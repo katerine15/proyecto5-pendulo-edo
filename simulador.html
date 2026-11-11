@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Péndulo real vs lineal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Instrumento de laboratorio: panel claro, dos colores fijos para los dos modelos (azul = lineal, naranja = real) */
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #17202a;
+  --muted: #5d6b79;
+  --line: #d5dce3;
+  --lin: #1f6fb2;
+  --real: #e0701b;
+  --warn: #c2361f;
+  --ok: #1d8a55;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151b; --panel: #172029; --ink: #e6edf3; --muted: #93a2b1; --line: #2a3742;
+    --lin: #5aa7e8; --real: #f29546; --warn: #f0705a; --ok: #4cc08a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151b; --panel: #172029; --ink: #e6edf3; --muted: #93a2b1; --line: #2a3742;
+  --lin: #5aa7e8; --real: #f29546; --warn: #f0705a; --ok: #4cc08a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 16px; }
+header h1 { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 5vw, 34px); line-height: 1.1; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); max-width: 65ch; }
+.eq { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; font-family: var(--mono); font-size: 14px; }
+.eq span { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.card h2 { font-family: var(--display); font-weight: 700; font-size: 17px; margin: 0 0 2px; }
+.card .sub { color: var(--muted); font-size: 13.5px; margin: 0 0 10px; }
+canvas { display: block; width: 100%; }
+#stage { aspect-ratio: 16 / 9; max-height: 440px; }
+@media (max-width: 720px) { #stage { aspect-ratio: 5 / 3; } }
+#trace { height: 220px; }
+#errc { height: 240px; }
+.controls { display: grid; gap: 12px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+label.big { font-weight: 600; }
+#ang { flex: 1 1 220px; accent-color: var(--real); height: 28px; }
+#angv { font-family: var(--mono); font-weight: 600; font-size: 20px; min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+button { font: inherit; font-weight: 600; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--lin); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+button.primary { background: var(--lin); color: #fff; border-color: var(--lin); }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tile .k { font-size: 12.5px; color: var(--muted); }
+.tile .v { font-family: var(--mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.tile .v small { font-size: 13px; color: var(--muted); font-weight: 400; }
+.pill { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; }
+.pill.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.pill.bad { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+.tile.lin { border-top: 3px solid var(--lin); }
+.tile.real { border-top: 3px solid var(--real); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 600; color: var(--muted); font-size: 12.5px; }
+td { font-family: var(--mono); }
+tr.sel td { background: color-mix(in srgb, var(--real) 12%, transparent); }
+.tablewrap { overflow-x: auto; }
+ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70ch; }
+.foot { color: var(--muted); font-size: 13px; }
+@media (max-width: 720px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .grid2 { grid-template-columns: 1fr; }
+  #trace { height: 200px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Péndulo real vs lineal</h1>
+    <p>Proyecto 5 · Ecuaciones Diferenciales, Unidad 3. Los dos péndulos se sueltan al mismo tiempo desde el mismo ángulo, con L = 1 m y g = 9.81 m/s².</p>
+    <div class="eq">
+      <span><i class="dot" style="background:var(--lin)"></i>lineal: θ'' + (g/L)·θ = 0 → θ₀·cos(ωt)</span>
+      <span><i class="dot" style="background:var(--real)"></i>real: θ'' + (g/L)·sen θ = 0 → RK4</span>
+    </div>
+  </header>
+
+  <section class="card" aria-label="Animación">
+    <canvas id="stage" role="img" aria-label="Animación de los dos péndulos lado a lado"></canvas>
+  </section>
+
+  <section class="card controls" aria-label="Controles">
+    <div class="row">
+      <label class="big" for="ang">Ángulo inicial θ₀</label>
+      <input id="ang" type="range" min="1" max="170" step="1" value="90">
+      <output id="angv" for="ang">90°</output>
+    </div>
+    <div class="row">
+      <span class="foot">Valores del enunciado:</span>
+      <button data-a="10">10°</button><button data-a="23">23°</button><button data-a="45">45°</button><button data-a="90">90°</button><button data-a="150">150°</button>
+    </div>
+    <div class="row">
+      <button id="play" class="primary">Pausar</button>
+      <button id="reset">Volver a soltar</button>
+      <span class="foot">Velocidad:</span>
+      <button class="spd" data-s="0.5">0.5×</button><button class="spd" data-s="1" aria-pressed="true">1×</button><button class="spd" data-s="2">2×</button>
+    </div>
+  </section>
+
+  <section class="tiles" aria-label="Resultados">
+    <div class="tile lin"><div class="k">Período lineal T₀</div><div class="v" id="t0">2.0061 <small>s</small></div><div class="foot">no depende de θ₀</div></div>
+    <div class="tile real"><div class="k">Período real T</div><div class="v" id="treal">–</div><div class="foot">medido con RK4</div></div>
+    <div class="tile"><div class="k">Error (T − T₀)/T₀</div><div class="v" id="err">–</div><span class="pill" id="errpill">–</span></div>
+    <div class="tile"><div class="k">Tiempo transcurrido</div><div class="v" id="now">–</div><div class="foot" id="cyc">–</div></div>
+  </section>
+
+  <section class="card" aria-label="Gráfica theta contra tiempo">
+    <h2>θ(t) de los dos modelos</h2>
+    <p class="sub">Se dibuja mientras corre la animación. Con ángulos pequeños las curvas van encima; con ángulos grandes la naranja se atrasa.</p>
+    <canvas id="trace" role="img" aria-label="Gráfica del ángulo contra el tiempo para los dos modelos"></canvas>
+  </section>
+
+  <div class="grid2">
+    <section class="card" aria-label="Error del período">
+      <h2>Error del período según θ₀</h2>
+      <p class="sub">La línea roja es el 1 %. El punto es el ángulo elegido arriba.</p>
+      <canvas id="errc" role="img" aria-label="Error porcentual del período contra el ángulo inicial"></canvas>
+    </section>
+    <section class="card" aria-label="Tabla de períodos">
+      <h2>Tabla de períodos</h2>
+      <p class="sub">Calculada aquí mismo con RK4, h = 0.001 s. Coincide con los valores de referencia.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>θ₀</th><th>T real [s]</th><th>vs T₀</th><th>vs T</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="foot" id="umbral" style="margin:10px 0 0">–</p>
+    </section>
+  </div>
+
+  <section class="card" aria-label="Cómo leer el simulador">
+    <h2>Qué se está viendo</h2>
+    <ul class="notes">
+      <li>El péndulo azul sigue la solución deducida a mano, θ₀·cos(√(g/L)·t). Siempre tarda 2.0061 s por oscilación, sin importar θ₀.</li>
+      <li>El naranja resuelve la ecuación con sen θ paso a paso (Runge–Kutta 4). Como sen θ &lt; θ, la fuerza que lo devuelve es menor y tarda más.</li>
+      <li>Por debajo de unos 23° la diferencia del período es menor al 1 % y la aproximación lineal sirve.</li>
+      <li>Un reloj de péndulo con más amplitud <strong>atrasa</strong>: a 10° pierde cerca de 2.7 minutos por día.</li>
+    </ul>
+  </section>
+  <p class="foot">Hecho para el Proyecto 5 con apoyo de Claude. Mismo modelo y mismos números que pendulo.py.</p>
+</div>
+
+<script>
+(() => {
+  const g = 9.81, L = 1.0, w = Math.sqrt(g / L), T0 = 2 * Math.PI * Math.sqrt(L / g), H = 0.001;
+  const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+  const $ = id => document.getElementById(id);
+
+  // Un paso de RK4 para el péndulo real: u' = v, v' = -(g/L) sen u
+  function rk4Step(u, v, h) {
+    const f = (u, v) => [v, -(g / L) * Math.sin(u)];
+    const k1 = f(u, v);
+    const k2 = f(u + h / 2 * k1[0], v + h / 2 * k1[1]);
+    const k3 = f(u + h / 2 * k2[0], v + h / 2 * k2[1]);
+    const k4 = f(u + h * k3[0], v + h * k3[1]);
+    return [u + h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
+            v + h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])];
+  }
+  // Período: primer cambio de signo de la velocidad = T/2, con interpolación lineal
+  function periodo(d) {
+    let u = rad(d), v = 0, t = 0;
+    while (t < 20) {
+      const [u2, v2] = rk4Step(u, v, H);
+      if (v < 0 && v2 >= 0) return 2 * (t - v * H / (v2 - v));
+      u = u2; v = v2; t += H;
+    }
+    return NaN;
+  }
+
+  // Curva de error precalculada 1°..170°
+  const curva = [];
+  for (let d = 1; d <= 170; d++) curva.push([d, 100 * (periodo(d) - T0) / T0]);
+  let umbral = NaN;
+  for (let i = 1; i < curva.length; i++) if (curva[i][1] > 1 && curva[i - 1][1] <= 1) {
+    const [a0, e0] = curva[i - 1], [a1, e1] = curva[i];
+    umbral = a0 + (1 - e0) * (a1 - a0) / (e1 - e0); break;
+  }
+  $("umbral").textContent = `El error pasa del 1 % a partir de θ₀ ≈ ${umbral.toFixed(1)}°.`;
+
+  const filas = [10, 45, 90, 150].map(d => { const T = periodo(d); return [d, T, 100 * (T - T0) / T0, 100 * (T - T0) / T]; });
+  function pintarTabla(sel) {
+    $("tbody").innerHTML = filas.map(([d, T, a, b]) =>
+      `<tr class="${d === sel ? "sel" : ""}"><td>${d}°</td><td>${T.toFixed(4)}</td><td>${a.toFixed(2)} %</td><td>${b.toFixed(2)} %</td></tr>`).join("");
+  }
+
+  // Estado de la simulación
+  let th0 = 90, u, v, t, hist, Treal, playing = true, speed = 1, last = null;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) playing = false;
+
+  function soltar() {
+    u = rad(th0); v = 0; t = 0; hist = [[0, th0, th0]];
+    Treal = periodo(th0);
+    const e = 100 * (Treal - T0) / T0;
+    $("angv").textContent = th0 + "°";
+    $("ang").value = th0;
+    $("treal").innerHTML = `${Treal.toFixed(4)} <small>s</small>`;
+    $("err").innerHTML = `${e.toFixed(2)} <small>%</small>`;
+    const p = $("errpill");
+    p.className = "pill " + (e <= 1 ? "ok" : "bad");
+    p.textContent = e <= 1 ? "la aproximación sirve" : "la aproximación falla";
+    pintarTabla(th0);
+    dibujarError();
+    actualizarLecturas();
+  }
+  function lin(t) { return th0 * Math.cos(w * t); }
+  function actualizarLecturas() {
+    const dl = lin(t), dr = deg(u);
+    $("now").innerHTML = `${t.toFixed(1)} <small>s</small>`;
+    $("cyc").textContent = `diferencia ${(dl - dr).toFixed(0)}° · oscilaciones: lineal ${(t / T0).toFixed(1)}, real ${(t / Treal).toFixed(1)}`;
+  }
+
+  // Lienzos con resolución de pantalla
+  function prep(c) {
+    const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    if (c.width !== Math.round(r.width * dpr) || c.height !== Math.round(r.height * dpr)) {
+      c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+    }
+    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return [x, r.width, r.height];
+  }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function dibujarEscena() {
+    const [x, W, Hh] = prep($("stage"));
+    x.clearRect(0, 0, W, Hh);
+    const R = Math.min(W * 0.2, (Hh - 56) / 2);           // largo del hilo en píxeles
+    const py = 34 + R, cols = [W * 0.26, W * 0.74];
+    const angs = [rad(lin(t)), u], colores = [css("--lin"), css("--real")], nombres = ["lineal", "real"];
+    x.font = `600 14px ${css("--body")}`; x.textAlign = "center";
+    for (let i = 0; i < 2; i++) {
+      const cx = cols[i];
+      // arco de la amplitud y vertical de referencia
+      x.strokeStyle = css("--line"); x.lineWidth = 1; x.setLineDash([4, 4]);
+      x.beginPath(); x.moveTo(cx, py); x.lineTo(cx, py + R * 1.08); x.stroke();
+      x.setLineDash([]);
+      x.beginPath(); x.arc(cx, py, R, Math.PI / 2 - rad(th0), Math.PI / 2 + rad(th0)); x.stroke();
+      // soporte
+      x.strokeStyle = css("--ink"); x.lineWidth = 4;
+      x.beginPath(); x.moveTo(cx - 34, py); x.lineTo(cx + 34, py); x.stroke();
+      // hilo y masa
+      const bx = cx + R * Math.sin(angs[i]), by = py + R * Math.cos(angs[i]);
+      x.strokeStyle = css("--muted"); x.lineWidth = 2;
+      x.beginPath(); x.moveTo(cx, py); x.lineTo(bx, by); x.stroke();
+      x.fillStyle = colores[i];
+      x.beginPath(); x.arc(bx, by, Math.max(10, R * 0.11), 0, 2 * Math.PI); x.fill();
+      x.fillStyle = colores[i];
+      x.fillText(nombres[i], cx, 18);
+    }
+  }
+
+  function ejes(x, W, Hh, pad, xmin, xmax, ymin, ymax, xt, yt, xl, yl) {
+    const X = v => pad.l + (v - xmin) / (xmax - xmin) * (W - pad.l - pad.r);
+    const Y = v => Hh - pad.b - (v - ymin) / (ymax - ymin) * (Hh - pad.t - pad.b);
+    x.font = `12px ${css("--mono")}`; x.fillStyle = css("--muted"); x.strokeStyle = css("--line"); x.lineWidth = 1;
+    x.textAlign = "right"; x.textBaseline = "middle";
+    yt.forEach(v => { x.beginPath(); x.moveTo(pad.l, Y(v)); x.lineTo(W - pad.r, Y(v)); x.stroke(); x.fillText(v, pad.l - 6, Y(v)); });
+    x.textAlign = "center"; x.textBaseline = "top";
+    xt.forEach(v => x.fillText(v, X(v), Hh - pad.b + 6));
+    x.font = `12px ${css("--body")}`;
+    x.fillText(xl, (pad.l + W - pad.r) / 2, Hh - 16);
+    x.save(); x.translate(12, (pad.t + Hh - pad.b) / 2); x.rotate(-Math.PI / 2); x.fillText(yl, 0, -6); x.restore();
+    return [X, Y];
+  }
+
+  function dibujarTraza() {
+    const [x, W, Hh] = prep($("trace"));
+    x.clearRect(0, 0, W, Hh);
+    const span = 10, t1 = Math.max(span, t), t0 = t1 - span;
+    const m = Math.ceil(th0 / 30) * 30, yt = th0 <= 30 ? [-th0, 0, th0] : [-m, -m / 2, 0, m / 2, m];
+    const xt = []; for (let s = Math.ceil(t0); s <= t1; s += 2) xt.push(s);
+    const [X, Y] = ejes(x, W, Hh, { l: 46, r: 10, t: 8, b: 40 }, t0, t1, -Math.max(m, th0), Math.max(m, th0), xt, yt, "tiempo [s]", "θ [grados]");
+    [[1, css("--lin")], [2, css("--real")]].forEach(([k, c]) => {
+      x.strokeStyle = c; x.lineWidth = 2; x.beginPath();
+      let first = true;
+      for (const p of hist) { if (p[0] < t0) continue; first ? x.moveTo(X(p[0]), Y(p[k])) : x.lineTo(X(p[0]), Y(p[k])); first = false; }
+      x.stroke();
+      const lp = hist[hist.length - 1];
+      x.fillStyle = c; x.beginPath(); x.arc(X(lp[0]), Y(lp[k]), 4, 0, 2 * Math.PI); x.fill();
+    });
+  }
+
+  function dibujarError() {
+    const [x, W, Hh] = prep($("errc"));
+    x.clearRect(0, 0, W, Hh);
+    // escala log en y para ver a la vez 0.01 % y 100 %
+    const ly = v => Math.log10(Math.max(v, 1e-3));
+    const [X, Y0] = ejes(x, W, Hh, { l: 52, r: 12, t: 10, b: 40 }, 0, 170, -3, 2.3,
+      [0, 30, 60, 90, 120, 150], [], "amplitud θ₀ [grados]", "error del período [%]");
+    const Y = v => Y0(ly(v));
+    x.font = `12px ${css("--mono")}`; x.textAlign = "right"; x.textBaseline = "middle";
+    [[0.001, "0.001"], [0.01, "0.01"], [0.1, "0.1"], [1, "1"], [10, "10"], [100, "100"]].forEach(([v, s]) => {
+      x.strokeStyle = css("--line"); x.beginPath(); x.moveTo(52, Y(v)); x.lineTo(W - 12, Y(v)); x.stroke();
+      x.fillStyle = css("--muted"); x.fillText(s, 46, Y(v));
+    });
+    x.strokeStyle = css("--warn"); x.setLineDash([6, 4]); x.lineWidth = 1.5;
+    x.beginPath(); x.moveTo(52, Y(1)); x.lineTo(W - 12, Y(1)); x.stroke(); x.setLineDash([]);
+    x.strokeStyle = css("--ink"); x.lineWidth = 2; x.beginPath();
+    curva.forEach(([d, e], i) => i ? x.lineTo(X(d), Y(e)) : x.moveTo(X(d), Y(e))); x.stroke();
+    x.strokeStyle = css("--muted"); x.setLineDash([2, 3]); x.lineWidth = 1;
+    x.beginPath(); x.moveTo(X(umbral), Y(1)); x.lineTo(X(umbral), Hh - 40); x.stroke(); x.setLineDash([]);
+    x.fillStyle = css("--muted"); x.textAlign = "left"; x.font = `12px ${css("--body")}`;
+    x.fillText(`1 % en ${umbral.toFixed(1)}°`, X(umbral) + 6, Y(1) + 12);
+    const e = 100 * (Treal - T0) / T0;
+    x.fillStyle = css("--real"); x.beginPath(); x.arc(X(th0), Y(e), 6, 0, 2 * Math.PI); x.fill();
+    x.textAlign = th0 > 120 ? "right" : "left";
+    x.fillText(`${th0}°: ${e.toFixed(2)} %`, X(th0) + (th0 > 120 ? -10 : 10), Y(e) + 30);
+  }
+
+  function frame(ts) {
+    if (last === null) last = ts;
+    const dt = Math.min(0.05, (ts - last) / 1000) * speed; last = ts;
+    if (playing) {
+      const n = Math.round(dt / H);
+      for (let i = 0; i < n; i++) { [u, v] = rk4Step(u, v, H); t += H; }
+      hist.push([t, lin(t), deg(u)]);
+      if (hist.length > 4000) hist.splice(0, hist.length - 4000);
+      actualizarLecturas();
+    }
+    dibujarEscena(); dibujarTraza();
+    requestAnimationFrame(frame);
+  }
+
+  // Controles
+  $("ang").addEventListener("input", e => { th0 = +e.target.value; soltar(); });
+  document.querySelectorAll("button[data-a]").forEach(b => b.addEventListener("click", () => { th0 = +b.dataset.a; soltar(); }));
+  $("reset").addEventListener("click", soltar);
+  $("play").addEventListener("click", () => { playing = !playing; $("play").textContent = playing ? "Pausar" : "Reanudar"; });
+  document.querySelectorAll(".spd").forEach(b => b.addEventListener("click", () => {
+    speed = +b.dataset.s; document.querySelectorAll(".spd").forEach(o => o.setAttribute("aria-pressed", o === b));
+  }));
+  window.addEventListener("resize", dibujarError);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dibujarError);
+  new MutationObserver(dibujarError).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  $("play").textContent = playing ? "Pausar" : "Reanudar";
+  soltar();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
