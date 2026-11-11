@@ -12,6 +12,7 @@ Compara el péndulo real `θ'' + (g/L) sen θ = 0` con su aproximación lineal `
 
 | Archivo | Qué es |
 |---|---|
+| `requirements.txt` | Librerías de Python que necesita el proyecto |
 | `pendulo.py` | Programa principal: modelo, RK4, solución exacta, medición del período, gráficas y animación |
 | `pendulo_colab.ipynb` | El mismo código en cuaderno, para correrlo en Google Colab (sirve desde el navegador del celular) |
 | `simulador_3d.html` | Simulador principal para la exposición: vista 3D y 2D, los casos del enunciado, tabla, 4 gráficas y la solución a mano |
@@ -27,9 +28,14 @@ Compara el péndulo real `θ'' + (g/L) sen θ = 0` con su aproximación lineal `
 **En el computador**
 
 ```bash
-pip install numpy matplotlib pillow
+pip install -r requirements.txt
 python pendulo.py
 ```
+
+**En Visual Studio Code:** clonar el repositorio, abrir la carpeta, instalar la extensión *Python*,
+correr `pip install -r requirements.txt` en la terminal y darle ▶ (*Run Python File*) a `pendulo.py`.
+Para abrir `pendulo_colab.ipynb` dentro de VS Code se necesita además la extensión *Jupyter*
+y `pip install ipykernel`.
 
 Tarda cerca de un minuto (el barrido de 170 ángulos y la animación son lo más lento).
 Todo queda en la carpeta `figuras/` y la tabla de períodos se imprime en la consola.
