@@ -32,13 +32,26 @@ pip install -r requirements.txt
 python pendulo.py
 ```
 
-**En Visual Studio Code:** clonar el repositorio, abrir la carpeta, instalar la extensión *Python*,
-correr `pip install -r requirements.txt` en la terminal y darle ▶ (*Run Python File*) a `pendulo.py`.
-Para abrir `pendulo_colab.ipynb` dentro de VS Code se necesita además la extensión *Jupyter*
-y `pip install ipykernel`.
+**En Visual Studio Code**
 
-Tarda cerca de un minuto (el barrido de 170 ángulos y la animación son lo más lento).
-Todo queda en la carpeta `figuras/` y la tabla de períodos se imprime en la consola.
+Se necesita instalado una sola vez: Python 3 (en Windows, marcar *Add Python to PATH* al
+instalarlo), Git y VS Code con la extensión **Python**.
+
+1. En VS Code: *Ctrl+Shift+P* → **Git: Clone** → pegar
+   `https://github.com/katerine15/proyecto5-pendulo-edo` y abrir la carpeta.
+2. Abrir la terminal (*Terminal → New Terminal*) y escribir:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Abrir `pendulo.py` y darle ▶ (*Run Python File*), arriba a la derecha, o en la terminal:
+   `python pendulo.py`.
+4. Tarda cerca de un minuto. La tabla de períodos sale en la terminal y las gráficas y el GIF
+   quedan en la carpeta `figuras/`.
+
+- El cuaderno `pendulo_colab.ipynb` también abre en VS Code, celda por celda como en Colab.
+  Necesita además la extensión **Jupyter** y `pip install ipykernel`.
+- Si en Windows no se reconocen `pip` o `python`, usar `py -m pip install -r requirements.txt`
+  y `py pendulo.py`.
 
 **En Google Colab (sin instalar nada)**
 
@@ -48,7 +61,8 @@ Todo queda en la carpeta `figuras/` y la tabla de períodos se imprime en la con
 
 ### Simuladores
 
-Abrir `simulador_3d.html` (o `simulador.html`) con doble clic en cualquier navegador.
+Abrir `simulador_3d.html` (o `simulador.html`) con doble clic en cualquier navegador,
+o desde VS Code con la extensión *Live Server*. No necesitan Python.
 No necesitan internet; sin conexión solo cambia la tipografía.
 Si el proyecto se publica con GitHub Pages, `index.html` lleva al simulador 3D.
 
