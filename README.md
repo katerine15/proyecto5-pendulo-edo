@@ -11,7 +11,7 @@ verifica la simulación contra la solución exacta y predice el período con una
 
 | Carpeta | Qué es | Qué necesita |
 |---|---|---|
-| raíz (`backend/`, `frontend/`, `docs/`, `assets/`, `scripts/`) | **Tablero principal** para la exposición | Python 3.12+ con `uv` y Node.js 20+ |
+| raíz (`backend/`, `frontend/`, `docs/`, `assets/`, `scripts/`) | **Tablero principal** para la exposición | Python 3.12+ con `uv` y Node.js 22 LTS (mínimo 20.19) |
 | [`version-ligera/`](version-ligera/) | **Respaldo**: `pendulo.py` (RK4, gráficas, GIF), cuaderno de Colab y dos simuladores HTML | Solo Python, o nada (los HTML abren con doble clic) |
 
 Los dos dan los mismos números: T₀ = 2.0061 s, períodos 2.0099 / 2.0863 / 2.3679 / 3.5351 s y umbral del 1 % en 22.9°.
@@ -46,7 +46,7 @@ Diseño y movimiento: [`docs/DISENO.md`](docs/DISENO.md).
 ## Requisitos
 
 - **Python 3.12+** con [`uv`](https://docs.astral.sh/uv/) (`pip install uv`)
-- **Node.js 20+** (incluye `npm`)
+- **Node.js 22 LTS** (mínimo 20.19 o 22.12; incluye `npm`). Con Node 20.14 o anterior la compilación falla con «Cannot find native binding»
 
 ## Instalación y ejecución
 
@@ -69,7 +69,7 @@ Abre <http://127.0.0.1:8000>. Todo corre **en local, sin internet y sin IA exter
 ### En Visual Studio Code
 
 1. *Ctrl+Shift+P* → **Git: Clone** → pegar `https://github.com/katerine15/proyecto5-pendulo-edo` y abrir la carpeta.
-2. Instalar una sola vez: Python 3.12+, Node.js 20+ y `uv` (en la terminal: `pip install uv`).
+2. Instalar una sola vez: Python 3.12+, Node.js 22 LTS y `uv` (en la terminal: `pip install uv`).
 3. En la terminal de VS Code (*Terminal → New Terminal*), desde la raíz del proyecto:
    - Windows: `.\scripts\install.ps1` y luego `.\scripts\run.ps1`
    - Linux / macOS / Git Bash: `scripts/install.sh` y luego `scripts/run.sh`
