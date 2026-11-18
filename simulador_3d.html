@@ -528,8 +528,42 @@
 
     <!-- JavaScript Application Logic -->
     <script>
+        /*
+         * =====================================================================
+         *  MAPA DEL PROGRAMA (léase primero)
+         * =====================================================================
+         *  Este simulador compara, en el navegador, las dos ecuaciones del proyecto:
+         *
+         *      péndulo real:    θ'' + (g/L)·sen θ = 0   → se resuelve con RK4, paso a paso
+         *      modelo lineal:   θ'' + (g/L)·θ     = 0   → se usa la solución exacta del
+         *                                                  Punto 1 a mano: θ(t) = θ₀·cos(ωt)
+         *
+         *  Partes del código, en orden:
+         *    1. Estado: todos los datos de la simulación en un solo objeto (state).
+         *    2. Física: aceleraciones, un paso de RK4, medición del período
+         *       (cuando θ' vuelve a 0) y período exacto con la integral elíptica.
+         *    3. Tabla de períodos, reinicio de la simulación y números de la barra
+         *       lateral (error de Taylor del Punto 3, error del período).
+         *       Avance del tiempo en cada cuadro: stepPhysics().
+         *    4. Vista 3D con Three.js (soporte, varillas, esferas, vectores, estelas,
+         *       cámara y arrastre de la esfera con el ratón).
+         *    5. Vista 2D en un canvas (para equipos sin 3D).
+         *    6. Las 7 gráficas (pestañas): θ(t), 4 casos, error del período,
+         *       Taylor, verificación exacta, espacio de fases y energía.
+         *    7. Botones y deslizadores (controles).
+         *    8. Bucle principal: unas 60 veces por segundo avanza la física,
+         *       dibuja el péndulo y dibuja la gráfica activa.
+         *
+         *  Unidades: los ángulos se guardan en RADIANES (θ en las fórmulas) y se
+         *  muestran en grados. sen θ ≈ θ solo es válido en radianes.
+         * =====================================================================
+         */
+
         /********************************************************************
          * 1. ESTADO FÍSICO Y PARÁMETROS DEL PROYECTO 5 (L=1m, g=9.81m/s²)
+         *    "state" guarda todo lo que cambia mientras corre la simulación.
+         *    thetaReal/omegaReal = ángulo y velocidad del péndulo real (rad, rad/s)
+         *    thetaLin/omegaLin   = ángulo y velocidad del modelo lineal
          ********************************************************************/
         const state = {
             // Parámetros por defecto idénticos al enunciado del Proyecto 5
@@ -572,7 +606,8 @@
             periodCurveCache: null
         };
 
-        // Audio Context para el metrónomo
+        // Sonido de "tic" (opcional): suena cada vez que el péndulo real llega a un
+        // extremo, es decir, cada medio período. Usa la API de audio del navegador.
         let audioCtx = null;
         function playTickSound(freq = 660, duration = 0.035) {
             if (!state.soundEnabled) return;
@@ -597,6 +632,12 @@
         /********************************************************************
          * 2. SOLUCIONADOR RK4 Y DETECTOR DE PERÍODO POR CRUCE θ'(t) = 0
          ********************************************************************/
+        /*
+         * Aceleración angular θ'' de cada modelo (despejada de la ecuación):
+         *   real:   θ'' = −(g/L)·sen θ
+         *   lineal: θ'' = −(g/L)·θ          (sen θ cambiado por θ: Punto 3)
+         * El término −b·ω sería fricción; en este proyecto b = 0 (sin amortiguamiento).
+         */
         function accelReal(theta, omega, L, g, b) {
             return -(g / L) * Math.sin(theta) - b * omega;
         }
@@ -605,19 +646,33 @@
             return -(g / L) * theta - b * omega;
         }
 
+        /*
+         * UN PASO DE RUNGE-KUTTA 4 (RK4).
+         * La ecuación de segundo orden se parte en dos de primer orden:
+         *     θ' = ω            (la derivada del ángulo es la velocidad)
+         *     ω' = aceleración  (accelReal o accelLinear)
+         * RK4 calcula 4 pendientes dentro del paso dt (al inicio, dos en la mitad
+         * y al final) y avanza con el promedio ponderado (k1 + 2k2 + 2k3 + k4)/6.
+         * Devuelve [θ, ω] en el instante t + dt.
+         */
         function rk4Step(theta, omega, dt, accelFn, L, g, b) {
+            // k1: pendientes al inicio del paso
             const k1_theta = omega;
             const k1_omega = accelFn(theta, omega, L, g, b);
 
+            // k2: pendientes en la mitad del paso, avanzando con k1
             const k2_theta = omega + 0.5 * dt * k1_omega;
             const k2_omega = accelFn(theta + 0.5 * dt * k1_theta, omega + 0.5 * dt * k1_omega, L, g, b);
 
+            // k3: pendientes en la mitad del paso, avanzando con k2
             const k3_theta = omega + 0.5 * dt * k2_omega;
             const k3_omega = accelFn(theta + 0.5 * dt * k2_theta, omega + 0.5 * dt * k2_omega, L, g, b);
 
+            // k4: pendientes al final del paso, avanzando con k3
             const k4_theta = omega + dt * k3_omega;
             const k4_omega = accelFn(theta + dt * k3_theta, omega + dt * k3_omega, L, g, b);
 
+            // Promedio ponderado: las pendientes de la mitad pesan el doble
             const nextTheta = theta + (dt / 6.0) * (k1_theta + 2 * k2_theta + 2 * k3_theta + k4_theta);
             const nextOmega = omega + (dt / 6.0) * (k1_omega + 2 * k2_omega + 2 * k3_omega + k4_omega);
             return [nextTheta, nextOmega];
@@ -654,7 +709,14 @@
             return 2 * Math.PI * Math.sqrt(L / g);
         }
 
-        // Integral elíptica AGM rápida para graficar la curva continua del Punto 3
+        /*
+         * PERÍODO EXACTO del péndulo real (sin integrar paso a paso):
+         *     T = T₀ / AGM(1, cos(θ₀/2))
+         * AGM es la "media aritmético-geométrica": se repite a ← (a+b)/2, b ← √(a·b)
+         * hasta que a y b coinciden. Es otra forma de escribir la integral elíptica
+         * completa K, que es la fórmula exacta del período. Se usa para comparar con
+         * el período medido por RK4 (deben dar igual) y para dibujar curvas rápido.
+         */
         function computeExactPeriodAGM(theta0Rad, L = state.L, g = state.g) {
             const T0 = 2 * Math.PI * Math.sqrt(L / g);
             const absTheta = Math.abs(theta0Rad);
@@ -673,6 +735,11 @@
         }
 
         // Pre-calcula las 4 integraciones numéricas del Punto 1: θ0 = 10°, 45°, 90°, 150°
+        /*
+         * Pre-calcula las curvas de la pestaña 2 (Punto 1 de "lo que programan"):
+         * real (RK4) y lineal (θ₀cos ωt) para 10°, 45°, 90° y 150°, durante 6.2 s.
+         * Se guarda en un "caché" para no recalcular en cada cuadro de la animación.
+         */
         function buildMultiCasesCache() {
             const angles = [10, 45, 90, 150];
             const tmax = 6.2;
@@ -697,6 +764,13 @@
         /********************************************************************
          * 3. TABLA OFICIAL DEL PROYECTO 5 Y ACTUALIZACIÓN DE TELEMETRÍA
          ********************************************************************/
+        /*
+         * Llena la tabla de períodos (Punto 2 de "lo que programan").
+         * Para cada ángulo mide el período real con RK4 (cruce de θ' por cero) y
+         * calcula el error de las dos formas:
+         *    contra T real: (T − T₀)/T · 100   ← así están los valores de referencia
+         *    contra T₀:     (T − T₀)/T₀ · 100  ← así lo dice el enunciado
+         */
         function updateProjectReferenceTable() {
             const tbody = document.getElementById('projectReferenceTableBody');
             if (!tbody) return;
@@ -737,6 +811,11 @@
             }).join('');
         }
 
+        /*
+         * Vuelve a soltar el péndulo desde θ₀ con velocidad 0, que son las
+         * condiciones iniciales del Punto 1: θ(0) = θ₀, θ'(0) = 0.
+         * Se llama al mover el deslizador, al pulsar un caso o al cambiar L o g.
+         */
         function resetSimulation() {
             const theta0Rad = state.theta0Deg * Math.PI / 180;
             state.t = 0.0;
@@ -762,6 +841,14 @@
             updateProjectReferenceTable();
         }
 
+        /*
+         * Números de la barra lateral:
+         *  - Error de Taylor (Punto 3 a mano): |θ − sen θ| / sen θ · 100
+         *      → 0.51 % a 10°, 57.08 % a 90°
+         *  - Período real exacto (AGM) y su error contra T₀.
+         *  - La etiqueta de color: verde si el error del período es ≤ 1 %
+         *    (la aproximación sirve), amarillo hasta 5 %, rojo si es mayor.
+         */
         function updateAnalyticalMetrics() {
             const absDeg = Math.abs(state.theta0Deg);
             const absRad = absDeg * Math.PI / 180;
@@ -796,10 +883,20 @@
             }
         }
 
+        /*
+         * AVANCE DEL TIEMPO EN CADA CUADRO DE LA ANIMACIÓN.
+         * frameDt es el tiempo real entre dos cuadros (≈ 1/60 s). Se divide en 10
+         * sub-pasos de RK4 para que la simulación sea precisa.
+         *  - Péndulo real: un paso de RK4 por sub-paso.
+         *  - Modelo lineal: NO se integra; se evalúa la fórmula exacta del Punto 1,
+         *    θ(t) = θ₀cos(ωt) y θ'(t) = −θ₀ω sen(ωt).
+         *  - Cada vez que la velocidad del real cambia de signo, el péndulo llegó
+         *    a un extremo: el tiempo entre dos extremos es T/2 (Punto 2).
+         */
         function stepPhysics(frameDt) {
-            if (!state.running || state.dragging) return;
+            if (!state.running || state.dragging) return;   // pausado o arrastrando la esfera: no avanza
 
-            const effectiveDt = Math.min(frameDt, 0.04) * state.timeScale;
+            const effectiveDt = Math.min(frameDt, 0.04) * state.timeScale;  // máximo 0.04 s por cuadro; × velocidad elegida (0.5×, 1×, 2×)
             const subSteps = 10;
             const subDt = effectiveDt / subSteps;
 
@@ -820,7 +917,8 @@
                     state.omegaLin = -th0 * w0 * Math.sin(w0 * state.t);
                 }
 
-                // Detectar cuando la velocidad vuelve a cero: θ'(t) = 0 (Punto 2 de la guía)
+                // Detectar cuando la velocidad vuelve a cero: θ'(t) = 0 (Punto 2 de la guía).
+                // El cruce cae entre dos sub-pasos; "frac" interpola dónde exactamente.
                 if (state.t > 0.15 && ((prevOmegaReal < 0 && state.omegaReal >= 0) || (prevOmegaReal > 0 && state.omegaReal <= 0))) {
                     const frac = Math.abs(prevOmegaReal) / (Math.abs(prevOmegaReal) + Math.abs(state.omegaReal) + 1e-12);
                     const zeroCrossTime = prevTime + frac * subDt;
@@ -833,6 +931,7 @@
                 }
             }
 
+            // Guarda el punto para la gráfica θ(t) (solo los últimos 12 s) y para las estelas
             state.history.push({
                 t: state.t,
                 thetaReal: state.thetaReal,
@@ -854,6 +953,12 @@
 
         /********************************************************************
          * 4. MOTOR 3D REALISTA CON THREE.JS (WebGL)
+         *    Solo dibuja: la física ya se calculó en stepPhysics().
+         *    Cada péndulo es un "grupo" que cuelga de su punto de suspensión;
+         *    girar el grupo un ángulo θ alrededor del eje z mueve la varilla y la
+         *    esfera juntas. Izquierda = real (dorado), derecha = lineal (magenta).
+         *    camOrbit guarda la posición de la cámara en coordenadas esféricas
+         *    (ángulos theta y phi, distancia radius) alrededor del punto "target".
          ********************************************************************/
         const threeContainer = document.getElementById('threeContainer');
         let scene3D, camera3D, renderer3D;
@@ -878,6 +983,8 @@
 
         let matBrass3D, matChrome3D, matLinearGhost3D, matLinearWire3D;
 
+        // Crea la escena 3D una sola vez: luces, piso, soporte, los dos péndulos,
+        // las flechas de fuerzas (tensión T y peso mg) y las estelas.
         function initThreeScene() {
             if (!threeContainer || typeof THREE === 'undefined') return;
 
@@ -1082,6 +1189,8 @@
             update3DCameraPosition();
         }
 
+        // Coloca la cámara a partir de sus coordenadas esféricas (theta, phi, radio).
+        // En pantallas angostas se aleja para que quepan los dos péndulos.
         function update3DCameraPosition() {
             if (!camera3D) return;
             const sinPhi = Math.sin(camOrbit.phi);
@@ -1128,6 +1237,7 @@
             update3DCameraPosition();
         };
 
+        // Actualiza el texto del botón "Seguir bola" (cámara libre / enfocar / primera persona).
         function updateFollowButtonUI() {
             const btn = document.getElementById('btnFollowBall');
             const label = document.getElementById('labelFollowBall');
@@ -1156,6 +1266,8 @@
             }
         };
 
+        // Ratón y dedo sobre la vista 3D: arrastrar la esfera cambia θ₀,
+        // arrastrar el fondo gira la cámara y la rueda acerca o aleja.
         function setup3DPointerEvents(domElem) {
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
@@ -1234,6 +1346,8 @@
             }, { passive: false });
         }
 
+        // Panel de datos sobre la vista: t, θ₀, ángulos actuales, diferencia,
+        // período medido (θ' = 0) y exacto, ciclos de cada péndulo y atraso del reloj.
         function updateHUDTelemetry() {
             const degReal = state.thetaReal * 180 / Math.PI;
             const degLin = state.thetaLin * 180 / Math.PI;
@@ -1267,6 +1381,8 @@
                 `Desfase: ${diffCycles.toFixed(2)} ciclos (Reloj atrasa ${clockLagSeconds.toFixed(2)} s)`;
         }
 
+        // Dibuja un cuadro en 3D: gira cada péndulo a su ángulo actual,
+        // mueve las flechas de fuerzas y las estelas, y renderiza.
         function renderThreeScene() {
             if (!renderer3D || !scene3D || !camera3D) return;
 
@@ -1363,6 +1479,8 @@
         const pCanvas = document.getElementById('pendulumCanvas');
         const pCtx = pCanvas.getContext('2d');
 
+        // Ajusta el tamaño en píxeles de los lienzos al tamaño de la pantalla
+        // (y a la densidad de píxeles del celular, para que no se vea borroso).
         function resizeCanvases() {
             const dpr = window.devicePixelRatio || 1;
             if (threeContainer && renderer3D && camera3D) {
@@ -1388,6 +1506,8 @@
             }
         }
 
+        // VISTA 2D: dibuja los dos péndulos en un canvas plano.
+        // Posición de la masa: x = L·sen θ, y = L·cos θ (hacia abajo).
         function drawPendulum2D() {
             const w = pCanvas.clientWidth;
             const h = pCanvas.clientHeight;
@@ -1457,6 +1577,11 @@
         const cCanvas = document.getElementById('chartCanvas');
         const cCtx = cCanvas.getContext('2d');
 
+        /********************************************************************
+         * 6. GRÁFICAS: drawCharts() dibuja solo la pestaña activa.
+         *    Todas usan el mismo patrón: márgenes (pad), funciones mapX/mapY que
+         *    convierten valores físicos en píxeles, cuadrícula, curvas y leyenda.
+         ********************************************************************/
         function drawCharts() {
             const w = cCanvas.clientWidth;
             const h = cCanvas.clientHeight;
@@ -1479,7 +1604,7 @@
             }
         }
 
-        // Pestaña 1: θ(t) del ángulo actual
+        // Pestaña 1: θ(t) del ángulo actual, últimos 12 s. Dorado = real, magenta = lineal.
         function drawTimeSeriesChart(w, h) {
             const pad = { top: 28, right: 92, bottom: 30, left: 46 };
             const pw = w - pad.left - pad.right;
@@ -1644,7 +1769,8 @@
             cCtx.fillText('Tiempo t (segundos)', pad.left + pw / 2, h - 8);
         }
 
-        // Pestaña 2 (Punto 1 de "Lo que programan"): Cuadrícula 2x2 con 10°, 45°, 90° y 150°
+        // Pestaña 2 (Punto 1 de "Lo que programan"): Cuadrícula 2x2 con 10°, 45°, 90° y 150°.
+        // Usa las curvas pre-calculadas en buildMultiCasesCache().
         function drawFourCasesGridChart(w, h) {
             if (!state.multiCasesCache) buildMultiCasesCache();
 
@@ -1745,7 +1871,8 @@
             });
         }
 
-        // Pestaña 3 (Punto 3 de "Lo que programan"): Error del período vs θ0 y umbral del 1% (~23°)
+        // Pestaña 3 (Punto 3 de "Lo que programan"): Error del período vs θ0 y umbral del 1% (~23°).
+        // Línea continua: error contra T real; punteada: error contra T₀.
         function drawPeriodErrorVsAngleChart(w, h) {
             const pad = { top: 26, right: 20, bottom: 34, left: 48 };
             const pw = w - pad.left - pad.right;
@@ -1902,7 +2029,8 @@
             cCtx.fillText('- - (T − T₀)/T₀', pad.left + 8, pad.top + 26);
         }
 
-        // Pestaña 4 (Punto 3 de "Lo que resuelven a mano"): Taylor sen(θ) vs θ
+        // Pestaña 4 (Punto 3 de "Lo que resuelven a mano"): Taylor sen(θ) vs θ.
+        // Muestra que la recta θ se separa de sen θ cuando el ángulo crece.
         function drawTaylorErrorChart(w, h) {
             const pad = { top: 24, right: 86, bottom: 32, left: 46 };
             const pw = w - pad.left - pad.right;
@@ -2289,6 +2417,11 @@
             document.getElementById('chartSubtitle').textContent = tabs[tab].subtitle;
         };
 
+        /********************************************************************
+         * 7. CONTROLES: pausar/reanudar, soltar de nuevo, velocidad, vista 3D/2D,
+         *    lado a lado o superpuesto, pantalla completa y la ventana del
+         *    ejercicio a mano.
+         ********************************************************************/
         function togglePlayPause() {
             state.running = !state.running;
             document.getElementById('iconPlayPause').className = state.running ? 'fa-solid fa-pause' : 'fa-solid fa-play';
@@ -2387,6 +2520,9 @@
         /********************************************************************
          * 8. BUCLE PRINCIPAL DE ANIMACIÓN
          ********************************************************************/
+        // requestAnimationFrame llama a animateLoop unas 60 veces por segundo.
+        // En cada llamada: 1) avanza la física, 2) dibuja el péndulo (3D o 2D),
+        // 3) dibuja la gráfica activa, 4) pide el siguiente cuadro.
         let lastFrameTime = performance.now();
         function animateLoop(now) {
             const dt = (now - lastFrameTime) / 1000.0;

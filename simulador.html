@@ -167,11 +167,21 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
 
 <script>
 (() => {
+  /*
+   * SIMULADOR LIGERO (2D) — mismo modelo y mismos números que pendulo.py
+   *   real:   θ'' + (g/L)·sen θ = 0  → RK4 paso a paso (rk4Step)
+   *   lineal: θ'' + (g/L)·θ     = 0  → solución exacta del Punto 1: θ₀·cos(ωt)
+   * Partes: física (rk4Step, periodo), curva de error y tabla, estado de la
+   * simulación (soltar), dibujo (escena, traza θ(t), gráfica de error),
+   * bucle de animación (frame) y controles.
+   */
+  // Datos del enunciado: g = 9.81 m/s², L = 1 m; ω = √(g/L); T₀ = 2π√(L/g) = 2.0061 s; H = paso de RK4 [s]
   const g = 9.81, L = 1.0, w = Math.sqrt(g / L), T0 = 2 * Math.PI * Math.sqrt(L / g), H = 0.001;
   const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
   const $ = id => document.getElementById(id);
 
   // Un paso de RK4 para el péndulo real: u' = v, v' = -(g/L) sen u
+  // (u = ángulo, v = velocidad angular; 4 pendientes k1..k4 y promedio (k1 + 2k2 + 2k3 + k4)/6)
   function rk4Step(u, v, h) {
     const f = (u, v) => [v, -(g / L) * Math.sin(u)];
     const k1 = f(u, v);
@@ -181,7 +191,9 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     return [u + h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
             v + h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])];
   }
-  // Período: primer cambio de signo de la velocidad = T/2, con interpolación lineal
+  // Período (Punto 2): se suelta desde el reposo en θ₀; la velocidad vuelve a ser 0 en el
+  // otro extremo, a los T/2. Se busca el primer cambio de signo de v (de − a +),
+  // se interpola linealmente el instante exacto t* y T = 2·t*.
   function periodo(d) {
     let u = rad(d), v = 0, t = 0;
     while (t < 20) {
@@ -192,7 +204,8 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     return NaN;
   }
 
-  // Curva de error precalculada 1°..170°
+  // Curva de error precalculada 1°..170°: error = (T − T₀)/T₀ · 100.
+  // Luego se busca, interpolando, el ángulo donde el error cruza el 1 % (≈ 22.8°).
   const curva = [];
   for (let d = 1; d <= 170; d++) curva.push([d, 100 * (periodo(d) - T0) / T0]);
   let umbral = NaN;
@@ -202,17 +215,21 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
   }
   $("umbral").textContent = `El error pasa del 1 % a partir de θ₀ ≈ ${umbral.toFixed(1)}°.`;
 
+  // Tabla de los 4 ángulos del enunciado: [θ₀, T real, error vs T₀, error vs T real]
   const filas = [10, 45, 90, 150].map(d => { const T = periodo(d); return [d, T, 100 * (T - T0) / T0, 100 * (T - T0) / T]; });
   function pintarTabla(sel) {
     $("tbody").innerHTML = filas.map(([d, T, a, b]) =>
       `<tr class="${d === sel ? "sel" : ""}"><td>${d}°</td><td>${T.toFixed(4)}</td><td>${a.toFixed(2)} %</td><td>${b.toFixed(2)} %</td></tr>`).join("");
   }
 
-  // Estado de la simulación
+  // Estado de la simulación: th0 = ángulo inicial [°]; u, v = ángulo [rad] y velocidad del real;
+  // t = tiempo [s]; hist = historial para la gráfica θ(t); Treal = período real del θ₀ actual
   let th0 = 90, u, v, t, hist, Treal, playing = true, speed = 1, last = null;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce) playing = false;
 
+  // Suelta el péndulo con las condiciones iniciales del Punto 1: θ(0) = θ₀, θ'(0) = 0,
+  // y actualiza el período, el error y la tabla.
   function soltar() {
     u = rad(th0); v = 0; t = 0; hist = [[0, th0, th0]];
     Treal = periodo(th0);
@@ -228,6 +245,7 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     dibujarError();
     actualizarLecturas();
   }
+  // Modelo lineal: solución exacta deducida a mano (en grados)
   function lin(t) { return th0 * Math.cos(w * t); }
   function actualizarLecturas() {
     const dl = lin(t), dr = deg(u);
@@ -246,6 +264,7 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
   }
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
+  // Dibuja los dos péndulos. Posición de la masa: x = R·sen θ, y = R·cos θ (R = hilo en píxeles)
   function dibujarEscena() {
     const [x, W, Hh] = prep($("stage"));
     x.clearRect(0, 0, W, Hh);
@@ -274,6 +293,7 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     }
   }
 
+  // Dibuja cuadrícula, marcas y títulos de ejes; devuelve X(), Y() para pasar de valores a píxeles
   function ejes(x, W, Hh, pad, xmin, xmax, ymin, ymax, xt, yt, xl, yl) {
     const X = v => pad.l + (v - xmin) / (xmax - xmin) * (W - pad.l - pad.r);
     const Y = v => Hh - pad.b - (v - ymin) / (ymax - ymin) * (Hh - pad.t - pad.b);
@@ -288,6 +308,7 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     return [X, Y];
   }
 
+  // Gráfica θ(t) de los últimos 10 s: azul = lineal, naranja = real
   function dibujarTraza() {
     const [x, W, Hh] = prep($("trace"));
     x.clearRect(0, 0, W, Hh);
@@ -305,6 +326,7 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     });
   }
 
+  // Gráfica del error del período contra θ₀ (Punto 3), con la línea del 1 % y el ángulo elegido
   function dibujarError() {
     const [x, W, Hh] = prep($("errc"));
     x.clearRect(0, 0, W, Hh);
@@ -332,6 +354,8 @@ ul.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70
     x.fillText(`${th0}°: ${e.toFixed(2)} %`, X(th0) + (th0 > 120 ? -10 : 10), Y(e) + 30);
   }
 
+  // Bucle de animación (~60 veces por segundo): avanza el tiempo real transcurrido con
+  // pasos de RK4 de H = 0.001 s, guarda el punto en el historial y redibuja.
   function frame(ts) {
     if (last === null) last = ts;
     const dt = Math.min(0.05, (ts - last) / 1000) * speed; last = ts;
