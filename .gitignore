@@ -4,18 +4,17 @@ __pycache__/
 .venv/
 .pytest_cache/
 node_modules/
-frontend/dist/
+tablero-avanzado/frontend/dist/
 *.log
-assets/blender/*.blend1
+tablero-avanzado/assets/blender/*.blend1
 *.tsbuildinfo
 probe.out.txt
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-backend/.venv/
-frontend/node_modules/
+tablero-avanzado/backend/.venv/
+tablero-avanzado/frontend/node_modules/
 
-# Versión ligera
 *.pyc
 .ipynb_checkpoints/

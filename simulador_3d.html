@@ -87,6 +87,15 @@
             flex: 1 1 auto !important;
             height: 100% !important;
         }
+        /* Ejercicio a mano con el formato del cuaderno */
+        .nb-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding: 3px 0 3px 10px; border-left: 2px solid #1e293b; }
+        .nb-eq { font-family: 'JetBrains Mono', monospace; color: #e2e8f0; white-space: pre-wrap; }
+        .nb-note { font-size: 11px; color: #94a3b8; font-style: italic; }
+        .nb-key { border-left-color: #38bdf8; } .nb-key .nb-eq { color: #7dd3fc; font-weight: 600; }
+        .nb-result { border-left-color: #34d399; } .nb-result .nb-eq { color: #6ee7b7; font-weight: 700; }
+        .nb-result-bad { border-left-color: #fb7185; } .nb-result-bad .nb-eq { color: #fda4af; font-weight: 700; }
+        .nb-sub { margin-top: 10px; font-weight: 700; color: #fbbf24; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+        .nb-p { margin: 4px 0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
@@ -430,6 +439,15 @@
                         <button id="tabBtnTaylor" onclick="switchChartTab('taylor')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition">
                             4. Taylor sen(θ) vs θ
                         </button>
+                        <button id="tabBtnVerif" onclick="switchChartTab('verif')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" title="Compara RK4 con la solución exacta del péndulo real (funciones elípticas)">
+                            5. Verificación exacta
+                        </button>
+                        <button id="tabBtnPhase" onclick="switchChartTab('phase')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" title="Ángulo contra velocidad angular">
+                            6. Espacio de fases
+                        </button>
+                        <button id="tabBtnEnergy" onclick="switchChartTab('energy')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition" title="Por qué se usa RK4: Euler gana energía">
+                            7. Energía: Euler vs RK4
+                        </button>
                     </div>
                 </div>
 
@@ -466,7 +484,7 @@
                         <i class="fa-solid fa-pen-ruler"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-base sm:text-lg text-white">Guía Resuelta: "Lo que resuelven a mano" y Pregunta de Exposición</h3>
+                        <h3 class="font-bold text-base sm:text-lg text-white">Ejercicio a mano: puntos 1, 2 y 3</h3>
                         <p class="text-xs text-slate-400">Desarrollo paso a paso del Proyecto 5</p>
                     </div>
                 </div>
@@ -476,73 +494,26 @@
             </div>
 
             <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
-
-                <!-- Punto 1 a mano -->
-                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                    <h4 class="font-bold text-sky-400">1. Resolver la ecuación lineal con θ(0) = θ₀, θ'(0) = 0 y deducir T₀ = 2π√(L/g)</h4>
-                    <p>Partimos de la EDO linealizada de segundo orden con coeficientes constantes:</p>
-                    <div class="font-mono text-xs sm:text-sm bg-slate-950 p-3 rounded-lg border border-slate-800 text-amber-200 overflow-x-auto">
-                        θ''(t) + (g/L)·θ(t) = 0   ;   definimos ω₀² = g/L  ⇒  θ'' + ω₀²·θ = 0
-                    </div>
-                    <p>Su ecuación característica es <span class="font-mono text-white">r² + ω₀² = 0 ⇒ r = ±i·ω₀</span>. Por tanto, la solución general es:</p>
-                    <div class="font-mono text-xs sm:text-sm bg-slate-950 p-3 rounded-lg border border-slate-800 text-sky-300 overflow-x-auto">
-                        θ(t) = C₁·cos(ω₀·t) + C₂·sen(ω₀·t)
-                    </div>
-                    <p>Aplicando las condiciones iniciales <span class="font-mono">θ(0) = θ₀ ⇒ C₁ = θ₀</span>, y derivando <span class="font-mono">θ'(t) = -ω₀·C₁·sen(ω₀t) + ω₀·C₂·cos(ω₀t)</span>, evaluamos <span class="font-mono">θ'(0) = 0 ⇒ C₂ = 0</span>. Así obtenemos:</p>
-                    <div class="font-mono text-xs sm:text-sm bg-slate-950 p-3 rounded-lg border border-slate-800 text-fuchsia-300 overflow-x-auto">
-                        θ_lineal(t) = θ₀ · cos( √(g/L) · t )
-                    </div>
-                    <p>Como el coseno se repite cada <span class="font-mono">2π</span> radianes (<span class="font-mono">ω₀·T₀ = 2π</span>), despejamos el período <span class="font-mono">T₀</span> para <span class="font-mono">L = 1 m</span> y <span class="font-mono">g = 9.81 m/s²</span>:</p>
-                    <div class="font-mono text-xs sm:text-sm bg-slate-950 p-3 rounded-lg border border-emerald-500/30 text-emerald-300 overflow-x-auto">
-                        T₀ = 2π / ω₀ = 2π · √(L/g) = 2π · √(1 / 9.81) ≈ 2.006067 s ≈ 2.0061 s
-                    </div>
+                <p class="text-[11px] text-slate-400">Mismo orden y notación que el cuaderno: un paso por renglón y, a la derecha, la nota con la flecha.</p>
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                    <h4 class="font-bold text-sky-400 mb-2">Punto 1: Resuelva la ecuación lineal con θ(0) = θ₀, θ'(0) = 0 y deduzca el período T₀ = 2π√(L/g)</h4>
+                    <div class="nb-line "><span class="nb-eq">θ'' + (g/L)·θ = 0</span><span class="nb-note">→ t: variable independiente; θ(t): ángulo que cambia con el tiempo</span></div><div class="nb-line "><span class="nb-eq">θ = eʳᵗ ,  θ' = r·eʳᵗ ,  θ'' = r²·eʳᵗ</span></div><div class="nb-line "><span class="nb-eq">r²·eʳᵗ + (g/L)·eʳᵗ = 0</span></div><div class="nb-line "><span class="nb-eq">eʳᵗ (r² + g/L) = 0</span><span class="nb-note">→ eʳᵗ nunca es 0, se divide</span></div><div class="nb-line "><span class="nb-eq">r² + g/L = 0</span></div><div class="nb-line "><span class="nb-eq">r² = −g/L</span></div><div class="nb-line "><span class="nb-eq">√r² = √(−g/L)</span></div><div class="nb-line "><span class="nb-eq">r = ±√(−1)·√(g/L)</span><span class="nb-note">→ i = √(−1)</span></div><div class="nb-line "><span class="nb-eq">r = ± i·√(g/L)</span><span class="nb-note">→ ω = √(g/L): frecuencia natural con que oscila el péndulo</span></div><div class="nb-line nb-key"><span class="nb-eq">r = ± iω</span></div><div class="nb-sub">Raíces complejas conjugadas:  r = a ± bi</div><div class="nb-line "><span class="nb-eq">r = 0 ± iω   ⇒   a = 0 ,  b = ω</span></div><div class="nb-line "><span class="nb-eq">θ(t) = eᵃᵗ (C₁ cos(ωt) + C₂ sen(ωt))</span><span class="nb-note">→ e⁰ = 1</span></div><div class="nb-line nb-key"><span class="nb-eq">θ(t) = C₁ cos(ωt) + C₂ sen(ωt)</span><span class="nb-note">→ Solución general</span></div><div class="nb-sub">Aplicación de condiciones iniciales</div><div class="nb-line "><span class="nb-eq">θ(0) = θ₀</span><span class="nb-note">→ ángulo inicial desde donde se suelta el péndulo (amplitud)</span></div><div class="nb-line "><span class="nb-eq">θ(0) = C₁ cos(ω·0) + C₂ sen(ω·0) = θ₀</span></div><div class="nb-line "><span class="nb-eq">= C₁ cos(0) + C₂ sen(0) = θ₀</span></div><div class="nb-line "><span class="nb-eq">= C₁·1 + C₂·0 = θ₀</span></div><div class="nb-line nb-key"><span class="nb-eq">C₁ = θ₀</span></div><div class="nb-line "><span class="nb-eq">θ'(0) = 0</span><span class="nb-note">→ velocidad angular inicial 0: se suelta desde reposo, sin empujarlo</span></div><div class="nb-line "><span class="nb-eq">θ'(t) = −C₁ω sen(ωt) + C₂ω cos(ωt)</span></div><div class="nb-line "><span class="nb-eq">θ'(0) = −C₁ω sen(0) + C₂ω cos(0) = 0</span></div><div class="nb-line "><span class="nb-eq">= −C₁ω(0) + C₂ω(1) = 0</span></div><div class="nb-line "><span class="nb-eq">C₂ω = 0   ⇒   C₂ = 0/ω</span><span class="nb-note">→ ω ≠ 0</span></div><div class="nb-line nb-key"><span class="nb-eq">C₂ = 0</span></div><div class="nb-sub">Solución particular</div><div class="nb-line "><span class="nb-eq">θ(t) = θ₀ cos(ωt) + 0·sen(ωt)</span></div><div class="nb-line nb-key"><span class="nb-eq">θ(t) = θ₀ cos(√(g/L) · t)</span></div><div class="nb-sub">Deducción del período T₀</div><div class="nb-line "><span class="nb-eq">ω·T₀ = 2π</span><span class="nb-note">→ el coseno se repite cada 2π</span></div><div class="nb-line "><span class="nb-eq">T₀ = 2π/ω = 2π/√(g/L)</span></div><div class="nb-line nb-key"><span class="nb-eq">T₀ = 2π √(L/g)</span></div><div class="nb-line "><span class="nb-eq">T₀ = 2π √(1/9.81) = 2π (0.3193)</span><span class="nb-note">→ L = 1 m, g = 9.81 m/s²</span></div><div class="nb-line nb-result"><span class="nb-eq">T₀ = 2.0061 s</span><span class="nb-note">→ tiempo de una oscilación completa (ida y vuelta)</span></div>
                 </div>
-
-                <!-- Punto 2 a mano -->
-                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                    <h4 class="font-bold text-sky-400">2. ¿Por qué T₀ no depende de la amplitud θ₀ en el modelo lineal, pero en el real sí?</h4>
-                    <p>
-                        En la fórmula <span class="font-mono text-emerald-300">T₀ = 2π√(L/g)</span> no aparece <span class="font-mono">θ₀</span> (propiedad de <strong>isocronismo</strong> de Galileo para oscilaciones pequeñas). Sin embargo, en el péndulo real la fuerza restauradora es proporcional a <span class="font-mono text-amber-300">sen(θ)</span>, que es <strong>menor</strong> que <span class="font-mono text-fuchsia-300">θ</span> cuando el ángulo crece (<span class="font-mono">sen(θ) &lt; θ</span>). Como el péndulo real siente menos fuerza empujándolo de regreso que el modelo lineal, tarda <strong>más tiempo</strong> en completar cada ciclo:
-                    </p>
-                    <div class="font-mono text-xs bg-slate-950 p-3 rounded-lg border border-slate-800 text-amber-200 overflow-x-auto">
-                        T_real(θ₀) = T₀ · [ 1 + (1/16)θ₀² + (11/3072)θ₀⁴ + ... ]  &gt;  T₀
-                    </div>
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                    <h4 class="font-bold text-sky-400 mb-2">Punto 2: ¿Por qué T₀ no depende de la amplitud θ₀ en el modelo lineal, pero en el real sí?</h4>
+                    <p class="nb-p">En la fórmula <span class='font-mono text-emerald-300'>T₀ = 2π√(L/g)</span> la amplitud θ₀ no aparece en ningún lado. Según la aproximación lineal, el período es independiente de la amplitud: el péndulo tarda 2.0061 s en ir y volver sin importar si se suelta desde un ángulo pequeño o uno grande.</p><p class="nb-p">En el péndulo real (ecuación no lineal con sen θ) esto no se cumple. Como <span class='font-mono'>sen θ &lt; θ</span>, la fuerza que lo devuelve es menor, y entre más abierto se suelte (mayor θ₀), más tiempo tarda en completar la oscilación: <span class='font-mono text-amber-300'>T &gt; T₀</span>.</p>
                 </div>
-
-                <!-- Punto 3 a mano -->
-                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                    <h4 class="font-bold text-sky-400">3. Polinomio de Taylor de sen(θ) y error relativo en θ₀ = 10° y θ₀ = 90°</h4>
-                    <p>Desarrollando <span class="font-mono">sen(θ)</span> en serie de Taylor/Maclaurin alrededor de <span class="font-mono">θ = 0</span> (con <span class="font-mono">θ</span> en radianes):</p>
-                    <div class="font-mono text-xs sm:text-sm bg-slate-950 p-3 rounded-lg border border-slate-800 text-white overflow-x-auto">
-                        sen(θ) = θ - θ³/3! + θ⁵/5! - ... = θ - θ³/6 + θ⁵/120 - ...
-                    </div>
-                    <p>Al aproximar <span class="font-mono">sen(θ) ≈ θ</span>, el primer término descartado (estimación de Taylor del error absoluto) es <span class="font-mono">|R₃(θ)| ≈ θ³/6</span>, por lo que el error relativo aproximado es <span class="font-mono">≈ θ²/6</span>:</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                        <div class="p-3 rounded-lg bg-slate-950 border border-emerald-500/30 font-mono text-xs space-y-1">
-                            <div class="text-emerald-400 font-bold">Caso A: θ₀ = 10° = π/18 ≈ 0.174533 rad</div>
-                            <div>• sen(0.174533) = 0.173648</div>
-                            <div>• Error rel. exacto: |0.174533 - 0.173648| / 0.173648 = <strong>0.51%</strong></div>
-                            <div>• Estimación Taylor (θ₀²/6): (0.174533)² / 6 ≈ <strong>0.508%</strong></div>
-                        </div>
-                        <div class="p-3 rounded-lg bg-slate-950 border border-rose-500/30 font-mono text-xs space-y-1">
-                            <div class="text-rose-400 font-bold">Caso B: θ₀ = 90° = π/2 ≈ 1.570796 rad</div>
-                            <div>• sen(1.570796) = 1.000000</div>
-                            <div>• Error rel. exacto: |1.570796 - 1.0| / 1.0 = <strong>57.08%</strong></div>
-                            <div>• Estimación Taylor (θ₀²/6): (1.570796)² / 6 ≈ <strong>41.12%</strong></div>
-                        </div>
-                    </div>
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                    <h4 class="font-bold text-sky-400 mb-2">Punto 3: Justifique sen θ ≈ θ con Taylor y estime el error relativo en 10° y 90°</h4>
+                    <div class="nb-sub">Serie de Taylor de sen θ alrededor de 0 (se deriva y se evalúa en θ = 0)</div><div class="nb-line "><span class="nb-eq">f(θ) = sen θ     →  f(0) = 0</span></div><div class="nb-line "><span class="nb-eq">f'(θ) = cos θ     →  f'(0) = 1</span></div><div class="nb-line "><span class="nb-eq">f''(θ) = −sen θ   →  f''(0) = 0</span></div><div class="nb-line "><span class="nb-eq">f'''(θ) = −cos θ  →  f'''(0) = −1</span></div><div class="nb-line "><span class="nb-eq">f⁴(θ) = sen θ     →  f⁴(0) = 0</span></div><div class="nb-line "><span class="nb-eq">f⁵(θ) = cos θ     →  f⁵(0) = 1</span></div><div class="nb-line "><span class="nb-eq">f(θ) = f(0) + f'(0)θ + f''(0)θ²/2! + f'''(0)θ³/3! + f⁴(0)θ⁴/4! + f⁵(0)θ⁵/5! + …</span></div><div class="nb-line "><span class="nb-eq">sen θ = 0 + (1)θ + 0 + (−1)θ³/6 + 0 + (1)θ⁵/120 − …</span></div><div class="nb-line nb-key"><span class="nb-eq">sen θ = θ − θ³/6 + θ⁵/120 − …</span><span class="nb-note">→ θ en radianes</span></div><div class="nb-sub">Aproximación</div><div class="nb-line "><span class="nb-eq">θ pequeño ⇒ θ³ y θ⁵ ≪ θ</span><span class="nb-note">→ ejemplo: θ = 0.1 → θ³/6 = 0.00017</span></div><div class="nb-line nb-key"><span class="nb-eq">sen θ ≈ θ</span><span class="nb-note">→ se deja solo el primer término</span></div><div class="nb-line "><span class="nb-eq">θ'' + (g/L) sen θ = 0   se vuelve   θ'' + (g/L) θ = 0</span><span class="nb-note">→ ecuación lineal</span></div><div class="nb-sub">Estimación del error</div><div class="nb-line "><span class="nb-eq">|θ − sen θ| ≤ θ³/6</span><span class="nb-note">→ la serie alterna signos: el error es menor que el primer término que se quitó</span></div><div class="nb-line nb-key"><span class="nb-eq">Error relativo = |θ − sen θ| / sen θ ≈ (θ³/6)/θ = θ²/6</span></div><div class="nb-sub">Caso θ₀ = 10°</div><div class="nb-line "><span class="nb-eq">θ = 10·π/180 = 0.1745 rad</span><span class="nb-note">→ pasar a radianes</span></div><div class="nb-line "><span class="nb-eq">sen(0.1745) = 0.1736  ;  |0.1745 − 0.1736| = 0.000885</span></div><div class="nb-line nb-result"><span class="nb-eq">Error = 0.000885 / 0.1736 × 100 = 0.51 %</span></div><div class="nb-line "><span class="nb-eq">Taylor: (0.1745)²/6 = 0.0305/6 = 0.0051 = 0.51 %</span><span class="nb-note">→ coinciden: a 10° la aproximación es muy buena</span></div><div class="nb-sub">Caso θ₀ = 90°</div><div class="nb-line "><span class="nb-eq">θ = 90·π/180 = π/2 = 1.5708 rad</span></div><div class="nb-line "><span class="nb-eq">sen(1.5708) = 1  ;  |1.5708 − 1| = 0.5708</span></div><div class="nb-line nb-result-bad"><span class="nb-eq">Error = 0.5708 / 1 × 100 = 57.08 %</span></div><div class="nb-line "><span class="nb-eq">Taylor: (1.5708)²/6 = 2.4674/6 = 0.4112 = 41.1 %</span><span class="nb-note">→ no coinciden: θ = 1.57 ya no es pequeño y θ⁵/120, … sí cuentan</span></div><div class="nb-sub">Conclusión</div><p class="nb-p">A 10° el error es 0.51 % y la aproximación sirve; a 90° es 57 % y no sirve. Por eso el período real se separa de T₀ cuando crece la amplitud: el error del período pasa del 1 % hacia los 23° (pestaña 3 de las gráficas).</p>
                 </div>
-
-                <!-- Pregunta de cierre de la exposición -->
                 <div class="p-4 rounded-xl bg-gradient-to-r from-amber-500/15 to-fuchsia-500/15 border border-amber-500/40 space-y-2">
                     <h4 class="font-bold text-amber-300 flex items-center gap-2">
-                        <i class="fa-solid fa-star"></i> Pregunta de cierre para la exposición: "¿Un reloj de péndulo adelanta o atrasa si se le aumenta la amplitud?"
+                        <i class="fa-solid fa-star"></i> Pregunta de cierre: ¿un reloj de péndulo adelanta o atrasa si se le aumenta la amplitud?
                     </h4>
-                    <p class="text-slate-200">
-                        <strong>Respuesta contundente:</strong> El reloj de péndulo <strong>SE ATRASA</strong>.
-                    </p>
+                    <p class="text-slate-200"><strong>Se atrasa.</strong></p>
                     <p class="text-xs text-slate-300">
-                        <strong>Justificación física y matemática:</strong> Un reloj mecánico está calibrado para que cada oscilación dure exactamente <span class="font-mono">T₀</span> (por ejemplo, <span class="font-mono">2.0061 s</span>). Si aumentamos la amplitud <span class="font-mono">θ₀</span>, como <span class="font-mono">sen(θ) &lt; θ</span>, la fuerza restauradora real es más débil que la lineal y el período real aumenta (<span class="font-mono">T_real &gt; T₀</span>; por ejemplo, a <span class="font-mono">45°</span> tarda <span class="font-mono">2.0863 s</span> y a <span class="font-mono">90°</span> tarda <span class="font-mono">2.3679 s</span>). Como cada "tic-tac" tarda más tiempo en ocurrir, las agujas del reloj avanzan más despacio y el reloj <strong>se atrasa</strong>.
+                        El reloj está calibrado para que cada oscilación dure <span class="font-mono">T₀ = 2.0061 s</span>. Al aumentar la amplitud, como <span class="font-mono">sen θ &lt; θ</span>, la fuerza real es más débil y el período crece (a <span class="font-mono">45°</span> tarda <span class="font-mono">2.0863 s</span>; a <span class="font-mono">90°</span>, <span class="font-mono">2.3679 s</span>). Cada tic tarda más, las agujas avanzan más despacio y el reloj se atrasa: a 10° pierde cerca de 2.7 minutos por día.
                     </p>
                 </div>
             </div>
@@ -583,7 +554,7 @@
             running: true,
             timeScale: 1.0,
             soundEnabled: false,
-            activeTab: 'time',       // 'time' | 'multi' | 'periodErr' | 'taylor'
+            activeTab: 'time',       // 'time' | 'multi' | 'periodErr' | 'taylor' | 'verif' | 'phase' | 'energy'
             dragging: false,
             compareMode: 'split',    // Por defecto 'split' (Lado a Lado, como pide el Punto 4)
             materialStyle: 'brass',  // 'brass' | 'chrome'
@@ -1497,6 +1468,12 @@
                 drawFourCasesGridChart(w, h);
             } else if (state.activeTab === 'periodErr') {
                 drawPeriodErrorVsAngleChart(w, h);
+            } else if (state.activeTab === 'verif') {
+                drawVerificationChart(w, h);
+            } else if (state.activeTab === 'phase') {
+                drawPhaseSpaceChart(w, h);
+            } else if (state.activeTab === 'energy') {
+                drawEnergyChart(w, h);
             } else {
                 drawTaylorErrorChart(w, h);
             }
@@ -2070,13 +2047,235 @@
             resetSimulation();
         };
 
+
+        /********************************************************************
+         * PESTAÑAS 5, 6 y 7: verificación exacta, espacio de fases y energía
+         ********************************************************************/
+
+        // Función elíptica de Jacobi sn(u | m) por el método AGM (Abramowitz y Stegun 16.4)
+        function jacobiSn(u, m) {
+            if (m < 1e-12) return Math.sin(u);
+            const a = [1], c = [Math.sqrt(m)];
+            let b = Math.sqrt(1 - m), n = 0;
+            while (Math.abs(c[n]) > 1e-15 && n < 30) {
+                const an = a[n];
+                a.push((an + b) / 2);
+                c.push((an - b) / 2);
+                b = Math.sqrt(an * b);
+                n++;
+            }
+            let phi = Math.pow(2, n) * a[n] * u;
+            for (let i = n; i > 0; i--) {
+                phi = (phi + Math.asin((c[i] / a[i]) * Math.sin(phi))) / 2;
+            }
+            return Math.sin(phi);
+        }
+
+        // Integral elíptica completa K(m) = π / (2·AGM(1, √(1−m)))
+        function ellipticK(m) {
+            let a = 1, b = Math.sqrt(1 - m);
+            for (let i = 0; i < 30 && Math.abs(a - b) > 1e-15; i++) { const an = (a + b) / 2; b = Math.sqrt(a * b); a = an; }
+            return Math.PI / (2 * a);
+        }
+
+        // Solución EXACTA del péndulo real soltado desde el reposo:
+        // θ(t) = 2·arcsen( k · sn(K − ω₀t | k²) ),  k = sen(θ₀/2)
+        function exactRealTheta(t, theta0, L, g) {
+            const k = Math.sin(Math.abs(theta0) / 2), m = k * k;
+            const K = ellipticK(m), w0 = Math.sqrt(g / L);
+            return Math.sign(theta0 || 1) * 2 * Math.asin(Math.min(1, k * jacobiSn(K - w0 * t, m)));
+        }
+
+        // Energía por unidad de m·L²: E = ½θ'² + (g/L)(1 − cos θ)  (cero en el punto más bajo)
+        function energyOf(th, om, L, g) { return 0.5 * om * om + (g / L) * (1 - Math.cos(th)); }
+
+        let analysisCache = null;
+        function getAnalysis() {
+            const key = `${state.theta0Deg}|${state.L}|${state.g}`;
+            if (analysisCache && analysisCache.key === key) return analysisCache;
+            const L = state.L, g = state.g;
+            const th0 = state.theta0Deg * Math.PI / 180;
+            const w0 = Math.sqrt(g / L);
+
+            // 5. Verificación: RK4 (h = 0.005 s) contra las dos soluciones exactas, 10 s
+            const h = 0.005, steps = 2000, every = 4;
+            const verif = { t: [], errReal: [], errLin: [], maxReal: 0, maxLin: 0, h };
+            let tr = th0, orr = 0, tl = th0, ol = 0;
+            for (let i = 0; i <= steps; i++) {
+                const t = i * h;
+                if (i % every === 0) {
+                    const eR = Math.abs(tr - exactRealTheta(t, th0, L, g)) * 180 / Math.PI;
+                    const eL = Math.abs(tl - th0 * Math.cos(w0 * t)) * 180 / Math.PI;
+                    verif.t.push(t); verif.errReal.push(eR); verif.errLin.push(eL);
+                    verif.maxReal = Math.max(verif.maxReal, eR); verif.maxLin = Math.max(verif.maxLin, eL);
+                }
+                [tr, orr] = rk4Step(tr, orr, h, accelReal, L, g, 0);
+                [tl, ol] = rk4Step(tl, ol, h, accelLinear, L, g, 0);
+            }
+
+            // 6. Espacio de fases: una oscilación completa de cada modelo
+            const Treal = computeExactPeriodAGM(th0, L, g);
+            const phase = { real: [], lin: [] };
+            let pt = th0, po = 0;
+            const hp = Treal / 400;
+            for (let i = 0; i <= 400; i++) {
+                phase.real.push([pt, po]);
+                [pt, po] = rk4Step(pt, po, hp, accelReal, L, g, 0);
+            }
+            for (let i = 0; i <= 200; i++) {
+                const t = (i / 200) * 2 * Math.PI / w0;
+                phase.lin.push([th0 * Math.cos(w0 * t), -th0 * w0 * Math.sin(w0 * t)]);
+            }
+
+            // 7. Energía: Euler explícito, Euler simpléctico y RK4 con h = 0.05 s durante 50 s
+            const he = 0.05, ne = 1000;
+            const E0 = energyOf(th0, 0, L, g);
+            const energy = { t: [], euler: [], sym: [], rk4: [], ok: E0 > 1e-9, h: he };
+            let a1 = th0, b1 = 0, a2 = th0, b2 = 0, a3 = th0, b3 = 0;
+            for (let i = 0; i <= ne; i++) {
+                if (i % 2 === 0 && energy.ok) {
+                    energy.t.push(i * he);
+                    energy.euler.push(Math.abs(energyOf(a1, b1, L, g) - E0) / E0);
+                    energy.sym.push(Math.abs(energyOf(a2, b2, L, g) - E0) / E0);
+                    energy.rk4.push(Math.abs(energyOf(a3, b3, L, g) - E0) / E0);
+                }
+                const n1 = a1 + he * b1; b1 = b1 - he * (g / L) * Math.sin(a1); a1 = n1;   // Euler explícito
+                b2 = b2 - he * (g / L) * Math.sin(a2); a2 = a2 + he * b2;                // Euler simpléctico
+                [a3, b3] = rk4Step(a3, b3, he, accelReal, L, g, 0);                       // RK4
+            }
+            analysisCache = { key, verif, phase, energy, th0, w0 };
+            return analysisCache;
+        }
+
+        // Ejes con escala logarítmica en y
+        function logAxes(w, h, pad, tMax, lo, hi, xLabel, yLabel) {
+            const pw = w - pad.left - pad.right, ph = h - pad.top - pad.bottom;
+            const mapX = (t) => pad.left + (t / tMax) * pw;
+            const mapY = (v) => pad.top + ph - ((Math.log10(Math.max(v, Math.pow(10, lo))) - lo) / (hi - lo)) * ph;
+            cCtx.lineWidth = 1;
+            cCtx.font = '10px "JetBrains Mono"';
+            for (let e = lo; e <= hi; e++) {
+                const y = mapY(Math.pow(10, e));
+                cCtx.strokeStyle = 'rgba(51, 65, 85, 0.45)';
+                cCtx.beginPath(); cCtx.moveTo(pad.left, y); cCtx.lineTo(pad.left + pw, y); cCtx.stroke();
+                cCtx.fillStyle = '#64748b'; cCtx.textAlign = 'right';
+                cCtx.fillText(`1e${e}`, pad.left - 5, y + 3);
+            }
+            const stepT = tMax > 20 ? 10 : 2;
+            for (let t = 0; t <= tMax + 1e-9; t += stepT) {
+                cCtx.fillStyle = '#64748b'; cCtx.textAlign = 'center';
+                cCtx.fillText(`${t}`, mapX(t), pad.top + ph + 13);
+            }
+            cCtx.fillStyle = '#94a3b8'; cCtx.textAlign = 'center';
+            cCtx.fillText(xLabel, pad.left + pw / 2, h - 4);
+            cCtx.save(); cCtx.translate(11, pad.top + ph / 2); cCtx.rotate(-Math.PI / 2);
+            cCtx.fillText(yLabel, 0, 0); cCtx.restore();
+            return { mapX, mapY };
+        }
+
+        function polyline(xs, ys, mapX, mapY, color, width, dash) {
+            cCtx.save();
+            cCtx.strokeStyle = color; cCtx.lineWidth = width;
+            if (dash) cCtx.setLineDash(dash);
+            cCtx.beginPath();
+            xs.forEach((x, i) => { const X = mapX(x), Y = mapY(ys[i]); i ? cCtx.lineTo(X, Y) : cCtx.moveTo(X, Y); });
+            cCtx.stroke();
+            cCtx.restore();
+        }
+
+        function legendRows(x, y, rows) {
+            cCtx.font = '600 10px "Inter"'; cCtx.textAlign = 'left';
+            rows.forEach(([color, text], i) => { cCtx.fillStyle = color; cCtx.fillText(text, x, y + i * 14); });
+        }
+
+        function decadeRange(arrs) {
+            let mn = Infinity, mx = 0;
+            arrs.forEach(a => a.forEach(v => { if (v > 0) { mn = Math.min(mn, v); mx = Math.max(mx, v); } }));
+            if (!isFinite(mn)) return [-16, -1];
+            const hi = Math.ceil(Math.log10(mx)) + 1;
+            return [Math.max(-16, hi - 9, Math.floor(Math.log10(mn))), hi];
+        }
+
+        // Pestaña 5: verificación contra la solución exacta
+        function drawVerificationChart(w, h) {
+            const A = getAnalysis(), V = A.verif;
+            const pad = { top: 46, right: 16, bottom: 30, left: 50 };
+            const [lo, hi] = decadeRange([V.errReal, V.errLin]);
+            const { mapX, mapY } = logAxes(w, h, pad, 10, lo, hi, 'tiempo [s]', '|RK4 − exacta| [°]');
+            polyline(V.t, V.errReal, mapX, mapY, '#fbbf24', 2);
+            polyline(V.t, V.errLin, mapX, mapY, '#e879f9', 1.6, [5, 3]);
+            legendRows(pad.left + 6, 14, [
+                ['#fbbf24', `Real: RK4 vs exacta elíptica  ·  máx ${V.maxReal.toExponential(1)}°`],
+                ['#e879f9', `Lineal: RK4 vs θ₀·cos(ωt)  ·  máx ${V.maxLin.toExponential(1)}°`],
+            ]);
+            cCtx.fillStyle = '#34d399'; cCtx.font = '600 10px "Inter"'; cCtx.textAlign = 'right';
+            cCtx.fillText(`h = ${V.h} s · diferencia del orden de una millonésima de grado: el integrador está bien`, w - pad.right, h - 4 - 14 > pad.top ? pad.top - 6 : 12);
+        }
+
+        // Pestaña 6: espacio de fases
+        function drawPhaseSpaceChart(w, h) {
+            const A = getAnalysis();
+            const pad = { top: 34, right: 16, bottom: 30, left: 54 };
+            const pw = w - pad.left - pad.right, ph = h - pad.top - pad.bottom;
+            const deg = (r) => r * 180 / Math.PI;
+            let mxT = 1, mxO = 1;
+            A.phase.real.concat(A.phase.lin).forEach(([t, o]) => { mxT = Math.max(mxT, Math.abs(deg(t))); mxO = Math.max(mxO, Math.abs(deg(o))); });
+            mxT *= 1.1; mxO *= 1.12;
+            const mapX = (t) => pad.left + pw / 2 + (deg(t) / mxT) * (pw / 2);
+            const mapY = (o) => pad.top + ph / 2 - (deg(o) / mxO) * (ph / 2);
+            cCtx.strokeStyle = 'rgba(51, 65, 85, 0.6)'; cCtx.lineWidth = 1;
+            cCtx.beginPath(); cCtx.moveTo(pad.left, pad.top + ph / 2); cCtx.lineTo(pad.left + pw, pad.top + ph / 2);
+            cCtx.moveTo(pad.left + pw / 2, pad.top); cCtx.lineTo(pad.left + pw / 2, pad.top + ph); cCtx.stroke();
+            cCtx.font = '10px "JetBrains Mono"'; cCtx.fillStyle = '#64748b';
+            const nice = (mx) => { const raw = mx / 3, p10 = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p10; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p10; };
+            const sT = nice(mxT), sO = nice(mxO);
+            cCtx.textAlign = 'center';
+            for (let v = -Math.floor(mxT / sT) * sT; v <= mxT; v += sT) if (Math.abs(v) > 1e-9) cCtx.fillText(`${v.toFixed(0)}°`, mapX(v * Math.PI / 180), pad.top + ph + 13);
+            cCtx.textAlign = 'right';
+            for (let v = -Math.floor(mxO / sO) * sO; v <= mxO; v += sO) if (Math.abs(v) > 1e-9) cCtx.fillText(`${v.toFixed(0)}`, pad.left - 5, mapY(v * Math.PI / 180) + 3);
+            cCtx.fillStyle = '#94a3b8'; cCtx.textAlign = 'center';
+            cCtx.fillText('ángulo θ [°]', pad.left + pw / 2, h - 4);
+            cCtx.save(); cCtx.translate(11, pad.top + ph / 2); cCtx.rotate(-Math.PI / 2); cCtx.fillText("θ' [°/s]", 0, 0); cCtx.restore();
+            const line = (pts, color, wdt, dash) => polyline(pts.map(p => p[0]), pts.map(p => p[1]), mapX, mapY, color, wdt, dash);
+            line(A.phase.lin, '#e879f9', 1.8, [6, 4]);
+            line(A.phase.real, '#fbbf24', 2.2);
+            const dot = (t, o, c) => { cCtx.fillStyle = c; cCtx.beginPath(); cCtx.arc(mapX(t), mapY(o), 4.5, 0, 2 * Math.PI); cCtx.fill(); };
+            dot(state.thetaLin, state.omegaLin, '#e879f9');
+            dot(state.thetaReal, state.omegaReal, '#fbbf24');
+            legendRows(pad.left + 6, 14, [['#fbbf24', 'Real (RK4): curva cerrada deformada'], ['#e879f9', 'Lineal: elipse θ₀cos ωt, −θ₀ω sen ωt']]);
+        }
+
+        // Pestaña 7: energía
+        function drawEnergyChart(w, h) {
+            const A = getAnalysis(), E = A.energy;
+            const pad = { top: 46, right: 16, bottom: 30, left: 50 };
+            if (!E.ok) {
+                cCtx.fillStyle = '#94a3b8'; cCtx.font = '12px "Inter"'; cCtx.textAlign = 'center';
+                cCtx.fillText('Con θ₀ = 0° el péndulo no se mueve: suba el ángulo inicial.', w / 2, h / 2); return;
+            }
+            const [lo, hi] = decadeRange([E.euler, E.sym, E.rk4]);
+            const { mapX, mapY } = logAxes(w, h, pad, 50, lo, Math.max(hi, 1), 'tiempo [s]', '|E − E₀| / E₀');
+            polyline(E.t, E.euler, mapX, mapY, '#fb7185', 2);
+            polyline(E.t, E.sym, mapX, mapY, '#38bdf8', 1.8);
+            polyline(E.t, E.rk4, mapX, mapY, '#34d399', 2);
+            const last = (a) => a[a.length - 1];
+            legendRows(pad.left + 6, 14, [
+                ['#fb7185', `Euler explícito: gana energía (al final ${(100 * last(E.euler)).toFixed(0)} %)`],
+                ['#38bdf8', `Euler simpléctico: oscila, no crece (máx ${(100 * Math.max(...E.sym)).toFixed(1)} %)`],
+                ['#34d399', `RK4: casi no cambia (máx ${(100 * Math.max(...E.rk4)).toExponential(1)} %)`],
+            ]);
+        }
+
         window.switchChartTab = function(tab) {
             state.activeTab = tab;
             const tabs = {
                 time: { btn: 'tabBtnTime', subtitle: 'Real (dorado, RK4) vs. lineal (magenta, solución exacta θ₀·cos ωt), en tiempo real.' },
                 multi: { btn: 'tabBtnMulti', subtitle: 'Punto 1: Las dos ecuaciones graficadas juntas para θ₀ = 10°, 45°, 90° y 150°.' },
                 periodErr: { btn: 'tabBtnPeriodErr', subtitle: 'Punto 3: Error porcentual del período vs. θ₀ (supera el 1% cerca de los 23°).' },
-                taylor: { btn: 'tabBtnTaylor', subtitle: 'Punto 3 (A mano): Comparación de sen(θ), θ y Taylor θ - θ³/6 en 10° y 90°.' }
+                taylor: { btn: 'tabBtnTaylor', subtitle: 'Punto 3 (A mano): Comparación de sen(θ), θ y Taylor θ - θ³/6 en 10° y 90°.' },
+                verif: { btn: 'tabBtnVerif', subtitle: 'Diferencia entre RK4 y la solución exacta durante 10 s, para el θ₀ actual (escala logarítmica).' },
+                phase: { btn: 'tabBtnPhase', subtitle: 'θ contra θ\': el lineal dibuja una elipse; el real se deforma cuando θ₀ es grande.' },
+                energy: { btn: 'tabBtnEnergy', subtitle: 'Error relativo de la energía durante 50 s con paso h = 0.05 s: Euler la gana, RK4 casi no la cambia.' }
             };
 
             Object.keys(tabs).forEach(k => {
