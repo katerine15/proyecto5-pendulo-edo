@@ -16,13 +16,14 @@ El tablero web más grande quedó como extra en [`tablero-avanzado/`](tablero-av
 | Archivo | Qué es |
 |---|---|
 | `simulador_3d.html` | **Simulador principal** para la exposición: vista 3D y 2D, casos del enunciado, tabla de períodos, 7 gráficas y el ejercicio a mano paso a paso |
-| `simulador_3d_exposicion.html` | Guion visual de exposición en 4 voces: la deducción del Punto 1 y la verificación del Punto 2 aparecen en dos columnas, **LaTeX renderizado** a la izquierda y **Python** (`math`/`numpy`) a la derecha. Incluye modo claro/oscuro y oculta el 3D mientras se lee la ecuación |
+| `simulador_3d_exposicion.html` | Guion visual de exposición en 4 voces. El **ejercicio a mano completo** (Puntos 1, 2 y 3, como en `Ecusamano/`) aparece renglón por renglón: a la izquierda en **LaTeX** sobre una hoja de cuaderno y a la derecha su paralelo en **Python** (`math`/`numpy`) en un editor; al llegar ahí el 3D se oculta y la sección ocupa toda la pantalla. La verificación del Punto 2 (RK4) va en dos columnas. Incluye modo claro/oscuro |
 | `GUION_EXPOSICION.md` | Quién habla, cuánto tiempo, qué se muestra y preguntas probables |
 | `requirements.txt` | Librerías de Python que necesita el proyecto |
 | `pendulo.py` | Programa principal: modelo, RK4, solución exacta, medición del período, gráficas y animación |
 | `pendulo_colab.ipynb` | El mismo código en cuaderno, para correrlo en Google Colab (sirve desde el navegador del celular) |
 | `simulador.html` | Simulador ligero en un solo archivo (2D), por si el equipo no soporta 3D |
-| `vendor/` | Librerías guardadas localmente (Three.js r128, Tailwind compilado, Font Awesome y KaTeX para las fórmulas del simulador de exposición) para que funcione sin internet |
+| `vendor/` | Librerías guardadas localmente (Three.js r128, Tailwind compilado, Font Awesome y KaTeX para las fórmulas del simulador de exposición) para que funcione sin internet. `vendor/pendulo_modelo.js` es el modelo 3D del aparato (lo genera `modelo3d/`) |
+| `modelo3d/` | Modelo 3D del aparato hecho en **Blender 5.2**: `construir_modelo.py` lo construye y hornea la luz, `empaquetar.py` lo comprime en `vendor/pendulo_modelo.js`, y `pendulo.blend` se puede abrir en Blender. Ver «Modelo 3D» abajo |
 | `tailwind.config.js`, `tailwind.input.css` | Solo para recompilar `vendor/tailwind.css` si se cambian clases del simulador 3D |
 | `figuras/` | Resultados de `pendulo.py`: 3 gráficas PNG, la animación GIF y la tabla CSV |
 | `tests/` | Pruebas automáticas de `pendulo.py` (T₀, los 4 períodos, verificación, umbral y Taylor) |
@@ -93,6 +94,26 @@ Si el repositorio se publica con GitHub Pages, `index.html` lleva a `simulador_3
 
 El botón **Respuestas a mano** muestra los puntos 1, 2 y 3 renglón por renglón, igual que en el cuaderno.
 
+### Modelo 3D (simulador de exposición)
+
+La escena 3D de `simulador_3d_exposicion.html` es un aparato de laboratorio modelado en Blender:
+base de nogal, columnas y viga de aluminio, rodamientos, transportadores con la zona del 1 % y
+placas con la ecuación de cada péndulo. El modelo queda arriba y la gráfica debajo, sin taparlo.
+
+- **Cámara:** arrastrar gira la vista; la rueda del mouse, el pellizco o los botones **+ / −** acercan;
+  el doble clic sobre un péndulo se acerca a él; clic derecho, Shift+arrastrar o dos dedos mueven la vista;
+  **⟲** vuelve a la vista completa.
+- **Por qué corre en cualquier equipo:** el aparato tiene unos 7 800 triángulos y pesa 344 KB.
+  La luz y las sombras del soporte están *horneadas* en una textura, así que el navegador no las
+  calcula; no hay sombras en tiempo real; solo se dibuja cuando algo cambia, y si el equipo va lento
+  baja la resolución solo. Sin WebGL o sin el archivo del modelo, usa la escena simple anterior.
+- **Para regenerarlo** (solo si se cambia el modelo):
+  ```bash
+  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python modelo3d/construir_modelo.py
+  python modelo3d/empaquetar.py
+  ```
+  El primero tarda menos de un minuto con GPU y deja una vista previa en `modelo3d/salida/vista_previa.png`.
+
 ## Qué produce `pendulo.py`
 
 1. `1_verificacion_lineal.png` — numérica (RK4) vs exacta `θ0·cos(ωt)` del modelo lineal y su diferencia (~1e-11 rad).
@@ -118,6 +139,9 @@ vuelve a correr y todo se recalcula. En el simulador 3D, L y g se cambian con lo
   tomaron las ideas de la verificación con la solución exacta elíptica, el espacio de fases, la
   comparación de energía Euler/RK4 y el guion de exposición. Claude las implementó en `simulador_3d.html`,
   escribió `tests/` y `GUION_EXPOSICION.md`, y reescribió la ventana del ejercicio a mano.
+- **Modelo 3D:** Claude escribió `modelo3d/construir_modelo.py` (modelado y horneado en Blender 5.2),
+  `modelo3d/empaquetar.py` y la escena 3D de `simulador_3d_exposicion.html` (carga del modelo,
+  transportadores, cámara con zoom y gráfica debajo del modelo).
 
 El grupo revisó, ejecutó y es responsable de cada línea.
 <!-- Ajusten esta sección según lo que realmente hayan hecho. -->

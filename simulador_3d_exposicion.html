@@ -53,7 +53,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:30px;align-items:start}
 .stagewrap{position:relative;align-self:stretch;min-height:0}
 .stage{position:sticky;top:70px;border:1px solid var(--line);border-radius:20px;background:var(--panel);
-  backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);transition:opacity .3s ease,box-shadow .3s ease}
+  backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);
+  transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease}
 .stagehead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .stagehead .mode{font-family:var(--mono);font-size:11px;color:var(--accent)}
 .stagehead .dots{display:flex;gap:5px}
@@ -63,10 +64,19 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 #threeHost{position:absolute;inset:0}
 #threeHost canvas{display:block;width:100%;height:100%;cursor:grab}
 #threeHost canvas:active{cursor:grabbing}
-.chartbox{position:absolute;left:10px;right:10px;bottom:10px;height:176px;border-radius:12px;z-index:3;
+.chartbox{position:relative;margin:10px;height:176px;border-radius:12px;z-index:3;
   background:rgba(6,11,20,.94);border:1px solid var(--line);backdrop-filter:blur(8px);
   display:flex;flex-direction:column;overflow:hidden;transition:height .3s cubic-bezier(.2,.8,.2,1)}
-.chartbox.code-mode{height:calc(100% - 20px)}
+/* Al ver el código, el 3D se oculta (no se dibuja) y el cuaderno usa todo el espacio */
+.stage.code-view .visual{height:0!important}
+.stage.code-view .chartbox{height:clamp(300px,60vh,580px)!important}
+.zoomctl{position:absolute;right:10px;top:10px;z-index:4;display:flex;flex-direction:column;gap:6px}
+.zoomctl button{width:32px;height:32px;padding:0;border-radius:9px;font:600 16px/1 var(--mono);
+  background:rgba(6,11,20,.72);backdrop-filter:blur(6px)}
+.zoomhint{position:absolute;right:50px;top:12px;font:10px var(--mono);color:var(--muted);pointer-events:none;
+  padding:3px 8px;border-radius:7px;background:rgba(6,11,20,.7);opacity:0;transition:opacity .25s}
+.visual:hover .zoomhint{opacity:.9}
+body.light .zoomhint{background:rgba(255,255,255,.85)}
 .charthead{display:flex;align-items:center;gap:6px;padding:4px 7px;flex:0 0 auto;
   border-bottom:1px solid var(--line);background:rgba(15,23,42,.85)}
 .charthead .ttl{font:10px var(--mono);color:var(--muted);margin-right:auto;
@@ -173,15 +183,128 @@ td.hi{color:var(--real);font-weight:600}
 .pycode{margin:0;font-family:var(--mono);font-size:11px;line-height:1.5;color:#d6e0ed;white-space:pre-wrap;overflow-wrap:anywhere}
 .pyc{color:#64748b}.pyk{color:#c084fc}.pyn{color:#fbbf24}.pyf{color:var(--accent)}.pyo{color:var(--ok)}
 .texbtn{font-size:10.5px;padding:4px 9px}
+/* ===== Ejercicio a mano: hoja de cuaderno (LaTeX) | editor de código (Python) =====
+   Cada renglón lleva su LaTeX y su Python a la misma altura. Las dos texturas son una sola
+   hoja continua detrás de todas las filas (::before = papel, ::after = editor), hechas con
+   CSS y un ruido SVG de pocos bytes: no hay imágenes que descargar.
+   En escritorio la tarjeta ocupa todo el ancho (layoutTexCard) y se "despliega" con clip-path
+   mientras el 3D se oculta; el alto de la página no cambia. */
+.texcard{--texL:0px;position:relative;z-index:2;padding:20px 22px 24px;
+  clip-path:inset(0 0 0 var(--texL) round 18px);transition:clip-path .7s cubic-bezier(.2,.8,.2,1),box-shadow .5s ease}
+body.eq-focus .texcard{clip-path:inset(0 0 0 0 round 18px);box-shadow:0 30px 90px rgba(0,0,0,.5)}
+/* Sin overflow:hidden (rompería el encabezado fijo): las esquinas las redondea cada hoja */
+.texgrid.texrows{position:relative;display:flex;flex-direction:column;gap:0;border-radius:14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(148,163,184,.18)}
+.texgrid.texrows::before{border-radius:14px 0 0 14px}
+.texgrid.texrows::after{border-radius:0 14px 14px 0}
+.texcolheads .hp{border-top-left-radius:14px}
+.texcolheads .he{border-top-right-radius:14px}
+.texrows .pycode,.texrows .tx .texmath{overscroll-behavior-x:contain}
+/* Papel: blanco cálido, grano de fibra, cuadrícula azul y margen rojo */
+.texgrid.texrows::before{content:"";position:absolute;left:0;top:0;bottom:0;width:50%;z-index:0;pointer-events:none;
+  background-color:#fffdf7;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,transparent 46px,rgba(220,38,38,.5) 46px,rgba(220,38,38,.5) 48px,transparent 48px),
+    linear-gradient(rgba(37,99,235,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(37,99,235,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,95,60,.06),transparent 18%,transparent 82%,rgba(120,95,60,.08));
+  background-size:180px 180px,100% 100%,24px 24px,24px 24px,100% 100%;
+  box-shadow:inset -10px 0 18px -12px rgba(60,40,20,.35)}
+/* Editor: fondo estilo VS Code, ruido sutil y canal de números de línea */
+.texgrid.texrows::after{content:"";position:absolute;right:0;top:0;bottom:0;width:50%;z-index:0;pointer-events:none;
+  background-color:#1e1e1e;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,#181818 0,#181818 50px,rgba(255,255,255,.06) 50px,rgba(255,255,255,.06) 51px,transparent 51px),
+    radial-gradient(120% 70% at 50% 0%,rgba(255,255,255,.035),transparent 60%);
+  background-size:160px 160px,100% 100%,100% 100%}
+/* Capas (de abajo hacia arriba): papel 1 · contenido del papel 2 · editor 3 · código 4.
+   Las filas no crean su propio contexto de capas, así la hoja puede pasar por DEBAJO del editor. */
+.texcolheads,.texpart,.texrow{position:relative;z-index:auto}
+.texgrid.texrows::before{z-index:1}
+.texgrid.texrows::after{z-index:3;box-shadow:-16px 0 28px -10px rgba(0,0,0,.5)}
+.texrow .tx,.texpart .pp{position:relative;z-index:2}
+.texrow .pycode,.texpart .pc{position:relative;z-index:4}
+.texcolheads .hp{position:relative;z-index:5}
+.texcolheads .he{position:relative;z-index:7}
+/* La hoja sale de detrás del editor al llegar (.paper-in) y vuelve a esconderse al salir */
+.texgrid.texrows::before,.texrow .tx,.texpart .pp,.texcolheads .hp{
+  transform:translateX(100%);transition:transform .55s cubic-bezier(.55,0,.75,.25)}
+.texcard.paper-in .texgrid.texrows::before,.texcard.paper-in .texrow .tx,
+.texcard.paper-in .texpart .pp,.texcard.paper-in .texcolheads .hp{
+  transform:translateX(0);transition:transform .9s cubic-bezier(.16,1,.3,1) .18s}
+@media (prefers-reduced-motion:reduce){
+  .texgrid.texrows::before,.texrow .tx,.texpart .pp,.texcolheads .hp{transform:none!important;transition:none!important}
+}
+/* Encabezado: espiral del cuaderno | barra de título del editor */
+/* sticky siempre crea su propio contexto de capas: va por encima de las dos hojas, y adentro
+   la parte de papel (.hp) igual se esconde debajo de la barra del editor (.he) */
+.texcolheads{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);position:sticky;top:57px;z-index:8!important}
+.texcolheads .hp{display:flex;align-items:baseline;gap:12px;padding:20px 18px 10px 62px;background-color:#fffdf7;
+  background-image:radial-gradient(circle at 13px 10px,#c7ccd4 0,#c7ccd4 4px,#5b6472 5px,transparent 6px);
+  background-size:26px 22px;background-repeat:repeat-x;border-bottom:2px solid rgba(37,99,235,.25);color:#1e293b}
+.texcolheads .hp b{font:700 15px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#0f172a}
+.texcolheads .hp span{font:11px var(--mono);color:#64748b}
+.texcolheads .he{display:flex;align-items:center;gap:12px;padding:0 14px;background:#2d2d30;border-bottom:1px solid #111}
+.texcolheads .dots{display:flex;gap:7px;font-style:normal}
+.texcolheads .dots b{width:11px;height:11px;border-radius:50%;background:#ff5f57}
+.texcolheads .dots b:nth-child(2){background:#febc2e}
+.texcolheads .dots b:nth-child(3){background:#28c840}
+.texcolheads .tab{align-self:stretch;display:flex;align-items:center;padding:0 14px;margin-top:8px;background:#1e1e1e;
+  border-top:2px solid #3794ff;border-radius:6px 6px 0 0;font:12px var(--mono);color:#e5e5e5}
+.texcolheads .lang{margin-left:auto;font:11px var(--mono);color:#8b8b8b}
+/* Separador de cada Punto */
+.texpart{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.texpart .pp{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:18px 18px 8px 62px}
+.texpart .pp b{font:700 20px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#0f172a;
+  background:linear-gradient(transparent 62%,rgba(250,204,21,.55) 62%);padding:0 4px}
+.texpart .pp span{font-size:14px;font-style:italic;color:#475569}
+.texpart .pc{display:flex;align-items:flex-end;padding:18px 16px 8px 64px;font:13px var(--mono);color:#6a9955;
+  white-space:nowrap;overflow:hidden}
+/* Cada renglón */
+.texrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:0;border-radius:0;overflow:visible;background:none}
+.texrow .tx{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:12px 18px 14px 62px;
+  border-bottom:1px dashed rgba(37,99,235,.22)}
+.texrow .lbl{display:flex;align-items:center;gap:9px;margin-bottom:4px;font:600 13.5px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#1d4ed8}
+.texrow .num{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  border:1.5px solid rgba(29,78,216,.55);font:700 10px var(--mono);color:#1d4ed8;margin-left:-38px}
+.texrow.key .lbl .txt{background:linear-gradient(transparent 58%,rgba(56,189,248,.35) 58%)}
+.texrow.result .lbl .txt{background:linear-gradient(transparent 58%,rgba(52,211,153,.45) 58%)}
+.texrow .tx .texmath{color:#111827;font-size:16.5px;padding:0;overflow-x:auto;overflow-y:hidden}
+.texrow .tx .texmath .katex-display{margin:.25em 0}
+.texrow .tx .texsrc{font-size:11.5px;color:#475569}
+.texrow .pycode{display:block;align-self:stretch;margin:0;padding:14px 16px 14px 0;background:none;color:#d4d4d4;
+  font-size:13px;line-height:1.62;white-space:pre;overflow-x:auto;overflow-wrap:normal;border-bottom:1px solid rgba(255,255,255,.04)}
+body.light .texrow .pycode{color:#d4d4d4}          /* el editor es oscuro en los dos temas */
+body.light .texrow .tx .texmath{color:#111827}
+.texrow .pycode .ln{display:inline-block;width:34px;margin-right:24px;text-align:right;color:#6e7681;user-select:none}
+.texrow .pycode .cm{color:#6a9955;font-style:normal}
+.texrow .pycode .kw{color:#c586c0}
+.texrow .pycode .st{color:#ce9178}
+.texrow .pycode .nm{color:#b5cea8}
+.texrow .pycode::-webkit-scrollbar,.texrow .tx .texmath::-webkit-scrollbar{height:6px}
+.texrow .pycode::-webkit-scrollbar-thumb{background:#424242;border-radius:3px}
+.texrow .tx .texmath::-webkit-scrollbar-thumb{background:rgba(37,99,235,.25);border-radius:3px}
+/* Celular y tablet: cada renglón apila la hoja y el editor */
+@media(max-width:980px){
+  .texgrid.texrows::before,.texgrid.texrows::after{display:none}
+  .texrow .tx,.texpart .pp,.texcolheads .hp{transform:none!important;transition:none!important}
+  .texcolheads{display:none}
+  .texpart,.texrow{grid-template-columns:1fr}
+  .texpart .pp,.texrow .tx{background:#fffdf7}
+  .texpart .pc{display:none}
+  .texpart .pp{padding-left:18px}
+  .texrow .tx{padding-left:44px}
+  .texrow .num{margin-left:-30px}
+  .texrow .pycode{background:#1e1e1e;font-size:12px}
+  .texrow .pycode .ln{width:26px;margin-right:14px}
+  .texcard{padding:14px 12px 18px}
+  .texrow .tx .texmath{font-size:clamp(11.5px,3.4vw,14px)}
+}
 .katex-display{margin:.15em 0!important}
 /* Modo foco: el stage se desvanece SIN salir del flujo (evita saltos de scroll) */
-body.eq-focus .stage{opacity:0;pointer-events:none;box-shadow:none}
-body.eq-focus #p1Latex .texgrid{min-height:76vh;align-content:start}
-body.eq-focus #p1Latex .texstep{padding:14px 16px;margin-bottom:10px;min-height:88px}
-body.eq-focus #p1Latex .texmath{font-size:16px;padding:8px 0}
-body.eq-focus #p1Latex .texexpl{font-size:13px;margin-top:8px}
-body.eq-focus #p1Latex .pycode{font-size:13px;line-height:1.65}
-body.eq-focus #p1Latex .texstep .n{font-size:11px}
+body.eq-focus .stage{opacity:0;transform:translateX(-40px) scale(.94);pointer-events:none;box-shadow:none}
 @media(max-width:980px){.texgrid{grid-template-columns:1fr}}
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
 .reveal.in{opacity:1;transform:none}
@@ -270,17 +393,22 @@ body.light .pycode{color:#1e293b}
 body.light .pyk{color:#86198f}
 body.light .pyn{color:#b45309}
 
-/* Más altura para el render cuando está visible (pasos 2 a 4) */
-body:not(.eq-focus) .visual{height:520px}
-body:not(.eq-focus) .chartbox{height:230px}
+/* Escenario visible (pasos 2 a 4): el modelo 3D arriba y la gráfica debajo, sin taparse.
+   Las alturas siguen el alto de la pantalla para que todo el escenario quepa. */
+body:not(.eq-focus) .visual{height:clamp(250px,42vh,420px)}
+body:not(.eq-focus) .chartbox{height:clamp(140px,22vh,220px)}
 @media(max-width:980px){
-  body:not(.eq-focus) .visual{height:400px}
-  body:not(.eq-focus) .chartbox{height:150px}
+  body:not(.eq-focus) .visual{height:clamp(220px,36vh,340px)}
+  body:not(.eq-focus) .chartbox{height:140px}
 }
 @media(max-width:560px){
-  body:not(.eq-focus) .visual{height:300px}
-  body:not(.eq-focus) .chartbox{height:110px}
+  body:not(.eq-focus) .visual{height:clamp(190px,27vh,230px)}
+  body:not(.eq-focus) .chartbox{height:150px}
+  .charthead button{white-space:nowrap;padding:3px 6px}
+  .zoomctl button{width:28px;height:28px;font-size:14px}
+  .zoomhint{display:none}
 }
+body.light .zoomctl button{background:rgba(255,255,255,.85)}
 </style>
 </head>
 <body>
@@ -328,6 +456,13 @@ body:not(.eq-focus) .chartbox{height:230px}
           <div class="row"><span class="tag l">LINEAL · θ</span><span class="v" id="hudLin">θ = 90.0°</span></div>
           <div class="row"><span class="v" id="hudTime">t = 0.00 s · Δθ = 0.0°</span></div>
         </div>
+        <div class="zoomctl">
+          <button id="zIn" title="Acercar (rueda del mouse o pellizco)" aria-label="Acercar">+</button>
+          <button id="zOut" title="Alejar" aria-label="Alejar">−</button>
+          <button id="zReset" title="Volver a la vista completa" aria-label="Vista completa">⟲</button>
+        </div>
+        <div class="zoomhint">arrastra: girar · doble clic: ir al péndulo · clic der./Shift: mover</div>
+      </div>
         <div class="chartbox" id="chartbox">
           <div class="charthead">
             <span class="ttl" id="chartTitle">Render · Taylor</span>
@@ -339,7 +474,6 @@ body:not(.eq-focus) .chartbox{height:230px}
             <div id="codePane"></div>
           </div>
         </div>
-      </div>
       <div class="controls">
         <div class="ctrlrow">
           <div class="ctrl"><label>θ₀ inicial <b id="vTheta">90.0°</b></label><input id="sTheta" type="range" min="1" max="170" step="0.5" value="90"></div>
@@ -384,126 +518,390 @@ body:not(.eq-focus) .chartbox{height:230px}
         <div class="eq">θ'' + (g/L)·sen θ = 0 → (sen θ ≈ θ) → θ'' + (g/L)·θ = 0 → θ(t) = θ₀·cos(ωt), ω = √(g/L)</div>
       </div>
 
-      <div class="card" id="p1Latex">
+      <div class="card texcard" id="p1Latex">
         <div class="texhead">
-          <h4 style="margin:0">La deducción en dos columnas · LaTeX ↔ Python</h4>
+          <h4 style="margin:0">El ejercicio a mano · LaTeX ↔ Python</h4>
           <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
         </div>
-        <p class="hint" style="margin-top:0">Los mismos siete pasos en los dos lenguajes. Las fórmulas se renderizan con KaTeX local; Python usa solo <span style="font-family:var(--mono)">math</span> y <span style="font-family:var(--mono)">numpy</span>.</p>
-        <div class="texgrid">
-          <section class="texcol">
-            <div class="texhead"><b>La ecuación en LaTeX</b><span class="tag2">punto1.tex</span></div>
-
-            <div class="texstep">
-              <div class="n">1 · La ecuación y los datos</div>
-              <div class="texmath" data-tex="\theta''(t)+\frac{g}{L}\,\theta(t)=0,\qquad \theta(0)=\theta_0,\quad \theta'(0)=0"></div>
-              <div class="texsrc">\theta''(t)+\frac{g}{L}\,\theta(t)=0,\qquad \theta(0)=\theta_0,\quad \theta'(0)=0</div>
-              <div class="texexpl">Ecuación lineal de segundo orden. El péndulo se suelta desde θ₀, sin velocidad inicial.</div>
+        <div class="texgrid texrows">
+          <div class="texcolheads"><div class="hp"><b>Taller · Péndulo simple</b><span>punto_a_mano.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">punto_a_mano.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texpart"><div class="pp"><b>Punto 1</b><span>Resolver la ecuación lineal con θ(0) = θ₀, θ&#x27;(0) = 0 y deducir T₀ = 2π√(L/g).</span></div><div class="pc"># ── PUNTO 1 ────────────────────────────</div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">01</span><span class="txt">Ecuación lineal y condiciones iniciales</span></div>
+              <div class="texmath" data-tex="\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0"></div>
+              <div class="texsrc">\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0</div>
             </div>
+            <pre class="pycode" data-py>import math
+import numpy as np
 
-            <div class="texstep">
-              <div class="n">2 · Ensayo exponencial</div>
-              <div class="texmath" data-tex="\theta=e^{rt}\;\Rightarrow\;\theta'=r e^{rt},\qquad \theta''=r^2 e^{rt}"></div>
-              <div class="texsrc">\theta=e^{rt}\;\Rightarrow\;\theta'=r e^{rt},\qquad \theta''=r^2 e^{rt}</div>
-              <div class="texexpl">Se prueba θ = eʳᵗ y se sustituye en la ecuación.</div>
+g, L = 9.81, 1.0                     # m/s², m
+# θ(0) = θ0  (en radianes)
+theta0 = math.radians(10)
+dtheta0 = 0.0                        # θ&#x27;(0) = 0</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">02</span><span class="txt">Se propone θ = eʳᵗ y se deriva</span></div>
+              <div class="texmath" data-tex="\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}"></div>
+              <div class="texsrc">\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}</div>
             </div>
-
-            <div class="texstep">
-              <div class="n">3 · Ecuación característica</div>
-              <div class="texmath" data-tex="r^2 e^{rt}+\frac{g}{L}e^{rt}=0\;\Rightarrow\;r^2+\frac{g}{L}=0\;\Rightarrow\;r=\pm i\sqrt{\frac{g}{L}}=\pm i\omega"></div>
-              <div class="texsrc">r^2 e^{rt}+\frac{g}{L}e^{rt}=0\;\Rightarrow\;r^2+\frac{g}{L}=0\;\Rightarrow\;r=\pm i\sqrt{\frac{g}{L}}=\pm i\omega</div>
-              <div class="texexpl">Se divide entre eʳᵗ (nunca es 0). Sale ω = √(g/L) = 3.1321 rad/s.</div>
+            <pre class="pycode" data-py># θ   = e^(rt)
+theta_e   = lambda r, t: math.exp(r*t)
+# θ&#x27;  = r·e^(rt)
+dtheta_e  = lambda r, t: r * math.exp(r*t)
+# θ&#x27;&#x27; = r²·e^(rt)
+d2theta_e = lambda r, t: r**2 * math.exp(r*t)</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">03</span><span class="txt">Se reemplaza y se factoriza eʳᵗ</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+r^{2}e^{rt}+\frac{g}{L}\,e^{rt}&amp;=0\\
+e^{rt}\left(r^{2}+\frac{g}{L}\right)&amp;=0\\
+e^{rt}\neq 0\;\Rightarrow\; r^{2}+\frac{g}{L}&amp;=0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+r^{2}e^{rt}+\frac{g}{L}\,e^{rt}&amp;=0\\
+e^{rt}\left(r^{2}+\frac{g}{L}\right)&amp;=0\\
+e^{rt}\neq 0\;\Rightarrow\; r^{2}+\frac{g}{L}&amp;=0
+\end{aligned}</div>
             </div>
-
-            <div class="texstep">
-              <div class="n">4 · Solución general</div>
-              <div class="texmath" data-tex="r=0\pm i\omega\;\Rightarrow\;\theta(t)=e^{0t}\left(C_1\cos\omega t+C_2\sin\omega t\right)=C_1\cos\omega t+C_2\sin\omega t"></div>
-              <div class="texsrc">r=0\pm i\omega\;\Rightarrow\;\theta(t)=e^{0t}\left(C_1\cos\omega t+C_2\sin\omega t\right)=C_1\cos\omega t+C_2\sin\omega t</div>
-              <div class="texexpl">Raíces complejas conjugadas: parte real a = 0, parte imaginaria b = ω.</div>
+            <pre class="pycode" data-py># r²·e^(rt) + (g/L)·e^(rt) = e^(rt)·(r² + g/L) = 0
+# e^(rt) ≠ 0  →  queda  r² + 0·r + g/L = 0
+caracteristica = [1, 0, g / L]</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">04</span><span class="txt">Se despeja r</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+r^{2}&amp;=-\frac{g}{L}\\
+\sqrt{r^{2}}&amp;=\pm\sqrt{-\frac{g}{L}}\\
+r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\\
+r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+r^{2}&amp;=-\frac{g}{L}\\
+\sqrt{r^{2}}&amp;=\pm\sqrt{-\frac{g}{L}}\\
+r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\\
+r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}
+\end{aligned}</div>
             </div>
-
-            <div class="texstep">
-              <div class="n">5 · Condiciones iniciales</div>
-              <div class="texmath" data-tex="\theta(0)=C_1=\theta_0,\qquad \theta'(0)=C_2\omega=0\;\Rightarrow\;C_2=0"></div>
-              <div class="texsrc">\theta(0)=C_1=\theta_0,\qquad \theta'(0)=C_2\omega=0\;\Rightarrow\;C_2=0</div>
-              <div class="texexpl">En t = 0 el coseno vale 1 y el seno vale 0: C₁ = θ₀ y C₂ = 0.</div>
+            <pre class="pycode" data-py>r1, r2 = np.roots(caracteristica)    # r = ±i·√(g/L)
+omega = math.sqrt(g / L)             # ω = √(g/L)
+print(f&quot;r = {abs(r1.real):.0f} ± {abs(r1.imag):.4f}i&quot;)
+# → r = 0 ± 3.1321i
+print(round(omega, 4))
+# → 3.1321</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">05</span><span class="txt">Raíces complejas → solución general</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
+\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos\omega t+C_2\sen\omega t\right)\\
+\theta(t)&amp;=C_1\cos\omega t+C_2\sen\omega t
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
+\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos\omega t+C_2\sen\omega t\right)\\
+\theta(t)&amp;=C_1\cos\omega t+C_2\sen\omega t
+\end{aligned}</div>
             </div>
+            <pre class="pycode" data-py>a, b = r1.real, abs(r1.imag)         # a = 0, b = ω
 
-            <div class="texstep key">
-              <div class="n">6 · Solución particular</div>
-              <div class="texmath" data-tex="\boxed{\theta(t)=\theta_0\cos(\omega t)}=\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\,t\right)"></div>
-              <div class="texsrc">\boxed{\theta(t)=\theta_0\cos(\omega t)}=\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\,t\right)</div>
-              <div class="texexpl">El movimiento es un coseno de amplitud θ₀ y frecuencia ω.</div>
+# e^(at)·(C1·cos bt + C2·sen bt)
+def theta_general(t, C1, C2):
+    return math.exp(a*t) * (C1*math.cos(b*t)
+                            + C2*math.sin(b*t))</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">06</span><span class="txt">Primera condición: θ(0) = θ₀</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta(0)&amp;=C_1\cos(\omega\cdot 0)+C_2\sen(\omega\cdot 0)=\theta_0\\
+&amp;=C_1(1)+C_2(0)=\theta_0\\
+&amp;\Rightarrow\;C_1=\theta_0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta(0)&amp;=C_1\cos(\omega\cdot 0)+C_2\sen(\omega\cdot 0)=\theta_0\\
+&amp;=C_1(1)+C_2(0)=\theta_0\\
+&amp;\Rightarrow\;C_1=\theta_0
+\end{aligned}</div>
             </div>
-
-            <div class="texstep result">
-              <div class="n">7 · Período</div>
-              <div class="texmath" data-tex="\omega T_0=2\pi\;\Rightarrow\;T_0=\frac{2\pi}{\omega}=2\pi\sqrt{\frac{L}{g}}=2\pi\sqrt{\frac{1}{9.81}}=2.0061\ \mathrm{s}"></div>
-              <div class="texsrc">\omega T_0=2\pi\;\Rightarrow\;T_0=\frac{2\pi}{\omega}=2\pi\sqrt{\frac{L}{g}}=2\pi\sqrt{\frac{1}{9.81}}=2.0061\ \mathrm{s}</div>
-              <div class="texexpl">T₀ no depende de θ₀: eso es justo lo que el péndulo real no cumple.</div>
+            <pre class="pycode" data-py># θ(0) = C1·cos(0) + C2·sen(0) = C1·1 + C2·0
+C1 = theta0                          # C1 = θ0</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">07</span><span class="txt">Se deriva θ(t)</span></div>
+              <div class="texmath" data-tex="\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)"></div>
+              <div class="texsrc">\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)</div>
             </div>
-          </section>
-
-          <section class="texcol">
-            <div class="texhead"><b>La misma deducción en Python</b><span class="tag2">punto1.py</span></div>
-
-            <div class="texstep">
-              <div class="n">1 · La ecuación y los datos</div>
-              <pre class="pycode"><span class="pyk">import</span> math
-<span class="pyk">import</span> numpy <span class="pyk">as</span> np
-
-g, L = <span class="pyn">9.81</span>, <span class="pyn">1.0</span>   <span class="pyc"># datos del enunciado</span>
-theta0 = <span class="pyn">0.5</span>      <span class="pyc"># θ(0), en radianes</span>
-omega0 = <span class="pyn">0.0</span>      <span class="pyc"># θ'(0): sin empujón</span></pre>
-              <div class="texexpl">Los parámetros y las condiciones iniciales del problema.</div>
+            <pre class="pycode" data-py>def dtheta_general(t, C1, C2):       # θ&#x27;(t)
+    return (-C1*omega*math.sin(omega*t)
+            + C2*omega*math.cos(omega*t))</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">08</span><span class="txt">Segunda condición: θ&#x27;(0) = 0</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta&#x27;(0)&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
+&amp;=-C_1\,\omega(0)+C_2\,\omega(1)=0\\
+C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta&#x27;(0)&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
+&amp;=-C_1\,\omega(0)+C_2\,\omega(1)=0\\
+C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
+\end{aligned}</div>
             </div>
-
-            <div class="texstep">
-              <div class="n">2 · Ensayo exponencial</div>
-              <pre class="pycode"><span class="pyc"># θ = e^(r·t) → θ' = r·e^(r·t), θ'' = r²·e^(r·t)</span>
-a, b, c = <span class="pyn">1.0</span>, <span class="pyn">0.0</span>, g / L   <span class="pyc"># r² + g/L = 0</span></pre>
-              <div class="texexpl">Los coeficientes del polinomio característico.</div>
+            <pre class="pycode" data-py># θ&#x27;(0) = −C1·ω·sen(0) + C2·ω·cos(0) = C2·ω = 0
+C2 = dtheta0 / omega                 # C2 = 0/ω = 0
+print(dtheta_general(0, C1, C2))
+# → 0.0</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">09</span><span class="txt">Se sustituye C₁ y C₂ · solución particular</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta(t)&amp;=\theta_0\cos(\omega t)+0\cdot\sen(\omega t)\\
+\theta(t)&amp;=\boxed{\theta_0\cos(\omega t)}=\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\;t\right)
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta(t)&amp;=\theta_0\cos(\omega t)+0\cdot\sen(\omega t)\\
+\theta(t)&amp;=\boxed{\theta_0\cos(\omega t)}=\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\;t\right)
+\end{aligned}</div>
             </div>
+            <pre class="pycode" data-py>def theta(t):                        # θ(t) = θ0·cos(ωt)
+    return theta0 * math.cos(omega * t)
 
-            <div class="texstep">
-              <div class="n">3 · Ecuación característica</div>
-              <pre class="pycode">omega = math.sqrt(g / L)    <span class="pyc"># r = ± i·ω</span>
-r = <span class="pyf">complex</span>(<span class="pyn">0</span>, omega)      <span class="pyc"># raíz compleja</span>
-<span class="pyf">print</span>(omega)               <span class="pyo"># 3.1321 rad/s</span></pre>
-              <div class="texexpl">np.roots([a, b, c]) da las mismas raíces ±iω.</div>
+print(math.isclose(theta(1.0), theta_general(1.0, C1, C2)))
+# → True</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">10</span><span class="txt">Período T₀</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\omega T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{g}/\sqrt{L}}=\frac{2\pi\sqrt{L}}{\sqrt{g}}\\
+T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}=2\pi\sqrt{\frac{1}{9.81}}=2.0061\ \text{s}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\omega T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{g}/\sqrt{L}}=\frac{2\pi\sqrt{L}}{\sqrt{g}}\\
+T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}=2\pi\sqrt{\frac{1}{9.81}}=2.0061\ \text{s}
+\end{aligned}</div>
             </div>
-
-            <div class="texstep">
-              <div class="n">4 · Solución general</div>
-              <pre class="pycode">t = np.linspace(<span class="pyn">0</span>, <span class="pyn">10</span>, <span class="pyn">1001</span>)
-theta_general = <span class="pyk">lambda</span> C1, C2: (
-    C1*np.cos(omega*t) + C2*np.sin(omega*t)
-)</pre>
-              <div class="texexpl">La forma C₁cos(ωt) + C₂sen(ωt), en el mismo vector de tiempos.</div>
+            <pre class="pycode" data-py>T0 = 2 * math.pi / omega             # ω·T0 = 2π
+print(f&quot;T0 = {T0:.4f} s&quot;)
+# → T0 = 2.0061 s
+print(math.isclose(theta(T0), theta0))
+# → True</pre>
+          </div>
+          <div class="texpart"><div class="pp"><b>Punto 2</b><span>Observar que T₀ no depende de la amplitud: el péndulo real sí depende.</span></div><div class="pc"># ── PUNTO 2 ────────────────────────────</div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">11</span><span class="txt">T₀ no depende de θ₀</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\text{lineal:}\quad &amp;T_0=2\pi\sqrt{\frac{L}{g}}\qquad(\theta_0\ \text{no aparece})\\
+\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\;\Rightarrow\;T&gt;T_0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\text{lineal:}\quad &amp;T_0=2\pi\sqrt{\frac{L}{g}}\qquad(\theta_0\ \text{no aparece})\\
+\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\;\Rightarrow\;T&gt;T_0
+\end{aligned}</div>
             </div>
-
-            <div class="texstep">
-              <div class="n">5 · Condiciones iniciales</div>
-              <pre class="pycode"><span class="pyc"># θ(0) = C1 = θ0 ; θ'(0) = C2·ω = 0</span>
-C1, C2 = theta0, omega0 / omega   <span class="pyc"># θ0, 0</span></pre>
-              <div class="texexpl">θ(0) fija C₁ = θ₀; θ'(0) = 0 fuerza C₂ = 0.</div>
+            <pre class="pycode" data-py># θ0 no entra en la fórmula
+for grados in (10, 45, 90, 150):
+    T = 2 * math.pi * math.sqrt(L / g)
+    print(f&quot;{grados:&gt;3}°  T0 = {T:.4f} s&quot;)
+# →  10°  T0 = 2.0061 s
+#    45°  T0 = 2.0061 s
+#    90°  T0 = 2.0061 s
+#   150°  T0 = 2.0061 s</pre>
+          </div>
+          <div class="texpart"><div class="pp"><b>Punto 3</b><span>Justificar sen θ ≈ θ con el polinomio de Taylor y estimar el error relativo en θ₀ = 10° y θ₀ = 90°.</span></div><div class="pc"># ── PUNTO 3 ────────────────────────────</div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">12</span><span class="txt">Polinomio de Taylor centrado en a</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+f(\theta)&amp;\approx f(a)+f&#x27;(a)(\theta-a)\\
+&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+f(\theta)&amp;\approx f(a)+f&#x27;(a)(\theta-a)\\
+&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}
+\end{aligned}</div>
             </div>
-
-            <div class="texstep key">
-              <div class="n">6 · Solución particular</div>
-              <pre class="pycode">theta = theta_general(C1, C2)
-<span class="pyc"># o, directamente:</span>
-theta = theta0 * np.cos(omega * t)</pre>
-              <div class="texexpl">Idéntico a <span style="font-family:var(--mono)">exacta_lineal()</span> en <span style="font-family:var(--mono)">pendulo.py</span>.</div>
+            <pre class="pycode" data-py># Σ f⁽ⁿ⁾(a)/n! · (θ − a)ⁿ
+def taylor(derivadas, th, centro=0.0):
+    return sum(d / math.factorial(n) * (th - centro)**n
+               for n, d in enumerate(derivadas))</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">13</span><span class="txt">Centro a = 0 (Maclaurin)</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+f(\theta)&amp;\approx\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}\\
+&amp;\quad+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}\\
+&amp;\qquad (0!=1,\;\;1!=1,\;\;\theta^{0}=1)\\
+f(\theta)&amp;\approx f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
+&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+f(\theta)&amp;\approx\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}\\
+&amp;\quad+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}\\
+&amp;\qquad (0!=1,\;\;1!=1,\;\;\theta^{0}=1)\\
+f(\theta)&amp;\approx f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
+&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}
+\end{aligned}</div>
             </div>
-
-            <div class="texstep result">
-              <div class="n">7 · Período</div>
-              <pre class="pycode">T0 = <span class="pyn">2</span>*math.pi / omega   <span class="pyc"># 2π√(L/g)</span>
-<span class="pyf">print</span>(<span class="pyn">f"T0 = {T0:.4f} s"</span>)  <span class="pyo"># T0 = 2.0061 s</span></pre>
-              <div class="texexpl">El número que imprime <span style="font-family:var(--mono)">pendulo.py</span> al correr.</div>
+            <pre class="pycode" data-py># a = 0: la vertical
+centro = 0.0
+print(math.factorial(0), math.factorial(1))
+# → 1 1</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">14</span><span class="txt">Derivadas de sen θ evaluadas en 0</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+f(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f(0)=\sen 0=0\\
+f&#x27;(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f&#x27;(0)=\cos 0=1\\
+f&#x27;&#x27;(\theta)&amp;=-\sen\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;(0)=-\sen 0=0\\
+f&#x27;&#x27;&#x27;(\theta)&amp;=-\cos\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;&#x27;(0)=-\cos 0=-1\\
+f^{(4)}(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f^{(4)}(0)=\sen 0=0\\
+f^{(5)}(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f^{(5)}(0)=\cos 0=1
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+f(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f(0)=\sen 0=0\\
+f&#x27;(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f&#x27;(0)=\cos 0=1\\
+f&#x27;&#x27;(\theta)&amp;=-\sen\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;(0)=-\sen 0=0\\
+f&#x27;&#x27;&#x27;(\theta)&amp;=-\cos\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;&#x27;(0)=-\cos 0=-1\\
+f^{(4)}(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f^{(4)}(0)=\sen 0=0\\
+f^{(5)}(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f^{(5)}(0)=\cos 0=1
+\end{aligned}</div>
             </div>
-          </section>
+            <pre class="pycode" data-py># sen → cos → −sen → −cos  (se repite cada 4)
+ciclo = [math.sin, math.cos,
+         lambda x: -math.sin(x), lambda x: -math.cos(x)]
+derivadas = [ciclo[n % 4](centro) for n in range(6)]
+print([d + 0.0 for d in derivadas])
+# → [0.0, 1.0, 0.0, -1.0, 0.0, 1.0]</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">15</span><span class="txt">Se reemplaza y se simplifican los factoriales</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\sen\theta&amp;\approx 0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}\\
+&amp;=\theta-\frac{\theta^{3}}{3!}+\frac{\theta^{5}}{5!}\\
+&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\sen\theta&amp;\approx 0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}\\
+&amp;=\theta-\frac{\theta^{3}}{3!}+\frac{\theta^{5}}{5!}\\
+&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>coef = [d / math.factorial(n)
+        for n, d in enumerate(derivadas)]
+print(math.factorial(3), math.factorial(5))
+# → 6 120
+print([round(c, 5) + 0.0 for c in coef])
+# → [0.0, 1.0, 0.0, -0.16667, 0.0, 0.00833]</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">16</span><span class="txt">Ángulo pequeño: se desprecian θ³/6 y θ⁵/120</span></div>
+              <div class="texmath" data-tex="\theta\ \text{pequeño (rad)}:\quad \frac{\theta^{3}}{6}\approx 0,\quad \frac{\theta^{5}}{120}\approx 0\;\;\Rightarrow\;\;\boxed{\sen\theta\approx\theta}"></div>
+              <div class="texsrc">\theta\ \text{pequeño (rad)}:\quad \frac{\theta^{3}}{6}\approx 0,\quad \frac{\theta^{5}}{120}\approx 0\;\;\Rightarrow\;\;\boxed{\sen\theta\approx\theta}</div>
+            </div>
+            <pre class="pycode" data-py># ángulo pequeño, en radianes
+x = math.radians(5)
+lineal = taylor(derivadas[:2], x)    # solo el término θ
+print(f&quot;sen = {math.sin(x):.5f}  lineal = {lineal:.5f}&quot;)
+# → sen = 0.08716  lineal = 0.08727</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">17</span><span class="txt">Error relativo porcentual</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+E_r&amp;=\frac{|\text{valor real}-\text{valor aprox.}|}{|\text{valor real}|}\times 100\%\\
+E_r&amp;=\frac{|\sen\theta_0-\theta_0|}{|\sen\theta_0|}\times 100\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+E_r&amp;=\frac{|\text{valor real}-\text{valor aprox.}|}{|\text{valor real}|}\times 100\%\\
+E_r&amp;=\frac{|\sen\theta_0-\theta_0|}{|\sen\theta_0|}\times 100\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>def error_relativo(grados):
+    # primero a radianes
+    th = math.radians(grados)
+    return abs(math.sin(th) - th) / abs(math.sin(th)) * 100</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">18</span><span class="txt">θ₀ = 10°</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta_0&amp;=10^{\circ}\cdot\frac{\pi}{180^{\circ}}\approx 0.17453\ \text{rad}\\
+\sen(10^{\circ})&amp;\approx 0.17365\\
+E_r&amp;=\frac{|0.17365-0.17453|}{0.17365}\times 100\%\\
+&amp;=\frac{0.00088}{0.17365}\times 100\%\approx 0.51\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta_0&amp;=10^{\circ}\cdot\frac{\pi}{180^{\circ}}\approx 0.17453\ \text{rad}\\
+\sen(10^{\circ})&amp;\approx 0.17365\\
+E_r&amp;=\frac{|0.17365-0.17453|}{0.17365}\times 100\%\\
+&amp;=\frac{0.00088}{0.17365}\times 100\%\approx 0.51\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>th = math.radians(10)
+print(f&quot;{th:.5f} rad   sen = {math.sin(th):.5f}&quot;)
+# → 0.17453 rad   sen = 0.17365
+print(f&quot;{error_relativo(10):.2f} %&quot;)
+# → 0.51 %</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">19</span><span class="txt">θ₀ = 90°</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta_0&amp;=90^{\circ}\cdot\frac{\pi}{180^{\circ}}=\frac{\pi}{2}\approx 1.57080\ \text{rad}\\
+\sen(90^{\circ})&amp;=1.00000\\
+E_r&amp;=\frac{|1-1.57080|}{1}\times 100\%\\
+&amp;=0.57080\times 100\%=57.08\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta_0&amp;=90^{\circ}\cdot\frac{\pi}{180^{\circ}}=\frac{\pi}{2}\approx 1.57080\ \text{rad}\\
+\sen(90^{\circ})&amp;=1.00000\\
+E_r&amp;=\frac{|1-1.57080|}{1}\times 100\%\\
+&amp;=0.57080\times 100\%=57.08\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>th = math.radians(90)
+print(f&quot;{th:.5f} rad   sen = {math.sin(th):.5f}&quot;)
+# → 1.57080 rad   sen = 1.00000
+print(f&quot;{error_relativo(90):.2f} %&quot;)
+# → 57.08 %</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">20</span><span class="txt">Resumen</span></div>
+              <div class="texmath" data-tex="\begin{array}{c|c|c|c|c}
+\theta_0 &amp; \theta_0\ (\text{rad}) &amp; \sen\theta_0 &amp; \theta_0\ (\text{aprox.}) &amp; E_r\\ \hline
+10^{\circ} &amp; 0.17453 &amp; 0.17365 &amp; 0.17453 &amp; 0.51\%\\
+90^{\circ} &amp; 1.57080 &amp; 1.00000 &amp; 1.57080 &amp; 57.08\%
+\end{array}"></div>
+              <div class="texsrc">\begin{array}{c|c|c|c|c}
+\theta_0 &amp; \theta_0\ (\text{rad}) &amp; \sen\theta_0 &amp; \theta_0\ (\text{aprox.}) &amp; E_r\\ \hline
+10^{\circ} &amp; 0.17453 &amp; 0.17365 &amp; 0.17453 &amp; 0.51\%\\
+90^{\circ} &amp; 1.57080 &amp; 1.00000 &amp; 1.57080 &amp; 57.08\%
+\end{array}</div>
+            </div>
+            <pre class="pycode" data-py>for grados in (10, 90):
+    th = math.radians(grados)
+    print(f&quot;{grados:&gt;3}°  {th:.5f}  {math.sin(th):.5f}  &quot;
+          f&quot;{th:.5f}  {error_relativo(grados):.2f} %&quot;)
+# →  10°  0.17453  0.17365  0.17453  0.51 %
+#    90°  1.57080  1.00000  1.57080  57.08 %</pre>
+          </div>
         </div>
       </div>
 
@@ -716,6 +1114,7 @@ T = T0/a                       <span class="pyo"># 2.3679 s</span></pre>
 </div>
 
 <script src="vendor/three.min.js"></script>
+<script src="vendor/pendulo_modelo.js"></script>
 <script>
 /* =========================================================================
    PROYECTO 5 · SIMULADOR DE EXPOSICIÓN
@@ -937,6 +1336,8 @@ function setView(view){
   const nb = NOTEBOOKS[S.modeChart] || NOTEBOOKS.taylor;
   $('chartTitle').textContent = view==='code' ? 'Cuaderno · '+nb.file : nb.title;
   $('chartbox').classList.toggle('code-mode',view==='code');
+  $('stage').classList.toggle('code-view',view==='code');
+  if(view!=='code') R3.needs=true;
   $('tabRender').classList.toggle('on',view==='render');
   $('tabCode').classList.toggle('on',view==='code');
   if(view==='code') renderNotebook();
@@ -998,55 +1399,55 @@ function taylorError(deg){
   return Math.abs(a-Math.sin(a))/Math.abs(Math.sin(a))*100;
 }
 
-/* ---------- 2. Three.js: escena 3D ---------- */
+/* ---------- 2. Three.js: escena 3D ----------
+   El aparato se modeló en Blender 5.2 (modelo3d/construir_modelo.py) y viene empaquetado
+   en vendor/pendulo_modelo.js. Cómo se mantiene liviano para cualquier equipo:
+   · El soporte trae la luz y las sombras HORNEADAS en una textura: se dibuja con
+     MeshBasicMaterial, sin calcular luces. Solo las piezas metálicas y las pesas usan
+     material PBR, con un mapa de entorno que se genera una sola vez al iniciar.
+   · Sin sombras en tiempo real: la sombra de cada pesa es un difuminado que se mueve con ella.
+   · Se dibuja solo cuando algo cambia, y si un equipo va lento baja la resolución sola.
+   Si el modelo no carga, se usa la escena simple de antes. */
 let renderer=null,scene=null,camera=null,rigs=[],trails=[],lastFrame=0;
-let cam={az:0.08,el:0.16,r:6.6}, dragging=false, lastPointer=null;
+// Cámara orbital: az/el giran, r acerca (6.6 = vista completa), tx/ty es el punto que se mira
+const CAM0={az:0.06,el:0.14,r:6.6,tx:0,ty:1.22};
+let cam=Object.assign({},CAM0), dragging=false, lastPointer=null;
+const R_MIN=1.5, R_MAX=10;
 const PIVOT_Y=2.65;
+const R3={pro:false, light:false, dials:[], ground:null, baseTop:-0.07, aniso:1,
+  visible:true, needs:true, lastKey:'', pr:1, prMax:1, ema:16.7, slow:0, lastT:0};
 
 function initThree(){
   if(typeof THREE==='undefined'){ $('threeHost').innerHTML='<p style="padding:20px;color:#94a3b8;font:12px monospace">Three.js no disponible: se muestra solo la vista 2D.</p>'; return; }
   const host=$('threeHost'), w=host.clientWidth||600, h=host.clientHeight||390;
+  const dpr=window.devicePixelRatio||1;
+  const weak=/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)||(navigator.hardwareConcurrency||8)<=4;
+  R3.prMax=Math.min(dpr,weak?1.5:2); R3.pr=R3.prMax;
+
   scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x070b13);
-  scene.fog=new THREE.FogExp2(0x070b13,0.055);
   camera=new THREE.PerspectiveCamera(42,w/h,0.1,100);
-  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  try{
+    // Antialias por hardware solo en pantallas de baja densidad: en las de alta ya sobra resolución
+    renderer=new THREE.WebGLRenderer({antialias:dpr<1.5,alpha:true,powerPreference:'high-performance'});
+  }catch(e){
+    $('threeHost').innerHTML='<p style="padding:20px;color:#94a3b8;font:12px monospace">Este equipo no tiene WebGL: se muestra solo la vista 2D.</p>';
+    renderer=null; return;
+  }
+  renderer.setClearColor(0x000000,0);           // fondo transparente: se ve el degradado del tema
+  renderer.setPixelRatio(R3.pr);
   renderer.setSize(w,h);
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.05;
+  R3.aniso=Math.min(4,renderer.capabilities.getMaxAnisotropy());
   host.appendChild(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0x9fb3c8,0.72));
-  const hemi=new THREE.HemisphereLight(0xdff1ff,0x101827,0.7); scene.add(hemi);
-  const key=new THREE.DirectionalLight(0xfff4dd,2.0); key.position.set(3,7,5); scene.add(key);
-  const rim=new THREE.DirectionalLight(0xd776ff,0.9); rim.position.set(-4,3,-3); scene.add(rim);
-
-  const table=new THREE.Mesh(new THREE.BoxGeometry(9,0.22,4.4),
-    new THREE.MeshStandardMaterial({color:0x101a2b,roughness:0.5,metalness:0.3}));
-  table.position.y=-0.12; scene.add(table);
-  const grid=new THREE.GridHelper(9,30,0x38bdf8,0x1e293b);
-  grid.position.y=0.01; grid.material.opacity=0.28; grid.material.transparent=true; scene.add(grid);
-
-  const steel=new THREE.MeshStandardMaterial({color:0x7b8ca3,metalness:0.85,roughness:0.25});
-  const dark=new THREE.MeshStandardMaterial({color:0x1e293b,metalness:0.6,roughness:0.45});
-
-  [-1.5,1.5].forEach(x=>{
-    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,PIVOT_Y,20),steel);
-    post.position.set(x,PIVOT_Y/2,-0.25); scene.add(post);
-    const foot=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.38,0.11,28),dark);
-    foot.position.set(x,0.06,-0.25); scene.add(foot);
-  });
-
-  rigs.push(buildRig(-1.5,0xf5b642,0xffd27a));
-  rigs.push(buildRig( 1.5,0xe879f9,0xf5b0ff));
-
-  // Arco transportador y zona verde del umbral (~23°) alrededor de la vertical (-y)
-  const ring=new THREE.Mesh(new THREE.RingGeometry(0.44,0.53,64,1,-Math.PI,Math.PI),
-    new THREE.MeshBasicMaterial({color:0x64748b,side:THREE.DoubleSide,transparent:true,opacity:0.55}));
-  ring.position.set(-1.5,PIVOT_Y,0.06); scene.add(ring);
-  const rz=rad(22.9);
-  const green=new THREE.Mesh(new THREE.RingGeometry(0.45,0.52,32,1,-Math.PI/2-rz,2*rz),
-    new THREE.MeshBasicMaterial({color:0x34d399,side:THREE.DoubleSide,transparent:true,opacity:0.85}));
-  green.position.set(-1.5,PIVOT_Y,0.07); scene.add(green);
+  R3.pro=!!(window.PENDULO_MODELO&&window.PENDULO_MODELO.mallas);
+  if(R3.pro){
+    try{ buildProScene(window.PENDULO_MODELO); }
+    catch(e){ console.warn('Modelo 3D:',e); R3.pro=false; scene=new THREE.Scene(); rigs=[]; R3.dials=[]; R3.ground=null; }
+  }
+  if(!R3.pro) buildSimpleScene();
 
   // Estelas
   rigs.forEach((rig,i)=>{
@@ -1057,55 +1458,350 @@ function initThree(){
     scene.add(line); trails.push({line,arr,N});
   });
 
+  bindCameraControls(renderer.domElement);
   const c=renderer.domElement;
-  c.addEventListener('pointerdown',e=>{ dragging=true; lastPointer={x:e.clientX,y:e.clientY}; c.setPointerCapture(e.pointerId); });
-  c.addEventListener('pointermove',e=>{
-    if(!dragging||!lastPointer) return;
-    cam.az=clamp(cam.az-(e.clientX-lastPointer.x)*0.006,-1.2,1.2);
-    cam.el=clamp(cam.el+(e.clientY-lastPointer.y)*0.005,-0.25,1.0);
-    lastPointer={x:e.clientX,y:e.clientY};
-  });
-  c.addEventListener('pointerup',()=>{dragging=false;lastPointer=null;});
-  c.addEventListener('wheel',e=>{ e.preventDefault(); cam.r=clamp(cam.r+e.deltaY*0.004,3.8,10); },{passive:false});
+  // Si el lienzo no está en pantalla no se dibuja
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(es=>{ R3.visible=es[0].isIntersecting; R3.needs=true; }).observe(host);
+  }
+  c.addEventListener('webglcontextlost',e=>{ e.preventDefault(); R3.visible=false; });
+  c.addEventListener('webglcontextrestored',()=>{ R3.visible=true; R3.needs=true; });
 }
 
-function buildRig(x,color,glow){
-  const g=new THREE.Group(); g.position.set(x,PIVOT_Y,0); scene.add(g);
-  const rodGeo=new THREE.CylinderGeometry(0.02,0.02,1,16); rodGeo.translate(0,-0.5,0);
-  const rod=new THREE.Mesh(rodGeo,new THREE.MeshStandardMaterial({color:0xcbd5e1,metalness:0.9,roughness:0.22}));
-  g.add(rod);
-  const bob=new THREE.Mesh(new THREE.SphereGeometry(0.19,32,24),
-    new THREE.MeshStandardMaterial({color:color,metalness:0.75,roughness:0.2,emissive:color,emissiveIntensity:0.12}));
-  g.add(bob);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.012,8,40),
-    new THREE.MeshBasicMaterial({color:glow}));
-  ring.rotation.x=Math.PI/2; g.add(ring);
-  const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.13,24).rotateX(Math.PI/2),
-    new THREE.MeshStandardMaterial({color:0x334155,metalness:0.8,roughness:0.3}));
-  g.add(hub);
-  return {x,group:g,rod,bob,ring};
+/* --- Controles de cámara: girar, acercar y mover la vista (mouse, táctil y botones) ---
+   · Arrastrar: girar.  · Rueda / pellizco / botones + −: acercar.
+   · Clic derecho, Shift+arrastrar o dos dedos: mover la vista.
+   · Doble clic sobre un péndulo: acercarse a él.  · ⟲: vista completa. */
+function bindCameraControls(c){
+  c.style.touchAction='pan-y';               // un dedo vertical sigue desplazando la página
+  const ptrs=new Map(); let pinch=null;
+  const pinchState=()=>{ const [a,b]=[...ptrs.values()];
+    return {d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2}; };
+  c.addEventListener('contextmenu',e=>e.preventDefault());
+  c.addEventListener('pointerdown',e=>{
+    c.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===2){ pinch=Object.assign(pinchState(),{r0:cam.r}); dragging=false; return; }
+    dragging=true; lastPointer={x:e.clientX,y:e.clientY,pan:e.button===2||e.shiftKey};
+  });
+  c.addEventListener('pointermove',e=>{
+    if(!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size>=2&&pinch){
+      const p=pinchState();
+      cam.r=clamp(pinch.r0*pinch.d/p.d,R_MIN,R_MAX);
+      panBy(p.mx-pinch.mx,p.my-pinch.my); pinch.mx=p.mx; pinch.my=p.my;
+      return;
+    }
+    if(!dragging||!lastPointer) return;
+    const dx=e.clientX-lastPointer.x, dy=e.clientY-lastPointer.y;
+    if(lastPointer.pan) panBy(dx,dy);
+    else{ cam.az=clamp(cam.az-dx*0.006,-1.3,1.3); cam.el=clamp(cam.el+dy*0.005,-0.2,1.1); }
+    lastPointer.x=e.clientX; lastPointer.y=e.clientY;
+  });
+  const up=e=>{
+    ptrs.delete(e.pointerId);
+    if(ptrs.size<2) pinch=null;
+    if(ptrs.size===1){ const [p]=ptrs.values(); dragging=true; lastPointer={x:p.x,y:p.y,pan:false}; }
+    if(ptrs.size===0){ dragging=false; lastPointer=null; }
+  };
+  c.addEventListener('pointerup',up); c.addEventListener('pointercancel',up);
+  c.addEventListener('wheel',e=>{ e.preventDefault(); cam.r=clamp(cam.r*Math.exp(e.deltaY*0.0012),R_MIN,R_MAX); },{passive:false});
+  // Doble clic: acercarse al péndulo más cercano (izquierda = real, derecha = lineal)
+  c.addEventListener('dblclick',e=>{
+    const rect=c.getBoundingClientRect(), left=(e.clientX-rect.left)<rect.width/2;
+    const rig=rigs[left?0:1]; if(!rig) return;
+    cam.tx=rig.x; cam.ty=PIVOT_Y-0.6*S.L; cam.r=3.2; cam.az=left?0.18:-0.18; cam.el=0.1;
+  });
+  const zoom=k=>{ cam.r=clamp(cam.r*k,R_MIN,R_MAX); };
+  const zi=$('zIn'), zo=$('zOut'), zr=$('zReset');
+  if(zi) zi.addEventListener('click',()=>zoom(0.78));
+  if(zo) zo.addEventListener('click',()=>zoom(1.28));
+  if(zr) zr.addEventListener('click',()=>{ Object.assign(cam,CAM0); });
+}
+// Mueve el punto que se mira, en el plano de la pantalla (los píxeles se pasan a metros)
+function panBy(dx,dy){
+  const host=$('threeHost'), h=Math.max(1,host.clientHeight);
+  const k=2*camR()*Math.tan(rad(21))/h;
+  if(cam.tx===CAM0.tx && cam.ty===CAM0.ty)            // parte del encuadre que se está viendo
+    cam.ty=Math.max(cam.ty,-0.34+camR()*Math.tan(rad(21))*0.9);
+  cam.tx=clamp(cam.tx-dx*k*Math.cos(cam.az),-3.4,3.4);
+  cam.ty=clamp(cam.ty+dy*k,-0.3,3.4);
+}
+// Distancia real de la cámara: la que hace entrar el aparato completo, por el factor de zoom
+function camR(){
+  const t21=Math.tan(rad(21)), a=camera?camera.aspect:1.5;
+  const dist=Math.max(1.95/t21,3.55/(t21*a));      // aparato (3.2 m × 6.2 m) con margen
+  return dist*(cam.r/6.6);
+}
+
+/* --- Decodificar la geometría comprimida del modelo --- */
+function b64(s,Type){
+  const bin=atob(s), u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return new Type(u.buffer);
+}
+function geomFrom(m){
+  const g=new THREE.BufferGeometry(), q=b64(m.pos,Uint16Array), p=new Float32Array(q.length);
+  for(let i=0;i<q.length;i++){ const a=i%3; p[i]=m.min[a]+q[i]/65535*m.rng[a]; }
+  g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(b64(m.nor,Int8Array),3,true));
+  if(m.uv) g.setAttribute('uv',new THREE.BufferAttribute(b64(m.uv,Uint16Array),2,true));
+  g.setIndex(new THREE.BufferAttribute(b64(m.idx,m.i32?Uint32Array:Uint16Array),1));
+  g.computeBoundingSphere();
+  return g;
+}
+function texFrom(uri,srgb){
+  const t=new THREE.TextureLoader().load(uri,()=>{R3.needs=true;});
+  if(srgb) t.encoding=THREE.sRGBEncoding;
+  t.anisotropy=R3.aniso;
+  return t;
+}
+
+/* --- Reflejos de estudio: 4 paneles de luz renderizados una vez a un mapa de entorno --- */
+function studioEnv(){
+  try{
+    const env=new THREE.Scene();
+    const room=new THREE.Mesh(new THREE.BoxGeometry(14,9,14),new THREE.MeshBasicMaterial({color:0x252d3c,side:THREE.BackSide}));
+    room.position.y=3; env.add(room);
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.MeshBasicMaterial({color:0x3b2a1b}));
+    floor.rotation.x=-Math.PI/2; floor.position.y=-1; env.add(floor);
+    const panel=(w,h,x,y,z,col,k)=>{
+      const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+        new THREE.MeshBasicMaterial({color:new THREE.Color(col).multiplyScalar(k),side:THREE.DoubleSide}));
+      m.position.set(x,y,z); m.lookAt(0,1.4,0); env.add(m);
+    };
+    panel(5,3, 4,6,5,     0xfff1dc,6);   // luz clave
+    panel(3,4,-6,3,3,     0xcfe2ff,2.4); // relleno frío
+    panel(9,1.2,0,7.6,0,  0xffffff,3.2); // cenital
+    panel(7,1.6,0,3,-6.5, 0xead8ff,2);   // contraluz
+    const pm=new THREE.PMREMGenerator(renderer);
+    const rt=pm.fromScene(env,0.03);
+    pm.dispose();
+    env.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+    return rt.texture;
+  }catch(e){ console.warn('Entorno 3D:',e); return null; }
+}
+
+/* --- Texturas dibujadas en canvas: transportadores y placas (nítidas y sin peso de archivo) --- */
+function canvasTex(w,h,draw){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const t=new THREE.CanvasTexture(c);
+  t.encoding=THREE.sRGBEncoding; t.anisotropy=R3.aniso;
+  t.userData={c,draw};
+  draw(c.getContext('2d'),w,h);
+  return t;
+}
+function redraw(t){ const c=t.userData.c; t.userData.draw(c.getContext('2d'),c.width,c.height); t.needsUpdate=true; }
+
+function drawDial(accent){
+  return (g,w,h)=>{
+    const L=R3.light, cx=w/2, cy=10, R=w/2-16, ink=L?'#1e293b':'#e2e8f0';
+    g.clearRect(0,0,w,h);
+    // Placa semicircular de acrílico ahumado
+    g.beginPath(); g.moveTo(cx-R-8,cy); g.arc(cx,cy,R+8,0,Math.PI,false); g.closePath();
+    const fill=g.createRadialGradient(cx,cy,R*0.1,cx,cy,R+8);
+    fill.addColorStop(0,L?'rgba(255,255,255,.30)':'rgba(15,23,42,.18)');
+    fill.addColorStop(1,L?'rgba(255,255,255,.72)':'rgba(15,23,42,.62)');
+    g.fillStyle=fill; g.fill();
+    g.lineWidth=3; g.strokeStyle=accent; g.globalAlpha=.75; g.stroke(); g.globalAlpha=1;
+    // Zona verde: |θ| < 22.9°, donde el error del período es menor al 1 %
+    const rz=rad(22.9);
+    g.beginPath(); g.arc(cx,cy,R*0.86,Math.PI/2-rz,Math.PI/2+rz,false);
+    g.lineWidth=R*0.07; g.strokeStyle=L?'rgba(4,120,87,.85)':'rgba(52,211,153,.9)'; g.stroke();
+    // Marcas cada 5°, largas cada 15°
+    g.strokeStyle=ink; g.fillStyle=ink;
+    for(let d=-90;d<=90;d+=5){
+      const a=Math.PI/2-rad(d), big=d%15===0, len=big?R*0.14:R*0.07;
+      g.lineWidth=big?6:3;
+      g.beginPath();
+      g.moveTo(cx+R*Math.cos(a),cy+R*Math.sin(a));
+      g.lineTo(cx+(R-len)*Math.cos(a),cy+(R-len)*Math.sin(a));
+      g.stroke();
+      if(d%30===0){
+        g.font='700 44px "IBM Plex Mono",ui-monospace,monospace'; g.textAlign='center'; g.textBaseline='middle';
+        g.fillText(Math.abs(d)+'°',cx+R*0.68*Math.cos(a),cy+R*0.68*Math.sin(a));
+      }
+    }
+    g.font='700 34px "IBM Plex Mono",ui-monospace,monospace'; g.textAlign='center';
+    g.fillStyle=L?'#047857':'#34d399';
+    g.fillText('< 1 % · ±22.9°',cx,cy+R*0.40);
+  };
+}
+function drawPlaque(title,eq,accent){
+  return (g,w,h)=>{
+    const grd=g.createLinearGradient(0,0,0,h);
+    grd.addColorStop(0,'#e9c784'); grd.addColorStop(.5,'#c99a4b'); grd.addColorStop(1,'#a87a35');
+    g.fillStyle=grd; g.fillRect(0,0,w,h);
+    // Cepillado fino del latón
+    g.globalAlpha=.08; g.fillStyle='#fff';
+    for(let y=0;y<h;y+=3) g.fillRect(0,y,w,1);
+    g.globalAlpha=1;
+    g.fillStyle=accent; g.fillRect(14,14,10,h-28);
+    g.strokeStyle='rgba(60,35,10,.55)'; g.lineWidth=3; g.strokeRect(5,5,w-10,h-10);
+    g.fillStyle='#3a240c'; g.textBaseline='middle'; g.textAlign='left';
+    g.font='700 34px "Space Grotesk",system-ui,sans-serif'; g.fillText(title,44,h*0.36);
+    g.font='500 26px "IBM Plex Mono",ui-monospace,monospace'; g.fillText(eq,44,h*0.72);
+  };
+}
+function blobTexture(){
+  return canvasTex(128,128,(g,w,h)=>{
+    const r=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);
+    r.addColorStop(0,'rgba(0,0,0,1)'); r.addColorStop(.45,'rgba(0,0,0,.55)'); r.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=r; g.fillRect(0,0,w,h);
+  });
+}
+
+function buildProScene(M){
+  const env=studioEnv();
+  const pbr=(o)=>{ const m=new THREE.MeshStandardMaterial(o); if(env){ m.envMap=env; } else { m.metalness=Math.min(m.metalness,0.35); } return m; };
+  const steel=pbr({color:0xc9ced6,metalness:1,roughness:0.32});
+  const brass=pbr({color:0xd9a441,metalness:1,roughness:0.2});
+  const violet=pbr({color:0xbf6ae8,metalness:0.7,roughness:0.24,emissive:0x2e0842,emissiveIntensity:0.5});
+
+  scene.add(new THREE.HemisphereLight(0xdbe7ff,0x2a1d12,0.35));
+  const key=new THREE.DirectionalLight(0xfff1e0,1.5); key.position.set(3,6,5); scene.add(key);
+
+  // Soporte con la luz horneada en Blender (una sola llamada de dibujo, sin cálculo de luces)
+  const T=M.texturas;
+  const atlas=texFrom(T.atlas,true);
+  const soporte=new THREE.Mesh(geomFrom(M.mallas.soporte),new THREE.MeshBasicMaterial({map:atlas,toneMapped:false}));
+  scene.add(soporte);
+  scene.add(new THREE.Mesh(geomFrom(M.mallas.metal),steel));
+
+  // Sombra de contacto del aparato sobre el piso (AO horneado)
+  R3.ground=new THREE.Mesh(geomFrom(M.mallas.piso),new THREE.MeshBasicMaterial({
+    color:0x000000,transparent:true,alphaMap:texFrom(T.sombra,false),depthWrite:false,opacity:0.9,toneMapped:false}));
+  R3.ground.renderOrder=-1;
+  scene.add(R3.ground);
+
+  const ejeG=geomFrom(M.mallas.eje), varG=geomFrom(M.mallas.varilla), pesaG=geomFrom(M.mallas.pesa);
+  const blobT=blobTexture();
+  const rigDefs=[
+    {x:M.rigsX[0],mat:brass, accent:'#f5b642',title:'PÉNDULO REAL',  eq:"θ'' + (g/L)·sen θ = 0"},
+    {x:M.rigsX[1],mat:violet,accent:'#d97ef5',title:'MODELO LINEAL',eq:"θ'' + (g/L)·θ = 0"}
+  ];
+  rigDefs.forEach(d=>{
+    // Transportador detrás del pivote
+    const dialT=canvasTex(1024,532,drawDial(d.accent)); R3.dials.push(dialT);
+    const dw=1.34, dh=dw*532/1024;
+    const dial=new THREE.Mesh(new THREE.PlaneGeometry(dw,dh),
+      new THREE.MeshBasicMaterial({map:dialT,transparent:true,depthWrite:false,toneMapped:false}));
+    dial.position.set(d.x,PIVOT_Y-dh/2+dh*10/532,-0.13); scene.add(dial);
+
+    // Placa de latón inclinada sobre la base
+    const ph=0.19, pw=0.92;
+    const plaqueT=canvasTex(512,106,drawPlaque(d.title,d.eq,d.accent));
+    const side=pbr({color:0xb8863b,metalness:1,roughness:0.35});
+    const plaque=new THREE.Mesh(new THREE.BoxGeometry(pw,ph,0.014),
+      [side,side,side,side,new THREE.MeshBasicMaterial({map:plaqueT,toneMapped:false}),side]);
+    const tilt=-1.0, up=new THREE.Vector3(0,Math.cos(tilt),Math.sin(tilt));
+    plaque.rotation.x=tilt;
+    plaque.position.set(d.x,R3.baseTop+0.008,0.5).addScaledVector(up,ph/2);
+    scene.add(plaque);
+
+    // Piezas móviles: eje (gira), varilla (gira y se estira con L) y pesa
+    const g=new THREE.Group(); g.position.set(d.x,PIVOT_Y,0); scene.add(g);
+    g.add(new THREE.Mesh(ejeG,steel));
+    const rod=new THREE.Mesh(varG,steel); g.add(rod);
+    const bob=new THREE.Mesh(pesaG,d.mat); g.add(bob);
+
+    // Sombra difusa de la pesa sobre la base
+    const blob=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+      new THREE.MeshBasicMaterial({map:blobT,transparent:true,depthWrite:false,opacity:0.5,toneMapped:false,
+        polygonOffset:true,polygonOffsetFactor:-2}));
+    blob.rotation.x=-Math.PI/2; blob.position.set(d.x,R3.baseTop+0.003,0); scene.add(blob);
+
+    rigs.push({x:d.x,group:g,rod,bob,blob});
+  });
+}
+
+/* --- Escena simple (respaldo si vendor/pendulo_modelo.js no está) --- */
+function buildSimpleScene(){
+  scene.add(new THREE.AmbientLight(0x9fb3c8,0.72));
+  scene.add(new THREE.HemisphereLight(0xdff1ff,0x101827,0.7));
+  const key=new THREE.DirectionalLight(0xfff4dd,2.0); key.position.set(3,7,5); scene.add(key);
+  const table=new THREE.Mesh(new THREE.BoxGeometry(9,0.22,4.4),
+    new THREE.MeshStandardMaterial({color:0x101a2b,roughness:0.5,metalness:0.3}));
+  table.position.y=-0.12; scene.add(table);
+  const steel=new THREE.MeshStandardMaterial({color:0x7b8ca3,metalness:0.85,roughness:0.25});
+  [-1.5,1.5].forEach((x,i)=>{
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,PIVOT_Y,20),steel);
+    post.position.set(x,PIVOT_Y/2,-0.25); scene.add(post);
+    const g=new THREE.Group(); g.position.set(x,PIVOT_Y,0); scene.add(g);
+    const rodGeo=new THREE.CylinderGeometry(0.02,0.02,1,16); rodGeo.translate(0,-0.5,0);
+    const rod=new THREE.Mesh(rodGeo,steel); g.add(rod);
+    const color=i?0xe879f9:0xf5b642;
+    const bob=new THREE.Mesh(new THREE.SphereGeometry(0.19,32,24),
+      new THREE.MeshStandardMaterial({color,metalness:0.75,roughness:0.2,emissive:color,emissiveIntensity:0.12}));
+    g.add(bob);
+    rigs.push({x,group:g,rod,bob,blob:null});
+  });
+}
+
+/* --- Cambio de tema: los transportadores se redibujan con tinta clara u oscura --- */
+function theme3D(light){
+  R3.light=light;
+  R3.dials.forEach(redraw);
+  if(R3.ground) R3.ground.material.opacity=light?0.55:0.9;
+  R3.needs=true;
+}
+
+/* --- Calidad adaptativa: si el equipo no alcanza ~40 fps, baja la resolución del lienzo --- */
+function adaptQuality(now){
+  const dtms=R3.lastT?now-R3.lastT:16.7; R3.lastT=now;
+  if(dtms>250) return;                       // pestaña en segundo plano: no cuenta
+  R3.ema=R3.ema*0.92+dtms*0.08;
+  R3.slow=R3.ema>25?R3.slow+dtms:Math.max(0,R3.slow-dtms*0.5);
+  if(R3.slow>1500 && R3.pr>0.75){
+    R3.pr=Math.max(0.75,R3.pr*0.8);
+    renderer.setPixelRatio(R3.pr);
+    R3.slow=0; R3.ema=16.7; R3.needs=true;
+  }
 }
 
 function updateThree(){
-  if(!renderer) return;
+  if(!renderer||!R3.visible) return;
   const host=$('threeHost');
   if(host.clientWidth<10 || host.clientHeight<10) return; // el stage está oculto durante la ecuación
   const w=host.clientWidth,h=host.clientHeight;
   if(renderer.domElement.width!==Math.floor(w*renderer.getPixelRatio()) ||
      renderer.domElement.height!==Math.floor(h*renderer.getPixelRatio())){
-    renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+    renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); R3.needs=true;
   }
+  // Solo se dibuja si algo cambió (péndulos, cámara, tamaño o tema)
+  const keyNow=S.thR.toFixed(5)+'|'+S.thL.toFixed(5)+'|'+S.L+'|'+cam.az.toFixed(4)+'|'+cam.el.toFixed(4)+'|'+
+    cam.r.toFixed(3)+'|'+cam.tx.toFixed(3)+'|'+cam.ty.toFixed(3)+'|'+w+'x'+h;
+  if(!R3.needs && keyNow===R3.lastKey) return;
+  R3.lastKey=keyNow; R3.needs=false;
+  if(S.running) adaptQuality(performance.now());
+
   rigs[0].group.rotation.z=S.thR;
   rigs[1].group.rotation.z=S.thL;
-  rigs.forEach(r=>{ r.rod.scale.y=S.L; r.bob.position.y=-S.L; r.ring.position.y=-S.L; });
-  const tx=0, ty=1.5, tz=0;
-  camera.position.set(tx+cam.r*Math.sin(cam.az)*Math.cos(cam.el),
-                      ty+cam.r*Math.sin(cam.el),
-                      tz+cam.r*Math.cos(cam.az)*Math.cos(cam.el));
+  rigs.forEach((r,i)=>{
+    r.rod.scale.y=S.L; r.bob.position.y=-S.L;
+    if(r.blob){
+      const th=i?S.thL:S.thR, bx=r.x+S.L*Math.sin(th), by=PIVOT_Y-S.L*Math.cos(th);
+      const alto=Math.max(0,by-0.19-R3.baseTop);
+      r.blob.position.x=bx;
+      r.blob.scale.setScalar(0.42+alto*0.32);
+      r.blob.material.opacity=clamp(0.62*(1-alto/2.6),0,0.62)*(R3.light?0.7:1);
+    }
+  });
+  // Con cam.r = 6.6 el aparato completo entra en cualquier pantalla; el zoom parte de ahí
+  const r=camR();
+  // Si sobra alto, el aparato baja: arriba quedan libres el HUD y la pesa en ángulos grandes
+  let ty=cam.ty;
+  if(cam.tx===CAM0.tx && cam.ty===CAM0.ty) ty=Math.max(cam.ty,-0.34+r*Math.tan(rad(21))*0.9);
+  const tx=cam.tx, tz=0;
+  camera.position.set(tx+r*Math.sin(cam.az)*Math.cos(cam.el),
+                      ty+r*Math.sin(cam.el),
+                      tz+r*Math.cos(cam.az)*Math.cos(cam.el));
   camera.lookAt(tx,ty,tz);
   trails.forEach((tr,i)=>{
     const th=i?S.thL:S.thR;
     const x=rigs[i].x+S.L*Math.sin(th), y=PIVOT_Y-S.L*Math.cos(th);
+    if(S.t===0){ for(let k=0;k<tr.N;k++){ tr.arr[k*3]=x; tr.arr[k*3+1]=y; tr.arr[k*3+2]=0; } } // reinicio: la estela nace en la pesa
     for(let k=tr.N-1;k>0;k--){ tr.arr[k*3]=tr.arr[(k-1)*3]; tr.arr[k*3+1]=tr.arr[(k-1)*3+1]; tr.arr[k*3+2]=tr.arr[(k-1)*3+2]; }
     tr.arr[0]=x; tr.arr[1]=y; tr.arr[2]=0;
     tr.line.geometry.attributes.position.needsUpdate=true;
@@ -1345,7 +2041,9 @@ function frame(now){
 
 /* ---------- 5. Scroll: revelado, progreso y cambio de modo ---------- */
 function initScroll(){
-  const rev=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');rev.unobserve(e.target);}}),{threshold:.12});
+  // Aparece cuando su borde entra al 88 % de la pantalla (no por porcentaje del bloque:
+  // la sección del ejercicio a mano es tan alta que en celular nunca llegaría al 12 %)
+  const rev=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');rev.unobserve(e.target);}}),{threshold:0,rootMargin:'0px 0px -12% 0px'});
   document.querySelectorAll('.reveal').forEach(el=>rev.observe(el));
 
   const steps=[...document.querySelectorAll('.step')];
@@ -1380,14 +2078,57 @@ function initEquationFocus(){
       updateThree();
     }
   };
-  // Histéresis: entra con mucha visibilidad, sale con poca. Evita el parpadeo
-  // justo en el borde entre el punto 1 y el punto 2.
+  // El 3D se oculta mientras cualquier parte de la tarjeta esté en pantalla: en escritorio la
+  // tarjeta ocupa también la columna del 3D, así que nunca se pisan. La tarjeta no cambia de
+  // tamaño al entrar o salir, por eso no hace falta histéresis.
   const io=new IntersectionObserver(es=>{
-    const r=es[0].intersectionRatio;
-    if(!focused && r>0.28) setFocus(true);
-    else if(focused && r<0.08) setFocus(false);
-  },{threshold:[0,0.08,0.28,0.5,1],rootMargin:'-8% 0px -8% 0px'});
+    setFocus(es[es.length-1].isIntersecting);
+  },{threshold:[0]});
   io.observe(card);
+}
+
+/* ---------- La tarjeta del ejercicio a mano usa todo el ancho de la página ----------
+   En escritorio la página tiene dos columnas (3D | texto). Esta tarjeta se extiende sobre
+   las dos para quedar centrada y con espacio para LaTeX y Python lado a lado. */
+function layoutTexCard(){
+  const card=$('p1Latex'), lay=document.querySelector('.layout');
+  if(!card||!lay) return;
+  card.style.marginLeft=''; card.style.width=''; card.style.setProperty('--texL','0px');
+  if(window.innerWidth<=980) return;               // una sola columna: ya ocupa todo el ancho
+  // Más ancha que el contenido de la página: hasta 1480 px, centrada en la ventana
+  const vw=document.documentElement.clientWidth;      // sin la barra de desplazamiento
+  const W=Math.min(vw-48,1480), left=(vw-W)/2;
+  const cl=card.getBoundingClientRect().left, off=Math.round(cl-left);
+  card.style.marginLeft=(-off)+'px';
+  card.style.width=Math.round(W)+'px';
+  // Fuera del modo lectura solo se ve la parte de la columna de texto; al entrar, el
+  // clip-path se abre hacia la izquierda mientras el 3D se desvanece (ver .texcard en el CSS)
+  card.style.setProperty('--texL',off+'px');
+}
+/* La hoja de papel sale de detrás del editor cuando la sección ya entró bien en pantalla
+   (su borde de arriba pasó el 72 % del alto) y se vuelve a esconder cuando, al seguir
+   bajando, su final sube por encima del 38 %: así se ve la animación antes de cambiar de
+   sección. Subiendo de nuevo, vuelve a salir. */
+function initPaperSlide(){
+  const card=$('p1Latex');
+  if(!card) return;
+  let pendiente=false;
+  const actualizar=()=>{
+    pendiente=false;
+    const r=card.getBoundingClientRect(), vh=window.innerHeight;
+    card.classList.toggle('paper-in', r.top<vh*0.72 && r.bottom>vh*0.38);
+  };
+  const pedir=()=>{ if(!pendiente){ pendiente=true; requestAnimationFrame(actualizar); } };
+  window.addEventListener('scroll',pedir,{passive:true});
+  window.addEventListener('resize',pedir);
+  actualizar();
+}
+
+function initTexCardLayout(){
+  initPaperSlide();
+  layoutTexCard();
+  window.addEventListener('resize',layoutTexCard);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutTexCard);
 }
 
 /* ---------- 6. Controles ---------- */
@@ -1414,9 +2155,19 @@ function bindControls(){
 /* ---------- Fórmulas LaTeX con KaTeX (secciones 1 y 2) ---------- */
 let taxRendered = false;
 function renderTaxLatex(){
+  // Python de cada renglón: resaltado tipo editor y números de línea seguidos en todo el
+  // archivo, como si fuera un solo punto_a_mano.py abierto en el editor
+  let ln=0;
+  document.querySelectorAll('pre.pycode[data-py]').forEach(pre=>{
+    if(pre.dataset.hl) return;
+    pre.innerHTML=pre.textContent.split('\n')
+      .map(l=>'<span class="ln">'+(++ln)+'</span>'+hlLine(l)).join('\n');
+    pre.dataset.hl='1';
+  });
   if(taxRendered || typeof katex === 'undefined') return;
   document.querySelectorAll('.texmath[data-tex]').forEach(el=>{
-    katex.render(el.dataset.tex, el, {displayMode:true, throwOnError:false, strict:false});
+    katex.render(el.dataset.tex, el, {displayMode:true, throwOnError:false, strict:false,
+      macros:{'\\sen':'\\operatorname{sen}'}});
   });
   taxRendered = true;
 }
@@ -1431,6 +2182,7 @@ window.toggleTaxSource = function(btn){
 /* ---------- Tema claro / oscuro ---------- */
 function applyTheme(light){
   document.body.classList.toggle('light',light);
+  theme3D(light);
   const b=$('btnTheme');
   if(b){
     b.textContent = light ? '☾ Modo oscuro' : '☀ Modo claro';
@@ -1452,6 +2204,7 @@ initTheme();
 initScroll();
 initEquationFocus();
 renderTaxLatex();
+initTexCardLayout();
 paintTable();
 updateUI();
 setMode('manual');

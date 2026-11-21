@@ -18,3 +18,8 @@ tablero-avanzado/frontend/node_modules/
 
 *.pyc
 .ipynb_checkpoints/
+
+# Modelo 3D: intermedios que regenera modelo3d/construir_modelo.py (ya van comprimidos en vendor/pendulo_modelo.js)
+modelo3d/*.blend1
+modelo3d/salida/*
+!modelo3d/salida/vista_previa.png
