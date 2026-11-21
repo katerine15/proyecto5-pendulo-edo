@@ -41,6 +41,9 @@ Genera las gráficas, la tabla y la animación en la carpeta "figuras/".
 # LIBRERÍAS
 # ----------------------------------------------------------------------------
 import os                         # para crear la carpeta de resultados
+import sys                        # para configurar la salida de texto
+if hasattr(sys.stdout, "reconfigure"):  # la consola de Windows viene en cp1252 y no imprime θ
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 import numpy as np                # cálculo numérico: arreglos, sen, cos, raíz, π
 import matplotlib
 matplotlib.use("Agg")            # "Agg" guarda las gráficas como archivos sin abrir ventanas

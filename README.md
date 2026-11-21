@@ -16,12 +16,13 @@ El tablero web más grande quedó como extra en [`tablero-avanzado/`](tablero-av
 | Archivo | Qué es |
 |---|---|
 | `simulador_3d.html` | **Simulador principal** para la exposición: vista 3D y 2D, casos del enunciado, tabla de períodos, 7 gráficas y el ejercicio a mano paso a paso |
+| `simulador_3d_exposicion.html` | Guion visual de exposición en 4 voces: la deducción del Punto 1 y la verificación del Punto 2 aparecen en dos columnas, **LaTeX renderizado** a la izquierda y **Python** (`math`/`numpy`) a la derecha. Incluye modo claro/oscuro y oculta el 3D mientras se lee la ecuación |
 | `GUION_EXPOSICION.md` | Quién habla, cuánto tiempo, qué se muestra y preguntas probables |
 | `requirements.txt` | Librerías de Python que necesita el proyecto |
 | `pendulo.py` | Programa principal: modelo, RK4, solución exacta, medición del período, gráficas y animación |
 | `pendulo_colab.ipynb` | El mismo código en cuaderno, para correrlo en Google Colab (sirve desde el navegador del celular) |
 | `simulador.html` | Simulador ligero en un solo archivo (2D), por si el equipo no soporta 3D |
-| `vendor/` | Librerías del simulador 3D guardadas localmente (Three.js r128, Tailwind compilado, Font Awesome) para que funcione sin internet |
+| `vendor/` | Librerías guardadas localmente (Three.js r128, Tailwind compilado, Font Awesome y KaTeX para las fórmulas del simulador de exposición) para que funcione sin internet |
 | `tailwind.config.js`, `tailwind.input.css` | Solo para recompilar `vendor/tailwind.css` si se cambian clases del simulador 3D |
 | `figuras/` | Resultados de `pendulo.py`: 3 gráficas PNG, la animación GIF y la tabla CSV |
 | `tests/` | Pruebas automáticas de `pendulo.py` (T₀, los 4 períodos, verificación, umbral y Taylor) |

@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- KaTeX local: fórmulas LaTeX renderizadas sin internet -->
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<script src="vendor/katex/katex.min.js"></script>
 <style>
 :root{
   --bg:#080d16; --bg2:#0d1420; --panel:rgba(16,24,38,.86); --line:rgba(148,163,184,.18);
@@ -30,6 +33,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   border:1px solid var(--line);transition:.25s;white-space:nowrap}
 .navchips a:hover,.navchips a.active{color:var(--ink);border-color:var(--accent);background:rgba(56,189,248,.12)}
 .timer{font-family:var(--mono);font-size:11px;color:var(--muted);border-left:1px solid var(--line);padding-left:14px;white-space:nowrap}
+.themebtn{font-size:10.5px;padding:5px 9px;white-space:nowrap}
 .hero{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:72px 24px 42px}
 .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
 .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,68px);line-height:1.02;letter-spacing:-.035em;margin:0;max-width:16ch}
@@ -49,7 +53,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:30px;align-items:start}
 .stagewrap{position:relative;align-self:stretch;min-height:0}
 .stage{position:sticky;top:70px;border:1px solid var(--line);border-radius:20px;background:var(--panel);
-  backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);transition:opacity .3s ease,box-shadow .3s ease}
 .stagehead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .stagehead .mode{font-family:var(--mono);font-size:11px;color:var(--accent)}
 .stagehead .dots{display:flex;gap:5px}
@@ -148,6 +152,37 @@ td.hi{color:var(--real);font-weight:600}
 .checks span{font-size:11px;padding:5px 9px;border-radius:99px;border:1px solid var(--line);color:#a9b8c9}
 .srccite{font-family:var(--mono);font-size:11.5px;color:var(--muted);background:rgba(148,163,184,.08);
   border:1px solid var(--line);border-radius:8px;padding:6px 9px;display:inline-block;margin-top:8px}
+/* Deducción y verificación en dos columnas: LaTeX | Python */
+.texgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.texcol{min-width:0}
+.texhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.texhead b{font-family:var(--display);font-size:12px;color:#fff}
+.texhead .tag2{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.texstep{padding:9px 11px;margin-bottom:7px;border-left:2px solid rgba(148,163,184,.22);
+  border-radius:0 10px 10px 0;background:rgba(8,13,22,.55)}
+.texstep.key{border-left-color:var(--accent);background:rgba(56,189,248,.07)}
+.texstep.result{border-left-color:var(--ok);background:rgba(52,211,153,.07)}
+.texstep .n{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.texmath{color:#dceeff;font-size:12px;overflow-x:auto;padding:3px 0}
+.texstep.key .texmath{color:#bfe9ff}
+.texstep.result .texmath{color:#b7f7d9}
+.texsrc{display:none;font-family:var(--mono);font-size:10.5px;color:#7f8fa3;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
+.texgrid.show-src .texsrc{display:block}
+.texgrid.show-src .texmath{display:none}
+.texexpl{font-size:11.5px;color:#9fb0c4;margin-top:5px;line-height:1.45}
+.pycode{margin:0;font-family:var(--mono);font-size:11px;line-height:1.5;color:#d6e0ed;white-space:pre-wrap;overflow-wrap:anywhere}
+.pyc{color:#64748b}.pyk{color:#c084fc}.pyn{color:#fbbf24}.pyf{color:var(--accent)}.pyo{color:var(--ok)}
+.texbtn{font-size:10.5px;padding:4px 9px}
+.katex-display{margin:.15em 0!important}
+/* Modo foco: el stage se desvanece SIN salir del flujo (evita saltos de scroll) */
+body.eq-focus .stage{opacity:0;pointer-events:none;box-shadow:none}
+body.eq-focus #p1Latex .texgrid{min-height:76vh;align-content:start}
+body.eq-focus #p1Latex .texstep{padding:14px 16px;margin-bottom:10px;min-height:88px}
+body.eq-focus #p1Latex .texmath{font-size:16px;padding:8px 0}
+body.eq-focus #p1Latex .texexpl{font-size:13px;margin-top:8px}
+body.eq-focus #p1Latex .pycode{font-size:13px;line-height:1.65}
+body.eq-focus #p1Latex .texstep .n{font-size:11px}
+@media(max-width:980px){.texgrid{grid-template-columns:1fr}}
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
 .reveal.in{opacity:1;transform:none}
 @media(max-width:980px){
@@ -169,6 +204,83 @@ td.hi{color:var(--real);font-weight:600}
   .controls{padding:8px 10px 10px}
   .timer{display:none}
 }
+
+/* ---------- MODO CLARO ---------- */
+body.light{color-scheme:light;
+  --bg:#f4f7fb; --bg2:#e8eef6; --panel:rgba(255,255,255,.94); --line:rgba(15,23,42,.14);
+  --ink:#0f172a; --muted:#475569; --real:#b45309; --lin:#a21caf; --ok:#047857;
+  --accent:#0369a1; --warn:#be123c}
+body.light::before{background:radial-gradient(900px 500px at 12% -10%,rgba(3,105,161,.09),transparent 60%),
+                            radial-gradient(800px 500px at 92% 10%,rgba(162,28,175,.07),transparent 60%)}
+body.light .topbar{background:rgba(255,255,255,.92)}
+body.light .navchips a:hover,body.light .navchips a.active{background:rgba(3,105,161,.10)}
+body.light .hero .lead{color:#475569}
+body.light .rule{background:rgba(180,83,9,.08);border-color:rgba(180,83,9,.3);color:#92400e}
+body.light .spk:hover{border-color:rgba(3,105,161,.45)}
+body.light .stage{box-shadow:0 20px 50px rgba(15,23,42,.16)}
+body.light .stagehead .dots i{background:#cbd5e1}
+body.light .visual{background:radial-gradient(circle at 50% 30%,#e8f1fb,#dbe7f5 72%)}
+body.light .chartbox{background:rgba(255,255,255,.96)}
+body.light .charthead{background:rgba(241,245,249,.96)}
+body.light .charthead button.on{background:rgba(3,105,161,.14);color:#075985}
+body.light .charthead button.on.code{background:rgba(4,120,87,.14);color:#065f46}
+body.light #codePane{background:#f8fafc}
+body.light .nbhead{background:#e8eef6;border-bottom-color:rgba(15,23,42,.12)}
+body.light .nbname{color:#0f172a}
+body.light .nbbadge{color:#047857;border-color:rgba(4,120,87,.35)}
+body.light .cl:hover{background:rgba(3,105,161,.06)}
+body.light .ln{color:#94a3b8}
+body.light .cs{color:#1e293b}
+body.light .cm{color:#15803d}
+body.light .kw{color:#a21caf}
+body.light .st{color:#b45309}
+body.light .nm{color:#0369a1}
+body.light .fn{color:#0e7490}
+body.light .hud .r{color:#b45309;background:rgba(180,83,9,.10);border-color:rgba(180,83,9,.3)}
+body.light .hud .l{color:#a21caf;background:rgba(162,28,175,.10);border-color:rgba(162,28,175,.3)}
+body.light .hud .v{color:#1e293b}
+body.light button{color:#1e293b;background:rgba(255,255,255,.9)}
+body.light button:hover{color:#0f172a}
+body.light button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+body.light button.case.on{background:rgba(180,83,9,.13);border-color:var(--real);color:#7c2d12}
+body.light .who{color:#fff}
+body.light .leadp{color:#334155}
+body.light .card h4{color:var(--ink)}
+body.light .cite{background:rgba(180,83,9,.07);color:#78350f}
+body.light .quote{color:#92400e}
+body.light ol.steps li{color:#1e293b}
+body.light ol.steps li b{color:#0f172a}
+body.light .eq{color:#075985;background:rgba(3,105,161,.07);border-color:rgba(3,105,161,.22)}
+body.light .mini{background:rgba(241,245,249,.9)}
+body.light .mini .v{color:var(--ink)}
+body.light td{color:#1e293b}
+body.light .verdict{background:rgba(4,120,87,.07);border-color:rgba(4,120,87,.32)}
+body.light .verdict p{color:#065f46}
+body.light .checks span{color:#475569}
+body.light .srccite{background:rgba(15,23,42,.04)}
+body.light .texhead b{color:var(--ink)}
+body.light .texstep{background:rgba(241,245,249,.9);border-left-color:rgba(15,23,42,.18)}
+body.light .texstep.key{background:rgba(3,105,161,.06);border-left-color:var(--accent)}
+body.light .texstep.result{background:rgba(4,120,87,.06);border-left-color:var(--ok)}
+body.light .texmath{color:#0f172a}
+body.light .texstep.key .texmath{color:#075985}
+body.light .texstep.result .texmath{color:#065f46}
+body.light .texsrc,body.light .texexpl{color:#475569}
+body.light .pycode{color:#1e293b}
+body.light .pyk{color:#86198f}
+body.light .pyn{color:#b45309}
+
+/* Más altura para el render cuando está visible (pasos 2 a 4) */
+body:not(.eq-focus) .visual{height:520px}
+body:not(.eq-focus) .chartbox{height:230px}
+@media(max-width:980px){
+  body:not(.eq-focus) .visual{height:400px}
+  body:not(.eq-focus) .chartbox{height:150px}
+}
+@media(max-width:560px){
+  body:not(.eq-focus) .visual{height:300px}
+  body:not(.eq-focus) .chartbox{height:110px}
+}
 </style>
 </head>
 <body>
@@ -183,6 +295,7 @@ td.hi{color:var(--real);font-weight:600}
     <a href="#p3">3 · Período</a>
     <a href="#p4">4 · 3D y cierre</a>
   </nav>
+  <button type="button" id="btnTheme" class="themebtn" aria-pressed="false" title="Alternar modo claro">☀ Modo claro</button>
   <div class="timer">15 min + 5 preguntas</div>
 </header>
 
@@ -271,6 +384,129 @@ td.hi{color:var(--real);font-weight:600}
         <div class="eq">θ'' + (g/L)·sen θ = 0 → (sen θ ≈ θ) → θ'' + (g/L)·θ = 0 → θ(t) = θ₀·cos(ωt), ω = √(g/L)</div>
       </div>
 
+      <div class="card" id="p1Latex">
+        <div class="texhead">
+          <h4 style="margin:0">La deducción en dos columnas · LaTeX ↔ Python</h4>
+          <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+        </div>
+        <p class="hint" style="margin-top:0">Los mismos siete pasos en los dos lenguajes. Las fórmulas se renderizan con KaTeX local; Python usa solo <span style="font-family:var(--mono)">math</span> y <span style="font-family:var(--mono)">numpy</span>.</p>
+        <div class="texgrid">
+          <section class="texcol">
+            <div class="texhead"><b>La ecuación en LaTeX</b><span class="tag2">punto1.tex</span></div>
+
+            <div class="texstep">
+              <div class="n">1 · La ecuación y los datos</div>
+              <div class="texmath" data-tex="\theta''(t)+\frac{g}{L}\,\theta(t)=0,\qquad \theta(0)=\theta_0,\quad \theta'(0)=0"></div>
+              <div class="texsrc">\theta''(t)+\frac{g}{L}\,\theta(t)=0,\qquad \theta(0)=\theta_0,\quad \theta'(0)=0</div>
+              <div class="texexpl">Ecuación lineal de segundo orden. El péndulo se suelta desde θ₀, sin velocidad inicial.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">2 · Ensayo exponencial</div>
+              <div class="texmath" data-tex="\theta=e^{rt}\;\Rightarrow\;\theta'=r e^{rt},\qquad \theta''=r^2 e^{rt}"></div>
+              <div class="texsrc">\theta=e^{rt}\;\Rightarrow\;\theta'=r e^{rt},\qquad \theta''=r^2 e^{rt}</div>
+              <div class="texexpl">Se prueba θ = eʳᵗ y se sustituye en la ecuación.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">3 · Ecuación característica</div>
+              <div class="texmath" data-tex="r^2 e^{rt}+\frac{g}{L}e^{rt}=0\;\Rightarrow\;r^2+\frac{g}{L}=0\;\Rightarrow\;r=\pm i\sqrt{\frac{g}{L}}=\pm i\omega"></div>
+              <div class="texsrc">r^2 e^{rt}+\frac{g}{L}e^{rt}=0\;\Rightarrow\;r^2+\frac{g}{L}=0\;\Rightarrow\;r=\pm i\sqrt{\frac{g}{L}}=\pm i\omega</div>
+              <div class="texexpl">Se divide entre eʳᵗ (nunca es 0). Sale ω = √(g/L) = 3.1321 rad/s.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">4 · Solución general</div>
+              <div class="texmath" data-tex="r=0\pm i\omega\;\Rightarrow\;\theta(t)=e^{0t}\left(C_1\cos\omega t+C_2\sin\omega t\right)=C_1\cos\omega t+C_2\sin\omega t"></div>
+              <div class="texsrc">r=0\pm i\omega\;\Rightarrow\;\theta(t)=e^{0t}\left(C_1\cos\omega t+C_2\sin\omega t\right)=C_1\cos\omega t+C_2\sin\omega t</div>
+              <div class="texexpl">Raíces complejas conjugadas: parte real a = 0, parte imaginaria b = ω.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">5 · Condiciones iniciales</div>
+              <div class="texmath" data-tex="\theta(0)=C_1=\theta_0,\qquad \theta'(0)=C_2\omega=0\;\Rightarrow\;C_2=0"></div>
+              <div class="texsrc">\theta(0)=C_1=\theta_0,\qquad \theta'(0)=C_2\omega=0\;\Rightarrow\;C_2=0</div>
+              <div class="texexpl">En t = 0 el coseno vale 1 y el seno vale 0: C₁ = θ₀ y C₂ = 0.</div>
+            </div>
+
+            <div class="texstep key">
+              <div class="n">6 · Solución particular</div>
+              <div class="texmath" data-tex="\boxed{\theta(t)=\theta_0\cos(\omega t)}=\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\,t\right)"></div>
+              <div class="texsrc">\boxed{\theta(t)=\theta_0\cos(\omega t)}=\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\,t\right)</div>
+              <div class="texexpl">El movimiento es un coseno de amplitud θ₀ y frecuencia ω.</div>
+            </div>
+
+            <div class="texstep result">
+              <div class="n">7 · Período</div>
+              <div class="texmath" data-tex="\omega T_0=2\pi\;\Rightarrow\;T_0=\frac{2\pi}{\omega}=2\pi\sqrt{\frac{L}{g}}=2\pi\sqrt{\frac{1}{9.81}}=2.0061\ \mathrm{s}"></div>
+              <div class="texsrc">\omega T_0=2\pi\;\Rightarrow\;T_0=\frac{2\pi}{\omega}=2\pi\sqrt{\frac{L}{g}}=2\pi\sqrt{\frac{1}{9.81}}=2.0061\ \mathrm{s}</div>
+              <div class="texexpl">T₀ no depende de θ₀: eso es justo lo que el péndulo real no cumple.</div>
+            </div>
+          </section>
+
+          <section class="texcol">
+            <div class="texhead"><b>La misma deducción en Python</b><span class="tag2">punto1.py</span></div>
+
+            <div class="texstep">
+              <div class="n">1 · La ecuación y los datos</div>
+              <pre class="pycode"><span class="pyk">import</span> math
+<span class="pyk">import</span> numpy <span class="pyk">as</span> np
+
+g, L = <span class="pyn">9.81</span>, <span class="pyn">1.0</span>   <span class="pyc"># datos del enunciado</span>
+theta0 = <span class="pyn">0.5</span>      <span class="pyc"># θ(0), en radianes</span>
+omega0 = <span class="pyn">0.0</span>      <span class="pyc"># θ'(0): sin empujón</span></pre>
+              <div class="texexpl">Los parámetros y las condiciones iniciales del problema.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">2 · Ensayo exponencial</div>
+              <pre class="pycode"><span class="pyc"># θ = e^(r·t) → θ' = r·e^(r·t), θ'' = r²·e^(r·t)</span>
+a, b, c = <span class="pyn">1.0</span>, <span class="pyn">0.0</span>, g / L   <span class="pyc"># r² + g/L = 0</span></pre>
+              <div class="texexpl">Los coeficientes del polinomio característico.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">3 · Ecuación característica</div>
+              <pre class="pycode">omega = math.sqrt(g / L)    <span class="pyc"># r = ± i·ω</span>
+r = <span class="pyf">complex</span>(<span class="pyn">0</span>, omega)      <span class="pyc"># raíz compleja</span>
+<span class="pyf">print</span>(omega)               <span class="pyo"># 3.1321 rad/s</span></pre>
+              <div class="texexpl">np.roots([a, b, c]) da las mismas raíces ±iω.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">4 · Solución general</div>
+              <pre class="pycode">t = np.linspace(<span class="pyn">0</span>, <span class="pyn">10</span>, <span class="pyn">1001</span>)
+theta_general = <span class="pyk">lambda</span> C1, C2: (
+    C1*np.cos(omega*t) + C2*np.sin(omega*t)
+)</pre>
+              <div class="texexpl">La forma C₁cos(ωt) + C₂sen(ωt), en el mismo vector de tiempos.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">5 · Condiciones iniciales</div>
+              <pre class="pycode"><span class="pyc"># θ(0) = C1 = θ0 ; θ'(0) = C2·ω = 0</span>
+C1, C2 = theta0, omega0 / omega   <span class="pyc"># θ0, 0</span></pre>
+              <div class="texexpl">θ(0) fija C₁ = θ₀; θ'(0) = 0 fuerza C₂ = 0.</div>
+            </div>
+
+            <div class="texstep key">
+              <div class="n">6 · Solución particular</div>
+              <pre class="pycode">theta = theta_general(C1, C2)
+<span class="pyc"># o, directamente:</span>
+theta = theta0 * np.cos(omega * t)</pre>
+              <div class="texexpl">Idéntico a <span style="font-family:var(--mono)">exacta_lineal()</span> en <span style="font-family:var(--mono)">pendulo.py</span>.</div>
+            </div>
+
+            <div class="texstep result">
+              <div class="n">7 · Período</div>
+              <pre class="pycode">T0 = <span class="pyn">2</span>*math.pi / omega   <span class="pyc"># 2π√(L/g)</span>
+<span class="pyf">print</span>(<span class="pyn">f"T0 = {T0:.4f} s"</span>)  <span class="pyo"># T0 = 2.0061 s</span></pre>
+              <div class="texexpl">El número que imprime <span style="font-family:var(--mono)">pendulo.py</span> al correr.</div>
+            </div>
+          </section>
+        </div>
+      </div>
+
       <div class="card">
         <h4>En vivo · Taylor y error de la aproximación</h4>
         <div class="grid2">
@@ -303,6 +539,90 @@ td.hi{color:var(--real);font-weight:600}
           <li>Reduce el paso h diez veces: si la curva cambia, el paso era demasiado grande. Aquí se usan subpasos de ≈ 1.7 ms para animar y 0.5 ms para medir períodos.</li>
         </ol>
         <p class="hint">Errores típicos que hay que evitar (§8, líneas 119–124): paso h demasiado grande, grados mezclados con radianes, unidades inconsistentes y comparar curvas en vectores de tiempo distintos.</p>
+      </div>
+
+      <div class="card">
+        <div class="texhead">
+          <h4 style="margin:0">La verificación en dos columnas · LaTeX ↔ Python</h4>
+          <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+        </div>
+        <p class="hint" style="margin-top:0">Del sistema de primer orden a la comparación con las dos soluciones exactas: mismos pasos en notación matemática y en código.</p>
+        <div class="texgrid">
+          <section class="texcol">
+            <div class="texhead"><b>Las fórmulas de la verificación</b><span class="tag2">verificacion.tex</span></div>
+
+            <div class="texstep">
+              <div class="n">1 · De 2º orden a 1er orden</div>
+              <div class="texmath" data-tex="u=\theta,\quad v=\dot\theta\;\Rightarrow\;\dot u=v,\quad \dot v=-\frac{g}{L}\sin u\ \text{(real)},\;\;-\frac{g}{L}u\ \text{(lineal)}"></div>
+              <div class="texsrc">u=\theta,\quad v=\dot\theta\;\Rightarrow\;\dot u=v,\quad \dot v=-\frac{g}{L}\sin u\ \text{(real)},\;\;-\frac{g}{L}u\ \text{(lineal)}</div>
+              <div class="texexpl">Los dos vectores de derivadas que recibe el integrador.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">2 · Paso RK4</div>
+              <div class="texmath" data-tex="\mathbf y_{n+1}=\mathbf y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)"></div>
+              <div class="texsrc">\mathbf y_{n+1}=\mathbf y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)</div>
+              <div class="texexpl">Las pendientes de la mitad pesan el doble; el error por paso es O(h⁵).</div>
+            </div>
+
+            <div class="texstep key">
+              <div class="n">3 · Verificación del modelo lineal</div>
+              <div class="texmath" data-tex="\max_t\left|\theta_{\mathrm{RK4}}(t)-\theta_0\cos(\omega t)\right|\approx 10^{-11}\ \mathrm{rad}"></div>
+              <div class="texsrc">\max_t\left|\theta_{\mathrm{RK4}}(t)-\theta_0\cos(\omega t)\right|\approx 10^{-11}\ \mathrm{rad}</div>
+              <div class="texexpl">RK4 reproduce la deducción del Punto 1: las curvas se confunden.</div>
+            </div>
+
+            <div class="texstep result">
+              <div class="n">4 · Verificación del modelo real</div>
+              <div class="texmath" data-tex="T=\frac{2T_0}{\pi}\,K\!\left(\sin\frac{\theta_0}{2}\right)=2.3679\ \mathrm{s}\quad(\theta_0=90^\circ)"></div>
+              <div class="texsrc">T=\frac{2T_0}{\pi}\,K\!\left(\sin\frac{\theta_0}{2}\right)=2.3679\ \mathrm{s}\quad(\theta_0=90^\circ)</div>
+              <div class="texexpl">K es la integral elíptica completa; coincide con el período medido por RK4.</div>
+            </div>
+          </section>
+
+          <section class="texcol">
+            <div class="texhead"><b>El mismo código, comentado</b><span class="tag2">verificacion.py</span></div>
+
+            <div class="texstep">
+              <div class="n">1 · De 2º orden a 1er orden</div>
+              <pre class="pycode"><span class="pyk">def</span> <span class="pyf">F_real</span>(t, y):   <span class="pyc"># y = [u, v]</span>
+    u, v = y
+    <span class="pyk">return</span> np.array([v, -(g/L)*np.sin(u)])
+
+<span class="pyk">def</span> <span class="pyf">F_lineal</span>(t, y):
+    u, v = y
+    <span class="pyk">return</span> np.array([v, -(g/L)*u])</pre>
+              <div class="texexpl">Dos sistemas de primer orden: real y lineal.</div>
+            </div>
+
+            <div class="texstep">
+              <div class="n">2 · Paso RK4</div>
+              <pre class="pycode">k1 = F(t,      y)
+k2 = F(t+h/2,  y+h/2*k1)
+k3 = F(t+h/2,  y+h/2*k2)
+k4 = F(t+h,    y+h*k3)
+y  = y + h/6*(k1 + 2*k2 + 2*k3 + k4)</pre>
+              <div class="texexpl">El esqueleto de la guía, igual que en <span style="font-family:var(--mono)">pendulo.py</span>.</div>
+            </div>
+
+            <div class="texstep key">
+              <div class="n">3 · Verificación del modelo lineal</div>
+              <pre class="pycode">exacta = theta0*np.cos(w*t)      <span class="pyc"># deducida a mano</span>
+err = np.max(np.abs(Y[:,0]-exacta))
+<span class="pyf">print</span>(err)                     <span class="pyo"># 1.88e-11 rad</span></pre>
+              <div class="texexpl">Mismo vector de tiempos para las dos curvas (error típico evitado).</div>
+            </div>
+
+            <div class="texstep result">
+              <div class="n">4 · Verificación del modelo real</div>
+              <pre class="pycode">a, b = <span class="pyn">1.0</span>, np.cos(theta0/<span class="pyn">2</span>)   <span class="pyc"># AGM</span>
+<span class="pyk">while</span> abs(a-b) &gt; <span class="pyn">1e-15</span>:
+  a, b = (a+b)/<span class="pyn">2</span>, np.sqrt(a*b)
+T = T0/a                       <span class="pyo"># 2.3679 s</span></pre>
+              <div class="texexpl">Media aritmético-geométrica: la integral elíptica sin librerías extra.</div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <div class="card">
@@ -768,7 +1088,9 @@ function buildRig(x,color,glow){
 
 function updateThree(){
   if(!renderer) return;
-  const w=$('threeHost').clientWidth,h=$('threeHost').clientHeight;
+  const host=$('threeHost');
+  if(host.clientWidth<10 || host.clientHeight<10) return; // el stage está oculto durante la ecuación
+  const w=host.clientWidth,h=host.clientHeight;
   if(renderer.domElement.width!==Math.floor(w*renderer.getPixelRatio()) ||
      renderer.domElement.height!==Math.floor(h*renderer.getPixelRatio())){
     renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
@@ -864,11 +1186,19 @@ function xy(x,y,xmin,xmax,ymin,ymax,dim){
   return [PAD.l+(x-xmin)/(xmax-xmin)*(dim.w-PAD.l-PAD.r),
           dim.h-PAD.b-(y-ymin)/(ymax-ymin)*(dim.h-PAD.t-PAD.b)];
 }
+function chartPalette(){
+  return document.body.classList.contains('light')
+    ? {real:'#b45309',lin:'#a21caf',blue:'#0369a1',ok:'#047857',warn:'#be123c',white:'#334155',
+       grid:'rgba(15,23,42,.16)',tick:'#64748b',legend:'#1e293b'}
+    : {real:'#f5b642',lin:'#e879f9',blue:'#38bdf8',ok:'#34d399',warn:'#fb7185',white:'#ffffff',
+       grid:'rgba(148,163,184,.22)',tick:'#94a3b8',legend:'#cbd5e1'};
+}
 function axes(dim,xmin,xmax,ymin,ymax,xlabel,ylabel){
-  cx.strokeStyle='rgba(148,163,184,.22)';cx.lineWidth=1;
+  const K=chartPalette();
+  cx.strokeStyle=K.grid;cx.lineWidth=1;
   cx.beginPath();
   cx.moveTo(PAD.l,PAD.t);cx.lineTo(PAD.l,dim.h-PAD.b);cx.lineTo(dim.w-PAD.r,dim.h-PAD.b);cx.stroke();
-  cx.fillStyle='#94a3b8';cx.font='10px "IBM Plex Mono",monospace';
+  cx.fillStyle=K.tick;cx.font='10px "IBM Plex Mono",monospace';
   cx.fillText(ylabel,PAD.l-2,PAD.t-6);
   cx.textAlign='right';cx.fillText(xlabel,dim.w-PAD.r,dim.h-8);cx.textAlign='left';
   for(let i=0;i<=4;i++){
@@ -886,58 +1216,59 @@ function curve(pts,key,xkey,xmin,xmax,ymin,ymax,dim,color,dash,prog){
   cx.stroke();cx.restore();
 }
 function legend(items,dim){
+  const K=chartPalette();
   let x=PAD.l+4,y=PAD.t+2;
   cx.font='9px "IBM Plex Mono",monospace';
   items.forEach(it=>{
     cx.strokeStyle=it.c;cx.lineWidth=2;cx.setLineDash(it.d||[]);
     cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+12,y);cx.stroke();cx.setLineDash([]);
-    cx.fillStyle='#cbd5e1';cx.fillText(it.t,x+16,y+3);
+    cx.fillStyle=K.legend;cx.fillText(it.t,x+16,y+3);
     x+=cx.measureText(it.t).width+30;
     if(x>dim.w-90){x=PAD.l+4;y+=12;}
   });
 }
 
 function renderChart(prog){
-  const dim=sizeCanvas(), mode=S.modeChart;
+  const dim=sizeCanvas(), mode=S.modeChart, K=chartPalette();
   cx.clearRect(0,0,dim.w,dim.h);
   if(mode==='verify'){
     const c=CACHE.verify, ymax=c.ymax, ymin=-ymax;
     axes(dim,0,c.xmax,ymin,ymax,'t [s]','θ [°]');
-    curve(c.pts,'rkReal','t',0,c.xmax,ymin,ymax,dim,'#f5b642',[],prog);
-    curve(c.pts,'exReal','t',0,c.xmax,ymin,ymax,dim,'#ffffff',[4,3],prog);
-    curve(c.pts,'rkLin','t',0,c.xmax,ymin,ymax,dim,'#e879f9',[],prog);
-    curve(c.pts,'anLin','t',0,c.xmax,ymin,ymax,dim,'#38bdf8',[4,3],prog);
-    legend([{t:'RK4 real',c:'#f5b642'},{t:'exacta',c:'#fff',d:[4,3]},{t:'RK4 lineal',c:'#e879f9'},{t:'θ₀cosωt',c:'#38bdf8',d:[4,3]}],dim);
+    curve(c.pts,'rkReal','t',0,c.xmax,ymin,ymax,dim,K.real,[],prog);
+    curve(c.pts,'exReal','t',0,c.xmax,ymin,ymax,dim,K.white,[4,3],prog);
+    curve(c.pts,'rkLin','t',0,c.xmax,ymin,ymax,dim,K.lin,[],prog);
+    curve(c.pts,'anLin','t',0,c.xmax,ymin,ymax,dim,K.blue,[4,3],prog);
+    legend([{t:'RK4 real',c:K.real},{t:'exacta',c:K.white,d:[4,3]},{t:'RK4 lineal',c:K.lin},{t:'θ₀cosωt',c:K.blue,d:[4,3]}],dim);
   }else if(mode==='cases'){
     const c=CACHE.cases;
     axes(dim,0,c.xmax,-160,160,'t [s]','θ [°]');
-    const cols=['#38bdf8','#34d399','#f5b642','#fb7185'];
+    const cols=[K.blue,K.ok,K.real,K.warn];
     c.out.forEach((o,i)=>{ curve(o.pts,'real','t',0,c.xmax,-160,160,dim,cols[i],[],prog);
                            curve(o.pts,'lin','t',0,c.xmax,-160,160,dim,cols[i],[3,4],prog); });
     legend(c.out.map((o,i)=>({t:o.d+'°',c:cols[i]})),dim);
   }else if(mode==='error'){
     const c=CACHE.error;
     axes(dim,1,170,0,50,'θ₀ [°]','error [%]');
-    cx.strokeStyle='rgba(251,113,133,.8)';cx.setLineDash([5,4]);cx.beginPath();
+    cx.strokeStyle=K.warn;cx.globalAlpha=.8;cx.setLineDash([5,4]);cx.beginPath();
     const a=xy(1,1,1,170,0,50,dim),b=xy(170,1,1,170,0,50,dim);
-    cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);cx.stroke();cx.setLineDash([]);
-    curve(c.pts,'err','d',1,170,0,50,dim,'#38bdf8',[],prog);
+    cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;
+    curve(c.pts,'err','d',1,170,0,50,dim,K.blue,[],prog);
     const q=xy(c.thr,1,1,170,0,50,dim);
-    cx.fillStyle='#34d399';cx.beginPath();cx.arc(q[0],q[1],4,0,7);cx.fill();
-    cx.fillStyle='#34d399';cx.font='10px "IBM Plex Mono",monospace';
+    cx.fillStyle=K.ok;cx.beginPath();cx.arc(q[0],q[1],4,0,7);cx.fill();
+    cx.font='10px "IBM Plex Mono",monospace';
     cx.fillText('1% → '+c.thr.toFixed(1)+'°',q[0]+7,q[1]-6);
   }else{ // taylor
     const c=CACHE.taylor;
     axes(dim,0,1.6,0,1.7,'θ [rad]','valor');
-    curve(c.pts,'lin','a',0,1.6,0,1.7,dim,'#e879f9',[4,3],prog);
-    curve(c.pts,'cubic','a',0,1.6,0,1.7,dim,'#34d399',[2,3],prog);
-    curve(c.pts,'sin','a',0,1.6,0,1.7,dim,'#f5b642',[],prog);
-    [[10,'#38bdf8'],[90,'#fb7185']].forEach(([d,col])=>{
+    curve(c.pts,'lin','a',0,1.6,0,1.7,dim,K.lin,[4,3],prog);
+    curve(c.pts,'cubic','a',0,1.6,0,1.7,dim,K.ok,[2,3],prog);
+    curve(c.pts,'sin','a',0,1.6,0,1.7,dim,K.real,[],prog);
+    [[10,K.blue],[90,K.warn]].forEach(([d,col])=>{
       const p=xy(rad(d),0,0,1.6,0,1.7,dim);
       cx.strokeStyle=col;cx.globalAlpha=.5;cx.beginPath();cx.moveTo(p[0],PAD.t);cx.lineTo(p[0],dim.h-PAD.b);cx.stroke();cx.globalAlpha=1;
       cx.fillStyle=col;cx.fillText(d+'°',p[0]+3,dim.h-PAD.b-6);
     });
-    legend([{t:'sen θ',c:'#f5b642'},{t:'θ',c:'#e879f9',d:[4,3]},{t:'θ−θ³/6',c:'#34d399',d:[2,3]}],dim);
+    legend([{t:'sen θ',c:K.real},{t:'θ',c:K.lin,d:[4,3]},{t:'θ−θ³/6',c:K.ok,d:[2,3]}],dim);
   }
 }
 
@@ -1033,6 +1364,32 @@ function initScroll(){
   window.addEventListener('resize',()=>{S.chartDirty=true;});
 }
 
+/* ---------- Foco de la ecuación: oculta el 3D y lo devuelve en el paso 2 ---------- */
+function initEquationFocus(){
+  const card=$('p1Latex');
+  if(!card) return;
+  let focused=false;
+  const setFocus=on=>{
+    if(on===focused) return;
+    focused=on;
+    document.body.classList.toggle('eq-focus',on);
+    S.chartDirty=true;
+    if(!on){
+      // Al llegar al paso 2 reaparece el stage y la animación arranca de cero
+      resetSim();
+      updateThree();
+    }
+  };
+  // Histéresis: entra con mucha visibilidad, sale con poca. Evita el parpadeo
+  // justo en el borde entre el punto 1 y el punto 2.
+  const io=new IntersectionObserver(es=>{
+    const r=es[0].intersectionRatio;
+    if(!focused && r>0.28) setFocus(true);
+    else if(focused && r<0.08) setFocus(false);
+  },{threshold:[0,0.08,0.28,0.5,1],rootMargin:'-8% 0px -8% 0px'});
+  io.observe(card);
+}
+
 /* ---------- 6. Controles ---------- */
 function bindControls(){
   $('sTheta').addEventListener('input',e=>{S.theta0=+e.target.value; document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',+b.dataset.case===Math.round(S.theta0))); resetSim();});
@@ -1047,12 +1404,54 @@ function bindControls(){
   }));
   $('tabRender').addEventListener('click',()=>setView('render'));
   $('tabCode').addEventListener('click',()=>setView('code'));
+  $('btnTheme').addEventListener('click',()=>{
+    const light=!document.body.classList.contains('light');
+    applyTheme(light);
+    try{ localStorage.setItem('p5-theme',light?'light':'dark'); }catch(e){}
+  });
+}
+
+/* ---------- Fórmulas LaTeX con KaTeX (secciones 1 y 2) ---------- */
+let taxRendered = false;
+function renderTaxLatex(){
+  if(taxRendered || typeof katex === 'undefined') return;
+  document.querySelectorAll('.texmath[data-tex]').forEach(el=>{
+    katex.render(el.dataset.tex, el, {displayMode:true, throwOnError:false, strict:false});
+  });
+  taxRendered = true;
+}
+window.toggleTaxSource = function(btn){
+  const grid = btn.closest('.card').querySelector('.texgrid');
+  if(!grid) return;
+  const showing = grid.classList.toggle('show-src');
+  btn.textContent = showing ? 'Ver fórmulas' : 'Ver código LaTeX';
+  btn.setAttribute('aria-pressed', showing ? 'true' : 'false');
+};
+
+/* ---------- Tema claro / oscuro ---------- */
+function applyTheme(light){
+  document.body.classList.toggle('light',light);
+  const b=$('btnTheme');
+  if(b){
+    b.textContent = light ? '☾ Modo oscuro' : '☀ Modo claro';
+    b.setAttribute('aria-pressed', light ? 'true' : 'false');
+  }
+  S.chartDirty=true;
+}
+function initTheme(){
+  let saved=null;
+  try{ saved=localStorage.getItem('p5-theme'); }catch(e){}
+  const light = saved==='light' || (!saved && typeof matchMedia==='function' && matchMedia('(prefers-color-scheme: light)').matches);
+  applyTheme(light);
 }
 
 /* ---------- 7. Arranque ---------- */
 initThree();
 bindControls();
+initTheme();
 initScroll();
+initEquationFocus();
+renderTaxLatex();
 paintTable();
 updateUI();
 setMode('manual');
