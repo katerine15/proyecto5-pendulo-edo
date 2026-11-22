@@ -18,15 +18,15 @@ sin leer, incluido el Python que se ve en pantalla. Si son 3, el Integrante 4 se
 
 ## Bloque 1 · el ejercicio a mano (Integrante 1, 4 min)
 
-La tarjeta tiene 20 pasos numerados. No hay tiempo de leerlos todos: se recorren con scroll y se
+La tarjeta tiene 21 pasos numerados. No hay tiempo de leerlos todos: se recorren con scroll y se
 detiene en los marcados con ★.
 
 - **Punto 1** (≈ 2.5 min): 01 ecuación y condiciones · 03 se reemplaza y se factoriza eʳᵗ ·
-  ★ 04 se despeja r = ±iω · 05 solución general · 06 y 08 las dos condiciones iniciales (C₁ = θ₀, C₂ = 0) ·
-  ★ 09 θ(t) = θ₀cos(ωt) · ★ 10 T₀ = 2π√(L/g) = 2.0061 s.
-- **Punto 2** (≈ 20 s): ★ 11 θ₀ no aparece en T₀; el péndulo real sí depende de la amplitud (T > T₀).
-- **Punto 3** (≈ 1 min): 14 derivadas de sen θ en 0 · 15 serie hasta θ⁵ · ★ 16 sen θ ≈ θ ·
-  ★ 18 y 19 error de 0.51 % a 10° y de 57.08 % a 90° · 20 tabla resumen.
+  ★ 04 se despeja r = ±iω · 05 solución general (e⁰ = 1) · 06 y 08 las dos condiciones iniciales (C₁ = θ₀, C₂ = 0) ·
+  ★ 09 θ(t) = θ₀cos(√(g/L)·t) · ★ 10 T₀ = 2π√(L/g) · ★ 11 evaluación numérica: T₀ ≈ 2.0061 s con L = 1 m y g = 9.81 m/s².
+- **Punto 2** (≈ 20 s): ★ 12 θ₀ no aparece en T₀ (2.0061 s para cualquier ángulo); el péndulo real sí depende de la amplitud (T > T₀).
+- **Punto 3** (≈ 1 min): 15 derivadas de sen θ en 0 · 16 serie hasta θ⁵ · ★ 17 sen θ ≈ θ ·
+  ★ 19 y 20 error de 0.51 % a 10° y de 57.08 % a 90° · 21 tabla resumen y conclusión.
 - Cierre del bloque: «Ahora vamos a comprobar con el programa cuándo el péndulo real deja de obedecer T₀».
 
 Para cada paso, a la derecha está la misma operación en Python con su salida real (`# → T0 = 2.0061 s`).
