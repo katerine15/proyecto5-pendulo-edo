@@ -120,6 +120,23 @@ body.light .zoomhint{background:rgba(255,255,255,.85)}
 .ctrl label b{font-family:var(--mono);color:var(--ink);font-weight:500}
 input[type=range]{width:100%;accent-color:var(--accent);height:18px}
 .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+/* Velocidad de reproducción: centro = normal, con un "imán" que da un tirón al llegar */
+.speedrow{display:flex;align-items:center;gap:10px;margin-top:10px}
+.slowbtn{flex:none}
+.slowbtn[aria-pressed="true"]{background:rgba(56,189,248,.18);border-color:var(--accent);color:var(--ink)}
+.speedctl{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.speedctl label{font-size:11px;color:var(--muted);white-space:nowrap}
+.speedctl label b{display:inline-block;min-width:62px;font-family:var(--mono);font-weight:500;color:var(--ink)}
+.speedend{font:10px var(--mono);color:var(--muted);flex:none}
+.speedtrack{position:relative;flex:1;min-width:80px;display:flex;align-items:center}
+.speedtrack input{margin:0}
+.speedmid{position:absolute;left:50%;top:50%;width:2px;height:14px;border-radius:1px;transform:translate(-50%,-50%);
+  background:var(--accent);opacity:.75;pointer-events:none}
+.speedtrack.snap{animation:tiron .3s ease-out}
+.speedtrack.snap .speedmid{animation:pulsoMitad .45s ease-out}
+@keyframes tiron{0%{transform:translateX(0)}25%{transform:translateX(-3px)}55%{transform:translateX(2px)}100%{transform:translateX(0)}}
+@keyframes pulsoMitad{0%{height:14px;opacity:.75}35%{height:22px;opacity:1;box-shadow:0 0 10px var(--accent)}100%{height:14px;opacity:.75}}
+@media (prefers-reduced-motion:reduce){.speedtrack.snap,.speedtrack.snap .speedmid{animation:none}}
 button{font:inherit;font-size:11px;font-weight:600;color:#cbd5e1;background:rgba(30,41,59,.8);
   border:1px solid var(--line);border-radius:9px;padding:6px 10px;cursor:pointer;transition:.2s}
 button:hover{border-color:var(--accent);color:#fff}
@@ -437,8 +454,8 @@ body.light .pyn{color:#b45309}
 
 /* Escenario visible (pasos 2 a 4): el modelo 3D arriba y la gráfica debajo, sin taparse.
    Las alturas siguen el alto de la pantalla para que todo el escenario quepa. */
-body:not(.eq-focus) .visual{height:clamp(250px,42vh,420px)}
-body:not(.eq-focus) .chartbox{height:clamp(140px,22vh,220px)}
+body:not(.eq-focus) .visual{height:clamp(240px,39vh,410px)}
+body:not(.eq-focus) .chartbox{height:clamp(130px,20vh,210px)}
 @media(max-width:980px){
   body:not(.eq-focus) .visual{height:clamp(220px,36vh,340px)}
   body:not(.eq-focus) .chartbox{height:140px}
@@ -527,6 +544,18 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
           <button class="case" data-case="45">45°</button>
           <button class="case on" data-case="90">90°</button>
           <button class="case" data-case="150">150°</button>
+        </div>
+        <div class="speedrow">
+          <button id="btnSlow" class="slowbtn" aria-pressed="false" title="Cámara lenta a 0.25×; otro toque vuelve a la velocidad normal">🐢 Lento</button>
+          <div class="speedctl">
+            <label for="sSpeed">Velocidad <b id="vSpeed">1× normal</b></label>
+            <span class="speedend">0.1×</span>
+            <div class="speedtrack" title="Centro = velocidad normal · doble clic para volver a 1×">
+              <input id="sSpeed" type="range" min="0" max="100" step="0.5" value="50" aria-label="Velocidad de reproducción">
+              <i class="speedmid" aria-hidden="true"></i>
+            </div>
+            <span class="speedend">2×</span>
+          </div>
         </div>
       </div>
     </div>
@@ -2386,6 +2415,43 @@ function initTexCardLayout(){
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutTexCard);
 }
 
+/* ---------- Velocidad de reproducción ----------
+   La barra va de 0 a 100 y el centro (50) es la velocidad normal, 1×.
+   Mitad izquierda: 0.1× → 1× en escala logarítmica (fino en cámara lenta).
+   Mitad derecha: 1× → 2×. Cerca del centro (±4) la barra se pega a 1× con un pequeño
+   tirón (y una vibración corta en celulares que la permiten) para sentir que es la mitad. */
+function bindSpeed(){
+  const sp=$('sSpeed'), vS=$('vSpeed'), tr=sp&&sp.parentElement, slow=$('btnSlow');
+  if(!sp) return;
+  const aVel=s=> s<50 ? 0.1*Math.pow(10,s/50) : Math.pow(2,(s-50)/50);
+  const aBarra=v=> v<1 ? 50*Math.log10(v/0.1) : 50+50*Math.log2(v);
+  const LENTO=0.25;
+  let enIman=true;
+  const aplicar=(s,arrastrando)=>{
+    const iman=Math.abs(s-50)<=4;
+    if(iman){
+      s=50; sp.value=50;
+      if(arrastrando && !enIman){                    // recién llega al centro: tirón
+        tr.classList.remove('snap'); void tr.offsetWidth; tr.classList.add('snap');
+        // vibración corta solo si el usuario ya tocó la página (si no, el navegador la bloquea)
+        const activo=!navigator.userActivation || navigator.userActivation.hasBeenActive;
+        try{ if(navigator.vibrate && activo) navigator.vibrate(12); }catch(e){}
+      }
+    }
+    enIman=iman;
+    S.speed=aVel(s);
+    vS.textContent = s===50 ? '1× normal' : S.speed.toFixed(2)+'×';
+    slow.setAttribute('aria-pressed', Math.abs(S.speed-LENTO)<0.005 ? 'true' : 'false');
+  };
+  sp.addEventListener('input',()=>aplicar(+sp.value,true));
+  sp.addEventListener('dblclick',()=>{ sp.value=50; aplicar(50,false); });
+  slow.addEventListener('click',()=>{
+    const s = Math.abs(S.speed-LENTO)<0.005 ? 50 : aBarra(LENTO);
+    sp.value=s; aplicar(+sp.value,false);
+  });
+  aplicar(+sp.value,false);
+}
+
 /* ---------- 6. Controles ---------- */
 function bindControls(){
   $('sTheta').addEventListener('input',e=>{S.theta0=+e.target.value; document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',+b.dataset.case===Math.round(S.theta0))); resetSim();});
@@ -2393,6 +2459,7 @@ function bindControls(){
   $('sG').addEventListener('input',e=>{S.g=+e.target.value;resetSim();});
   $('btnPlay').addEventListener('click',()=>{S.running=!S.running;$('btnPlay').textContent=S.running?'❚❚ Pausar':'▶ Reproducir';});
   $('btnReset').addEventListener('click',resetSim);
+  bindSpeed();
   document.querySelectorAll('.case').forEach(b=>b.addEventListener('click',()=>{
     S.theta0=+b.dataset.case;$('sTheta').value=S.theta0;
     document.querySelectorAll('.case').forEach(x=>x.classList.toggle('on',x===b));
