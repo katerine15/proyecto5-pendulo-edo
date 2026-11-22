@@ -2137,6 +2137,28 @@ function legend(items,dim){
   });
 }
 
+/* Punto del θ₀ elegido con el deslizador: línea guía vertical, punto y etiqueta */
+function marcaTheta0(dim,px,pts,texto){
+  const K=chartPalette(), light=document.body.classList.contains('light');
+  cx.save();
+  cx.strokeStyle=K.white;cx.globalAlpha=.35;cx.setLineDash([2,3]);cx.lineWidth=1;
+  cx.beginPath();cx.moveTo(px,PAD.t);cx.lineTo(px,dim.h-PAD.b);cx.stroke();
+  cx.setLineDash([]);cx.globalAlpha=1;
+  pts.forEach(([py,col])=>{
+    cx.fillStyle=col;cx.beginPath();cx.arc(px,py,4.5,0,7);cx.fill();
+    cx.strokeStyle=light?'#fff':'#0b1220';cx.lineWidth=1.5;cx.stroke();
+  });
+  cx.font='600 10px "IBM Plex Mono",monospace';
+  const w=cx.measureText(texto).width+12, h=16;
+  let bx=px+8, by=Math.max(PAD.t+16,Math.min(pts[0][0]-h-6,dim.h-PAD.b-h-2));
+  if(bx+w>dim.w-PAD.r) bx=px-8-w;
+  cx.fillStyle=light?'rgba(255,255,255,.9)':'rgba(6,11,20,.88)';
+  cx.fillRect(bx,by,w,h);
+  cx.strokeStyle=K.grid;cx.lineWidth=1;cx.strokeRect(bx+.5,by+.5,w-1,h-1);
+  cx.fillStyle=K.legend;cx.fillText(texto,bx+6,by+11.5);
+  cx.restore();
+}
+
 function renderChart(prog){
   const dim=sizeCanvas(), mode=S.modeChart, K=chartPalette();
   cx.clearRect(0,0,dim.w,dim.h);
@@ -2154,7 +2176,9 @@ function renderChart(prog){
     const cols=[K.blue,K.ok,K.real,K.warn];
     c.out.forEach((o,i)=>{ curve(o.pts,'real','t',0,c.xmax,-160,160,dim,cols[i],[],prog);
                            curve(o.pts,'lin','t',0,c.xmax,-160,160,dim,cols[i],[3,4],prog); });
-    legend(c.out.map((o,i)=>({t:o.d+'°',c:cols[i]})),dim);
+    // Colores = amplitud; línea continua = péndulo real; punteada = modelo lineal
+    legend(c.out.map((o,i)=>({t:o.d+'°',c:cols[i]}))
+      .concat([{t:'real',c:K.white},{t:'lineal',c:K.white,d:[3,4]}]),dim);
   }else if(mode==='error'){
     const c=CACHE.error;
     axes(dim,1,170,0,50,'θ₀ [°]','error [%]');
@@ -2166,6 +2190,13 @@ function renderChart(prog){
     cx.fillStyle=K.ok;cx.beginPath();cx.arc(q[0],q[1],4,0,7);cx.fill();
     cx.font='10px "IBM Plex Mono",monospace';
     cx.fillText('1% → '+c.thr.toFixed(1)+'°',q[0]+7,q[1]-6);
+    legend([{t:'error del período',c:K.blue},{t:'tolerancia 1 %',c:K.warn,d:[5,4]}],dim);
+    // θ₀ del deslizador sobre la curva (el error depende solo de θ₀, no de L ni de g)
+    if(prog>=1){
+      const T0=linearPeriod(S.L,S.g), T=exactPeriod(rad(S.theta0),S.L,S.g), e=(T-T0)/T*100;
+      const m=xy(S.theta0,Math.min(e,50),1,170,0,50,dim);
+      marcaTheta0(dim,m[0],[[m[1],K.real]],'θ₀ = '+S.theta0.toFixed(1)+'° → '+e.toFixed(2)+' %');
+    }
   }else{ // taylor
     const c=CACHE.taylor;
     axes(dim,0,1.6,0,1.7,'θ [rad]','valor');
@@ -2178,6 +2209,17 @@ function renderChart(prog){
       cx.fillStyle=col;cx.fillText(d+'°',p[0]+3,dim.h-PAD.b-6);
     });
     legend([{t:'sen θ',c:K.real},{t:'θ',c:K.lin,d:[4,3]},{t:'θ−θ³/6',c:K.ok,d:[2,3]}],dim);
+    // θ₀ del deslizador: la distancia entre los dos puntos es el error de sen θ ≈ θ
+    if(prog>=1){
+      const a=rad(S.theta0), etiqueta='θ₀ = '+S.theta0.toFixed(1)+'° · error '+taylorError(S.theta0).toFixed(2)+' %';
+      if(a<=1.6){
+        const ps=xy(a,Math.sin(a),0,1.6,0,1.7,dim), pl=xy(a,a,0,1.6,0,1.7,dim);
+        marcaTheta0(dim,ps[0],[[pl[1],K.lin],[ps[1],K.real]],etiqueta);
+      }else{
+        cx.save();cx.font='600 10px "IBM Plex Mono",monospace';cx.fillStyle=K.tick;cx.textAlign='right';
+        cx.fillText(etiqueta+' (fuera del eje)',dim.w-PAD.r,PAD.t+28);cx.restore();
+      }
+    }
   }
 }
 
@@ -2291,12 +2333,12 @@ function initEquationFocus(){
       updateThree();
     }
   };
-  // El 3D se oculta mientras cualquier parte de la tarjeta esté en pantalla: en escritorio la
-  // tarjeta ocupa también la columna del 3D, así que nunca se pisan. La tarjeta no cambia de
-  // tamaño al entrar o salir, por eso no hace falta histéresis.
+  // El 3D se oculta cuando la tarjeta ya subió al 70 % de la pantalla y vuelve cuando la tarjeta
+  // sale por arriba. Antes de desplegarse, la tarjeta está recortada a la columna de texto
+  // (clip-path), así que nunca tapa al 3D. No cambia de tamaño: no hace falta histéresis.
   const io=new IntersectionObserver(es=>{
     setFocus(es[es.length-1].isIntersecting);
-  },{threshold:[0]});
+  },{threshold:[0],rootMargin:'0px 0px -30% 0px'});
   io.observe(card);
 }
 
