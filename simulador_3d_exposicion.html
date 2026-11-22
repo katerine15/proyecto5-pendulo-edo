@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Proyecto 5 · El péndulo — Exposición en 4 voces</title>
+<title>Proyecto 5 · El péndulo — ¿Cuándo vale la aproximación lineal?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -286,6 +286,48 @@ body.light .texrow .tx .texmath{color:#111827}
 .texrow .pycode::-webkit-scrollbar,.texrow .tx .texmath::-webkit-scrollbar{height:6px}
 .texrow .pycode::-webkit-scrollbar-thumb{background:#424242;border-radius:3px}
 .texrow .tx .texmath::-webkit-scrollbar-thumb{background:rgba(37,99,235,.25);border-radius:3px}
+/* Papel suelto (misma textura de la hoja): tarjetas compactas, conclusión y checklist */
+.texcard.compact .texrow .tx,.papernote{
+  background-color:#fffdf7;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,transparent 46px,rgba(220,38,38,.5) 46px,rgba(220,38,38,.5) 48px,transparent 48px),
+    linear-gradient(rgba(37,99,235,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(37,99,235,.13) 1px,transparent 1px);
+  background-size:180px 180px,100% 100%,24px 24px,24px 24px}
+/* Tarjetas compactas (secciones 2 y 3): la hoja y el editor van apilados dentro de la columna
+   de texto, así el panel de la izquierda sigue mostrando las gráficas en vivo. */
+.texcard.compact{clip-path:none;padding:16px 16px 18px}
+.texcard.compact .texgrid.texrows::before,.texcard.compact .texgrid.texrows::after{display:none}
+.texcard.compact .texcolheads{position:relative;top:auto;grid-template-columns:1fr}
+.texcard.compact .texcolheads .hp{border-radius:14px 14px 0 0}
+.texcard.compact .texcolheads .he{border-radius:0;height:38px}
+.texcard.compact .texrow,.texcard.compact .texpart{grid-template-columns:1fr}
+.texcard.compact .texrow .tx,.texcard.compact .texcolheads .hp,.texcard.compact .texpart .pp{transform:none!important;transition:none!important}
+.texcard.compact .texrow .tx{border-bottom:0;border-top:2px solid rgba(37,99,235,.18)}
+.texcard.compact .texrow .pycode{background:#1e1e1e linear-gradient(90deg,#181818 0,#181818 50px,rgba(255,255,255,.06) 50px,rgba(255,255,255,.06) 51px,transparent 51px);
+  border-bottom:0;font-size:12.5px}
+.texcard.compact .texrow:last-child .pycode{border-radius:0 0 14px 14px}
+.texcard.compact .texrow .tx .texmath{font-size:15px}
+/* La tabla en vivo de la sección 3, escrita en la hoja */
+.papertable{width:100%;border-collapse:collapse;margin:6px 0 2px;font:13.5px var(--mono);color:#111827;background:none}
+.papertable th{padding:6px 8px;text-align:left;font:600 12px var(--display,'Space Grotesk'),system-ui,sans-serif;
+  color:#1d4ed8;background:none;border:0;border-bottom:2px solid rgba(37,99,235,.35)}
+.papertable td{padding:6px 8px;color:#111827;background:none;border:0;border-bottom:1px dashed rgba(37,99,235,.25)}
+.papertable td.hi{color:#b45309;font-weight:700}
+.paperhint{margin:8px 0 0;font-size:13px;font-style:italic;color:#475569}
+.paperhint b{color:#047857;font-style:normal}
+/* Notas en papel: conclusión de la sección 4 y checklist del cierre */
+.papernote{position:relative;margin:16px 0;padding:22px 22px 20px 62px;border-radius:14px;color:#1e293b;
+  box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(148,163,184,.18)}
+.papernote h4{margin:0 0 10px;font:700 18px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#0f172a}
+.papernote h4 span{background:linear-gradient(transparent 62%,rgba(250,204,21,.55) 62%);padding:0 4px}
+.papernote p{margin:0;font-size:15px;line-height:1.7;color:#1e293b}
+.papernote p b{color:#b45309;background:linear-gradient(transparent 60%,rgba(52,211,153,.35) 60%)}
+.papernote .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px}
+.papernote .checks span{position:relative;padding:4px 0 4px 30px;font-size:14px;color:#1e293b;background:none;border:0}
+.papernote .checks span::before{content:"✓";position:absolute;left:0;top:3px;width:20px;height:20px;display:grid;place-items:center;
+  border:1.5px solid rgba(29,78,216,.55);border-radius:5px;font:700 13px var(--mono);color:#047857}
 /* Celular y tablet: cada renglón apila la hoja y el editor */
 @media(max-width:980px){
   .texgrid.texrows::before,.texgrid.texrows::after{display:none}
@@ -415,7 +457,7 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
 <div id="progress"></div>
 
 <header class="topbar">
-  <div class="brand">P5 · <em>El péndulo</em> · 4 voces</div>
+  <div class="brand">P5 · <em>El péndulo</em></div>
   <nav class="navchips">
     <a href="#hero">Portada</a>
     <a href="#p1">1 · A mano</a>
@@ -424,22 +466,20 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
     <a href="#p4">4 · 3D y cierre</a>
   </nav>
   <button type="button" id="btnTheme" class="themebtn" aria-pressed="false" title="Alternar modo claro">☀ Modo claro</button>
-  <div class="timer">15 min + 5 preguntas</div>
 </header>
 
 <section class="hero" id="hero">
   <p class="kicker reveal">Ecuaciones diferenciales · Unidad 3 · Colegio Mayor del Cauca</p>
   <h1 class="reveal" style="--d:.06s">¿Cuándo vale la <span>aproximación lineal</span>?</h1>
-  <p class="lead reveal" style="--d:.12s">Una sola página para exponer el Proyecto 5: la deducción a mano, el código que la verifica, la medición del error y la animación 3D. Cada bloque es la intervención de un integrante y se revela al hacer scroll.</p>
+  <p class="lead reveal" style="--d:.12s">El péndulo real obedece θ'' + (g/L)·sen θ = 0, pero casi siempre se usa la aproximación sen θ ≈ θ. Aquí la resolvemos a mano, la verificamos con código, medimos su error y la vemos en una simulación 3D.</p>
   <div class="rule reveal" style="--d:.18s"><b>Regla del proyecto:</b> primero la matemática, después el programa. El programa <b>verifica</b> la solución analítica; no la reemplaza.</div>
 
   <div class="speakers">
-    <article class="spk reveal" style="--d:.24s"><div class="n">INTEGRANTE 1</div><h3>El punto a mano</h3><p>Ecuación, linealización, solución exacta y Taylor.</p><span class="time">≈ 4 min</span></article>
-    <article class="spk reveal" style="--d:.30s"><div class="n">INTEGRANTE 2</div><h3>Del papel al código</h3><p>Sistema de 1er orden, RK4 y verificación.</p><span class="time">≈ 3 min</span></article>
-    <article class="spk reveal" style="--d:.36s"><div class="n">INTEGRANTE 3</div><h3>Período y umbral</h3><p>Detección de θ′ = 0, tabla y error del 1 %.</p><span class="time">≈ 3 min</span></article>
-    <article class="spk reveal" style="--d:.42s"><div class="n">INTEGRANTE 4</div><h3>Animación y cierre</h3><p>Escena 3D, conclusión y pregunta del reloj.</p><span class="time">≈ 5 min</span></article>
+    <article class="spk reveal" style="--d:.24s"><div class="n">INTEGRANTE 1</div><h3>El punto a mano</h3><p>Ecuación, linealización, solución exacta y Taylor.</p></article>
+    <article class="spk reveal" style="--d:.30s"><div class="n">INTEGRANTE 2</div><h3>Del papel al código</h3><p>Sistema de 1er orden, RK4 y verificación.</p></article>
+    <article class="spk reveal" style="--d:.36s"><div class="n">INTEGRANTE 3</div><h3>Período y umbral</h3><p>Detección de θ′ = 0, tabla y error del 1 %.</p></article>
+    <article class="spk reveal" style="--d:.42s"><div class="n">INTEGRANTE 4</div><h3>Animación y cierre</h3><p>Escena 3D, conclusión y pregunta del reloj.</p></article>
   </div>
-  <p class="hint reveal" style="--d:.48s">Reparto sugerido en <span class="srccite">proyecto5_pendulo.md §12, paso 10 (líneas 204–207)</span>: problema (1) · ecuación (2) · solución analítica (2) · aproximación (1) · verificación (2) · medición (2) · animación (2) · conclusión (2) · cierre (1).</p>
 </section>
 
 <div class="layout">
@@ -495,25 +535,23 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
   <div class="story">
     <!-- ======================= PERSONA 1 ======================= -->
     <section class="step reveal" id="p1" data-mode="manual" data-index="0">
-      <div class="head"><span class="who">INTEGRANTE 1 · ≈ 4 min</span><span class="minutes">pasos 1–3 de la guía</span></div>
+      <div class="head"><span class="who">INTEGRANTE 1</span><span class="minutes">solución analítica</span></div>
       <h2>1. El punto a mano</h2>
-      <p class="leadp">Aquí no se corre código. Se deduce la solución que después el programa va a intentar confirmar. Sin este bloque, la exposición se califica sobre la mitad.</p>
+      <p class="leadp">Primero la matemática: resolvemos a mano el modelo lineal, deducimos su período y justificamos la aproximación con Taylor. Después el programa comprueba esta solución.</p>
 
       <div class="cite">
-        <b>Cita de la guía (lo que debes hacer).</b> <span class="quote">«Resolver la ecuación <b>lineal</b> con θ(0) = θ₀, θ'(0) = 0, y deducir el período <b>T₀ = 2π√(L/g)</b>. Observar que T₀ <b>no depende de la amplitud</b>. Justificar la aproximación con el polinomio de Taylor de sen θ y estimar el error relativo en θ₀ = 10° y en θ₀ = 90°»</span>
-        <br>Fuente: <b>proyecto5_pendulo.md, §4 «Lo que resuelven a mano» (líneas 47–52)</b>, desarrollado en <b>§12, paso 1 (líneas 170–175)</b>. La regla está en <b>§1 (línea 14)</b>.
+        <b>Enunciado.</b> <span class="quote">«Resolver la ecuación <b>lineal</b> con θ(0) = θ₀, θ'(0) = 0, y deducir el período <b>T₀ = 2π√(L/g)</b>. Observar que T₀ <b>no depende de la amplitud</b>. Justificar la aproximación con el polinomio de Taylor de sen θ y estimar el error relativo en θ₀ = 10° y en θ₀ = 90°»</span>
       </div>
 
       <div class="card">
-        <h4>Qué hacer, renglón por renglón</h4>
+        <h4>El procedimiento en resumen</h4>
         <ol class="steps">
-          <li><b>Plantea el modelo.</b> Escribe la ecuación real y explica cada término: la aceleración angular θ'' y el término restaurador (g/L)·sen θ, con L = 1 m y g = 9.81 m/s² (§2, líneas 20–32).</li>
-          <li><b>Justifica la aproximación.</b> Escribe sen θ = θ − θ³/6 + θ⁵/120 − … y di que, para ángulos pequeños, se conserva solo θ. Mueve el deslizador de θ₀ y lee los errores en vivo: <b>0.51 % a 10°</b> y <b>57.08 % a 90°</b>.</li>
-          <li><b>Ecuación característica.</b> De θ'' + (g/L)θ = 0 sale r² + g/L = 0, luego r = ± i√(g/L). Define ω = √(g/L).</li>
-          <li><b>Solución general.</b> θ(t) = A·cos(ωt) + B·sen(ωt).</li>
-          <li><b>Condiciones iniciales.</b> θ(0) = θ₀ ⇒ A = θ₀; θ'(0) = 0 ⇒ B = 0. Por tanto <b>θ(t) = θ₀·cos(ωt)</b>.</li>
-          <li><b>Período.</b> T₀ = 2π/ω = <b>2π√(L/g) = 2.0061 s</b>. Recalca que no aparece θ₀ en la fórmula: el modelo lineal es isócrono.</li>
-          <li><b>Anuncia la medición.</b> «Ahora vamos a comprobar cuándo el péndulo real deja de obedecer esta T₀».</li>
+          <li><b>Modelo.</b> θ'' + (g/L)·sen θ = 0: θ'' es la aceleración angular y (g/L)·sen θ el término que lo devuelve a la vertical, con L = 1 m y g = 9.81 m/s².</li>
+          <li><b>Aproximación.</b> sen θ ≈ θ − θ³/6 + θ⁵/120; para ángulos pequeños se conserva solo θ. El error es de <b>0.51 % a 10°</b> y de <b>57.08 % a 90°</b>.</li>
+          <li><b>Ecuación característica.</b> De θ'' + (g/L)θ = 0 sale r² + g/L = 0, luego r = ± i√(g/L), con ω = √(g/L).</li>
+          <li><b>Solución general.</b> θ(t) = C₁·cos(ωt) + C₂·sen(ωt).</li>
+          <li><b>Condiciones iniciales.</b> θ(0) = θ₀ ⇒ C₁ = θ₀; θ'(0) = 0 ⇒ C₂ = 0. Por tanto <b>θ(t) = θ₀·cos(ωt)</b>.</li>
+          <li><b>Período.</b> T₀ = 2π/ω = <b>2π√(L/g) ≈ 2.0061 s</b>. θ₀ no aparece en la fórmula: el modelo lineal es isócrono.</li>
         </ol>
         <div class="eq">θ'' + (g/L)·sen θ = 0 → (sen θ ≈ θ) → θ'' + (g/L)·θ = 0 → θ(t) = θ₀·cos(ωt), ω = √(g/L)</div>
       </div>
@@ -532,13 +570,15 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
               <div class="texmath" data-tex="\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0"></div>
               <div class="texsrc">\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0</div>
             </div>
-            <pre class="pycode" data-py>import math
-import numpy as np
+            <pre class="pycode" data-py>import math                          # sen, cos, raíz, π
+import numpy as np                   # para np.roots
 
-g, L = 9.81, 1.0                     # m/s², m
-# θ(0) = θ0  (en radianes)
+# gravedad (m/s²) y largo (m)
+g, L = 9.81, 1.0
+# θ(0) = θ0, en radianes
 theta0 = math.radians(10)
-dtheta0 = 0.0                        # θ&#x27;(0) = 0</pre>
+# θ&#x27;(0) = 0: se suelta quieto
+dtheta0 = 0.0</pre>
           </div>
           <div class="texrow">
             <div class="tx">
@@ -546,7 +586,8 @@ dtheta0 = 0.0                        # θ&#x27;(0) = 0</pre>
               <div class="texmath" data-tex="\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}"></div>
               <div class="texsrc">\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}</div>
             </div>
-            <pre class="pycode" data-py># θ   = e^(rt)
+            <pre class="pycode" data-py># se prueba θ = e^(rt) y se deriva dos veces
+# θ   = e^(rt)
 theta_e   = lambda r, t: math.exp(r*t)
 # θ&#x27;  = r·e^(rt)
 dtheta_e  = lambda r, t: r * math.exp(r*t)
@@ -568,7 +609,8 @@ e^{rt}\neq 0\;\Rightarrow\; r^{2}+\frac{g}{L}&amp;=0
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># r²·e^(rt) + (g/L)·e^(rt) = e^(rt)·(r² + g/L) = 0
-# e^(rt) ≠ 0  →  queda  r² + 0·r + g/L = 0
+# e^(rt) nunca es 0, así que queda r² + 0·r + g/L = 0
+# coeficientes de r², r y 1
 caracteristica = [1, 0, g / L]</pre>
           </div>
           <div class="texrow">
@@ -587,7 +629,8 @@ r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\\
 r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>r1, r2 = np.roots(caracteristica)    # r = ±i·√(g/L)
+            <pre class="pycode" data-py># raíces del polinomio
+r1, r2 = np.roots(caracteristica)
 omega = math.sqrt(g / L)             # ω = √(g/L)
 print(f&quot;r = {abs(r1.real):.0f} ± {abs(r1.imag):.4f}i&quot;)
 # → r = 0 ± 3.1321i
@@ -608,7 +651,8 @@ r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
 e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos\omega t+C_2\sen\omega t
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>a, b = r1.real, abs(r1.imag)         # a = 0, b = ω
+            <pre class="pycode" data-py># r = a ± bi → a = 0, b = ω
+a, b = r1.real, abs(r1.imag)
 print(math.exp(a * 1.0))
 # → 1.0
 
@@ -632,7 +676,7 @@ def theta_general(t, C1, C2):
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># θ(0) = C1·cos(0) + C2·sen(0) = C1·1 + C2·0
-C1 = theta0                          # C1 = θ0</pre>
+C1 = theta0                          # entonces C1 = θ0</pre>
           </div>
           <div class="texrow">
             <div class="tx">
@@ -640,7 +684,8 @@ C1 = theta0                          # C1 = θ0</pre>
               <div class="texmath" data-tex="\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)"></div>
               <div class="texsrc">\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)</div>
             </div>
-            <pre class="pycode" data-py>def dtheta_general(t, C1, C2):       # θ&#x27;(t)
+            <pre class="pycode" data-py>def dtheta_general(t, C1, C2):       # derivada de θ(t)
+    # (cos ωt)&#x27; = −ω·sen ωt   y   (sen ωt)&#x27; = ω·cos ωt
     return (-C1*omega*math.sin(omega*t)
             + C2*omega*math.cos(omega*t))</pre>
           </div>
@@ -659,7 +704,7 @@ C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># θ&#x27;(0) = −C1·ω·sen(0) + C2·ω·cos(0) = C2·ω = 0
-C2 = dtheta0 / omega                 # C2 = 0/ω = 0
+C2 = dtheta0 / omega                 # C2·ω = 0 → C2 = 0
 print(dtheta_general(0, C1, C2))
 # → 0.0</pre>
           </div>
@@ -677,10 +722,12 @@ print(dtheta_general(0, C1, C2))
 \omega=\sqrt{\frac{g}{L}}\;\Rightarrow\;\theta(t)&amp;=\boxed{\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\;t\right)}
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py># θ0·cos(ωt), con ω = √(g/L)
+            <pre class="pycode" data-py># solución particular
 def theta(t):
+    # ω = √(g/L) ya reemplazado
     return theta0 * math.cos(math.sqrt(g / L) * t)
 
+# isclose compara sin errores de redondeo
 print(math.isclose(theta(1.0), theta_general(1.0, C1, C2)))
 # → True</pre>
           </div>
@@ -696,7 +743,8 @@ T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}
 T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>T0 = 2 * math.pi / omega             # ω·T0 = 2π
+            <pre class="pycode" data-py># el coseno se repite cada 2π
+T0 = 2 * math.pi / omega
 print(math.isclose(T0, 2*math.pi*math.sqrt(L/g)))
 # → True</pre>
           </div>
@@ -708,7 +756,7 @@ print(math.isclose(T0, 2*math.pi*math.sqrt(L/g)))
             </div>
             <pre class="pycode" data-py>print(f&quot;T0 = {T0:.4f} s&quot;)
 # → T0 = 2.0061 s
-# una vuelta completa: θ(T0) vuelve a θ0
+# tras un período completo θ vuelve a θ0
 print(math.isclose(theta(T0), theta0))
 # → True</pre>
           </div>
@@ -727,8 +775,9 @@ print(math.isclose(theta(T0), theta0))
 \text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\;\Rightarrow\;\theta_0\uparrow\;\Rightarrow\;T&gt;T_0
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py># θ0 no entra en la fórmula
+            <pre class="pycode" data-py># 4 amplitudes distintas
 for grados in (10, 45, 90, 150):
+    # θ0 no está en la fórmula
     T = 2 * math.pi * math.sqrt(L / g)
     print(f&quot;{grados:&gt;3}°  T0 = {T:.4f} s&quot;)
 # →  10°  T0 = 2.0061 s
@@ -751,6 +800,7 @@ f(\theta)&amp;\approx f(a)+f&#x27;(a)(\theta-a)\\
             </div>
             <pre class="pycode" data-py># Σ f⁽ⁿ⁾(a)/n! · (θ − a)ⁿ
 def taylor(derivadas, th, centro=0.0):
+    # n = 0, 1, 2, ... recorre las derivadas en orden
     return sum(d / math.factorial(n) * (th - centro)**n
                for n, d in enumerate(derivadas))</pre>
           </div>
@@ -797,10 +847,12 @@ f^{(4)}(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f^{(4)}(0)=\sen 0=0\\
 f^{(5)}(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f^{(5)}(0)=\cos 0=1
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py># sen → cos → −sen → −cos  (se repite cada 4)
+            <pre class="pycode" data-py># sen → cos → −sen → −cos y se repite cada 4
 ciclo = [math.sin, math.cos,
          lambda x: -math.sin(x), lambda x: -math.cos(x)]
+# n % 4 dice en qué parte del ciclo va
 derivadas = [ciclo[n % 4](centro) for n in range(6)]
+# el + 0.0 es para que no salga -0.0
 print([d + 0.0 for d in derivadas])
 # → [0.0, 1.0, 0.0, -1.0, 0.0, 1.0]</pre>
           </div>
@@ -818,7 +870,8 @@ print([d + 0.0 for d in derivadas])
 &amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>coef = [d / math.factorial(n)
+            <pre class="pycode" data-py># cada derivada entre n!
+coef = [d / math.factorial(n)
         for n, d in enumerate(derivadas)]
 print(math.factorial(3), math.factorial(5))
 # → 6 120
@@ -833,7 +886,8 @@ print([round(c, 5) + 0.0 for c in coef])
             </div>
             <pre class="pycode" data-py># ángulo pequeño, en radianes
 x = math.radians(5)
-lineal = taylor(derivadas[:2], x)    # solo el término θ
+# solo f(0) y f&#x27;(0)·θ
+lineal = taylor(derivadas[:2], x)
 print(f&quot;sen = {math.sin(x):.5f}  lineal = {lineal:.5f}&quot;)
 # → sen = 0.08716  lineal = 0.08727</pre>
           </div>
@@ -849,7 +903,8 @@ E_r&amp;=\frac{|\text{valor real}-\text{valor aprox.}|}{|\text{valor real}|}\tim
 E_r&amp;=\frac{|\sen\theta_0-\theta_0|}{|\sen\theta_0|}\times 100\%
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>def error_relativo(grados):
+            <pre class="pycode" data-py># |real − aprox| / |real| · 100
+def error_relativo(grados):
     # primero a radianes
     th = math.radians(grados)
     return abs(math.sin(th) - th) / abs(math.sin(th)) * 100</pre>
@@ -870,7 +925,7 @@ E_r&amp;=\frac{|0.17365-0.17453|}{0.17365}\times 100\%\\
 &amp;=\frac{0.00088}{0.17365}\times 100\%\approx 0.51\%
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>th = math.radians(10)
+            <pre class="pycode" data-py>th = math.radians(10)                # 10° · π/180
 print(f&quot;{th:.5f} rad   sen = {math.sin(th):.5f}&quot;)
 # → 0.17453 rad   sen = 0.17365
 print(f&quot;{error_relativo(10):.2f} %&quot;)
@@ -892,7 +947,7 @@ E_r&amp;=\frac{|1-1.57080|}{1}\times 100\%\\
 &amp;=0.57080\times 100\%=57.08\%
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py>th = math.radians(90)
+            <pre class="pycode" data-py>th = math.radians(90)                # 90° = π/2
 print(f&quot;{th:.5f} rad   sen = {math.sin(th):.5f}&quot;)
 # → 1.57080 rad   sen = 1.00000
 print(f&quot;{error_relativo(90):.2f} %&quot;)
@@ -920,17 +975,20 @@ print(f&quot;{error_relativo(90):.2f} %&quot;)
 90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}
 \end{gathered}</div>
             </div>
-            <pre class="pycode" data-py>for grados in (10, 90):
+            <pre class="pycode" data-py># las dos filas de la tabla
+for grados in (10, 90):
     th = math.radians(grados)
     print(f&quot;{grados:&gt;3}°  {th:.5f}  {math.sin(th):.5f}  &quot;
           f&quot;{th:.5f}  {error_relativo(grados):.2f} %&quot;)
 # →  10°  0.17453  0.17365  0.17453  0.51 %
 #    90°  1.57080  1.00000  1.57080  57.08 %
+# ¿el error queda por debajo del 1 %?
 print(error_relativo(10) &lt; 1, error_relativo(90) &lt; 1)
 # → True False</pre>
           </div>
         </div>
       </div>
+      <!-- fin p1Latex -->
 
       <div class="card">
         <h4>En vivo · Taylor y error de la aproximación</h4>
@@ -944,13 +1002,12 @@ print(error_relativo(10) &lt; 1, error_relativo(90) &lt; 1)
 
     <!-- ======================= PERSONA 2 ======================= -->
     <section class="step reveal" id="p2" data-mode="verify" data-index="1">
-      <div class="head"><span class="who">INTEGRANTE 2 · ≈ 3 min</span><span class="minutes">pasos 2–3 de la guía</span></div>
+      <div class="head"><span class="who">INTEGRANTE 2</span><span class="minutes">método numérico</span></div>
       <h2>2. Del papel al código: RK4 y verificación</h2>
       <p class="leadp">Un integrador no resuelve una ecuación de segundo orden directamente: primero la partimos en dos ecuaciones de primer orden. Después demostramos que el código coincide con la deducción.</p>
 
       <div class="cite">
-        <b>Cita de la guía.</b> <span class="quote">«Ningún integrador numérico resuelve directamente una ecuación de segundo orden: hay que convertirla primero. Con u = θ y v = θ', la ecuación queda: u' = v; v' = −(g/L)·sen u (real); v' = −(g/L)·u (lineal)».</span>
-        <br>Fuente: <b>proyecto5_pendulo.md, §8 «De segundo orden a sistema de primer orden» (líneas 89–95)</b> y <b>§12, pasos 2–3 (líneas 176–181)</b>.
+        <b>Indicación de la guía.</b> <span class="quote">«Ningún integrador numérico resuelve directamente una ecuación de segundo orden: hay que convertirla primero. Con u = θ y v = θ', la ecuación queda: u' = v; v' = −(g/L)·sen u (real); v' = −(g/L)·u (lineal)».</span>
       </div>
 
       <div class="card">
@@ -958,169 +1015,298 @@ print(error_relativo(10) &lt; 1, error_relativo(90) &lt; 1)
         <div class="eq">u = θ, v = θ' ⇒ u' = v, v' = −(g/L)·sen u  (o −(g/L)·u)</div>
         <div class="eq">yₙ₊₁ = yₙ + (h/6)·(k₁ + 2k₂ + 2k₃ + k₄)</div>
         <ol class="steps">
-          <li>Muestra las cuatro pendientes k₁…k₄ y el promedio ponderado: las dos pendientes de la mitad pesan el doble (esqueleto en §8, líneas 97–115).</li>
-          <li><b>Verificación 1 (lineal):</b> integra numéricamente θ'' + (g/L)θ = 0 y superpón la solución deducida a mano θ₀·cos(ωt). Deben confundirse (diferencia del orden de 1e-11 rad).</li>
-          <li><b>Verificación 2 (real):</b> compara RK4 con la solución exacta en funciones elípticas de Jacobi. En el panel se ven como una sola curva.</li>
-          <li>Reduce el paso h diez veces: si la curva cambia, el paso era demasiado grande. Aquí se usan subpasos de ≈ 1.7 ms para animar y 0.5 ms para medir períodos.</li>
+          <li><b>RK4:</b> cuatro pendientes k₁…k₄ y un promedio ponderado en el que las dos de la mitad pesan el doble.</li>
+          <li><b>Verificación 1 (lineal):</b> RK4 aplicado a θ'' + (g/L)θ = 0 se superpone con la solución deducida a mano θ₀·cos(ωt); la diferencia es del orden de 1e-11 rad.</li>
+          <li><b>Verificación 2 (real):</b> RK4 coincide con la solución exacta en funciones elípticas de Jacobi; en el panel se ven como una sola curva.</li>
+          <li><b>Paso h:</b> al reducirlo diez veces la curva no cambia. Se usan subpasos de ≈ 1.7 ms para animar y 0.5 ms para medir períodos.</li>
         </ol>
-        <p class="hint">Errores típicos que hay que evitar (§8, líneas 119–124): paso h demasiado grande, grados mezclados con radianes, unidades inconsistentes y comparar curvas en vectores de tiempo distintos.</p>
+        <p class="hint">Errores evitados: paso h demasiado grande, grados mezclados con radianes, unidades inconsistentes y curvas comparadas en vectores de tiempo distintos.</p>
       </div>
 
-      <div class="card">
+      <div class="card texcard compact" id="p2Tex">
         <div class="texhead">
-          <h4 style="margin:0">La verificación en dos columnas · LaTeX ↔ Python</h4>
+          <h4 style="margin:0">Del papel al código · LaTeX ↔ Python</h4>
           <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
         </div>
-        <p class="hint" style="margin-top:0">Del sistema de primer orden a la comparación con las dos soluciones exactas: mismos pasos en notación matemática y en código.</p>
-        <div class="texgrid">
-          <section class="texcol">
-            <div class="texhead"><b>Las fórmulas de la verificación</b><span class="tag2">verificacion.tex</span></div>
-
-            <div class="texstep">
-              <div class="n">1 · De 2º orden a 1er orden</div>
-              <div class="texmath" data-tex="u=\theta,\quad v=\dot\theta\;\Rightarrow\;\dot u=v,\quad \dot v=-\frac{g}{L}\sin u\ \text{(real)},\;\;-\frac{g}{L}u\ \text{(lineal)}"></div>
-              <div class="texsrc">u=\theta,\quad v=\dot\theta\;\Rightarrow\;\dot u=v,\quad \dot v=-\frac{g}{L}\sin u\ \text{(real)},\;\;-\frac{g}{L}u\ \text{(lineal)}</div>
-              <div class="texexpl">Los dos vectores de derivadas que recibe el integrador.</div>
+        <div class="texgrid texrows">
+          <div class="texcolheads"><div class="hp"><b>RK4 y verificación</b><span>verificacion.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">verificacion.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">01</span><span class="txt">De 2º orden a sistema de 1er orden</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+u=\theta,\quad v&amp;=\theta&#x27;\\
+u&#x27;&amp;=v\\
+v&#x27;&amp;=-\frac{g}{L}\sen u\quad\text{(real)}\\
+v&#x27;&amp;=-\frac{g}{L}\,u\quad\ \ \text{(lineal)}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+u=\theta,\quad v&amp;=\theta&#x27;\\
+u&#x27;&amp;=v\\
+v&#x27;&amp;=-\frac{g}{L}\sen u\quad\text{(real)}\\
+v&#x27;&amp;=-\frac{g}{L}\,u\quad\ \ \text{(lineal)}
+\end{aligned}</div>
             </div>
+            <pre class="pycode" data-py>import math
+import numpy as np
 
-            <div class="texstep">
-              <div class="n">2 · Paso RK4</div>
-              <div class="texmath" data-tex="\mathbf y_{n+1}=\mathbf y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)"></div>
-              <div class="texsrc">\mathbf y_{n+1}=\mathbf y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)</div>
-              <div class="texexpl">Las pendientes de la mitad pesan el doble; el error por paso es O(h⁵).</div>
-            </div>
+g, L = 9.81, 1.0
+# ω, la misma del punto 1
+w = math.sqrt(g / L)
 
-            <div class="texstep key">
-              <div class="n">3 · Verificación del modelo lineal</div>
-              <div class="texmath" data-tex="\max_t\left|\theta_{\mathrm{RK4}}(t)-\theta_0\cos(\omega t)\right|\approx 10^{-11}\ \mathrm{rad}"></div>
-              <div class="texsrc">\max_t\left|\theta_{\mathrm{RK4}}(t)-\theta_0\cos(\omega t)\right|\approx 10^{-11}\ \mathrm{rad}</div>
-              <div class="texexpl">RK4 reproduce la deducción del Punto 1: las curvas se confunden.</div>
-            </div>
-
-            <div class="texstep result">
-              <div class="n">4 · Verificación del modelo real</div>
-              <div class="texmath" data-tex="T=\frac{2T_0}{\pi}\,K\!\left(\sin\frac{\theta_0}{2}\right)=2.3679\ \mathrm{s}\quad(\theta_0=90^\circ)"></div>
-              <div class="texsrc">T=\frac{2T_0}{\pi}\,K\!\left(\sin\frac{\theta_0}{2}\right)=2.3679\ \mathrm{s}\quad(\theta_0=90^\circ)</div>
-              <div class="texexpl">K es la integral elíptica completa; coincide con el período medido por RK4.</div>
-            </div>
-          </section>
-
-          <section class="texcol">
-            <div class="texhead"><b>El mismo código, comentado</b><span class="tag2">verificacion.py</span></div>
-
-            <div class="texstep">
-              <div class="n">1 · De 2º orden a 1er orden</div>
-              <pre class="pycode"><span class="pyk">def</span> <span class="pyf">F_real</span>(t, y):   <span class="pyc"># y = [u, v]</span>
+# y = [u, v] = [θ, θ&#x27;]
+def F_real(t, y):
     u, v = y
-    <span class="pyk">return</span> np.array([v, -(g/L)*np.sin(u)])
+    return np.array([v, -(g / L) * np.sin(u)])
 
-<span class="pyk">def</span> <span class="pyf">F_lineal</span>(t, y):
+# igual, pero sen u ≈ u
+def F_lineal(t, y):
     u, v = y
-    <span class="pyk">return</span> np.array([v, -(g/L)*u])</pre>
-              <div class="texexpl">Dos sistemas de primer orden: real y lineal.</div>
+    return np.array([v, -(g / L) * u])</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">02</span><span class="txt">Un paso de RK4</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+k_1&amp;=F\left(t_n,\;y_n\right)\\
+k_2&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_1\right)\\
+k_3&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_2\right)\\
+k_4&amp;=F\left(t_n+h,\;y_n+h\,k_3\right)\\
+y_{n+1}&amp;=y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+k_1&amp;=F\left(t_n,\;y_n\right)\\
+k_2&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_1\right)\\
+k_3&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_2\right)\\
+k_4&amp;=F\left(t_n+h,\;y_n+h\,k_3\right)\\
+y_{n+1}&amp;=y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)
+\end{aligned}</div>
             </div>
+            <pre class="pycode" data-py>def rk4(F, y0, t):
+    # una fila por instante
+    Y = np.zeros((len(t), 2))
+    Y[0] = y0
+    h = t[1] - t[0]                  # paso fijo
+    for i in range(len(t) - 1):
+        # al inicio
+        k1 = F(t[i], Y[i])
+        # a la mitad
+        k2 = F(t[i] + h/2, Y[i] + h/2 * k1)
+        # a la mitad
+        k3 = F(t[i] + h/2, Y[i] + h/2 * k2)
+        # al final
+        k4 = F(t[i] + h, Y[i] + h * k3)
+        # las de la mitad pesan el doble
+        Y[i+1] = Y[i] + h/6 * (k1 + 2*k2 + 2*k3 + k4)
+    return Y</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">03</span><span class="txt">Verificación 1 · modelo lineal contra la solución a mano</span></div>
+              <div class="texmath" data-tex="\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}"></div>
+              <div class="texsrc">\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}</div>
+            </div>
+            <pre class="pycode" data-py># el mismo caso de pendulo.py
+theta0 = math.radians(45)
+t = np.arange(0, 10 + 1e-9, 1e-3)    # h = 0.001 s
+Y = rk4(F_lineal, [theta0, 0.0], t)
+# la deducida a mano
+exacta = theta0 * np.cos(w * t)
+# mismo vector t para las dos curvas
+print(f&quot;{np.max(np.abs(Y[:, 0] - exacta)):.2e} rad&quot;)
+# → 1.88e-11 rad</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">04</span><span class="txt">Verificación 2 · modelo real contra la solución exacta</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+T&amp;=\frac{2T_0}{\pi}\,K\!\left(\sen\frac{\theta_0}{2}\right)=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
+\theta_0=90^{\circ}\;\Rightarrow\;T&amp;\approx 2.3678\ \text{s}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+T&amp;=\frac{2T_0}{\pi}\,K\!\left(\sen\frac{\theta_0}{2}\right)=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
+\theta_0=90^{\circ}\;\Rightarrow\;T&amp;\approx 2.3678\ \text{s}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># sale de la integral elíptica
+def periodo_exacto(grados):
+    T0 = 2 * math.pi / w
+    a, b = 1.0, math.cos(math.radians(grados) / 2)
+    # media aritmético-geométrica
+    while abs(a - b) &gt; 1e-15:
+        a, b = (a + b) / 2, math.sqrt(a * b)
+    return T0 / a
 
-            <div class="texstep">
-              <div class="n">2 · Paso RK4</div>
-              <pre class="pycode">k1 = F(t,      y)
-k2 = F(t+h/2,  y+h/2*k1)
-k3 = F(t+h/2,  y+h/2*k2)
-k4 = F(t+h,    y+h*k3)
-y  = y + h/6*(k1 + 2*k2 + 2*k3 + k4)</pre>
-              <div class="texexpl">El esqueleto de la guía, igual que en <span style="font-family:var(--mono)">pendulo.py</span>.</div>
-            </div>
-
-            <div class="texstep key">
-              <div class="n">3 · Verificación del modelo lineal</div>
-              <pre class="pycode">exacta = theta0*np.cos(w*t)      <span class="pyc"># deducida a mano</span>
-err = np.max(np.abs(Y[:,0]-exacta))
-<span class="pyf">print</span>(err)                     <span class="pyo"># 1.88e-11 rad</span></pre>
-              <div class="texexpl">Mismo vector de tiempos para las dos curvas (error típico evitado).</div>
-            </div>
-
-            <div class="texstep result">
-              <div class="n">4 · Verificación del modelo real</div>
-              <pre class="pycode">a, b = <span class="pyn">1.0</span>, np.cos(theta0/<span class="pyn">2</span>)   <span class="pyc"># AGM</span>
-<span class="pyk">while</span> abs(a-b) &gt; <span class="pyn">1e-15</span>:
-  a, b = (a+b)/<span class="pyn">2</span>, np.sqrt(a*b)
-T = T0/a                       <span class="pyo"># 2.3679 s</span></pre>
-              <div class="texexpl">Media aritmético-geométrica: la integral elíptica sin librerías extra.</div>
-            </div>
-          </section>
+print(f&quot;T(90°) = {periodo_exacto(90):.4f} s&quot;)
+# → T(90°) = 2.3678 s</pre>
+          </div>
         </div>
       </div>
+      <!-- fin p2Tex -->
 
       <div class="card">
-        <h4>Qué se ve en la gráfica de la izquierda</h4>
+        <h4>La gráfica de verificación</h4>
         <p class="leadp" style="margin:0;font-size:13px">Amarillo: RK4 del modelo real. Blanco discontinuo: solución elíptica exacta. Magenta: RK4 del modelo lineal. Cian discontinuo: θ₀·cos(ωt). Las parejas se superponen: eso es la verificación.</p>
       </div>
     </section>
 
     <!-- ======================= PERSONA 3 ======================= -->
     <section class="step reveal" id="p3" data-mode="error" data-index="2">
-      <div class="head"><span class="who">INTEGRANTE 3 · ≈ 3 min</span><span class="minutes">pasos 5–6 de la guía</span></div>
+      <div class="head"><span class="who">INTEGRANTE 3</span><span class="minutes">medición del error</span></div>
       <h2>3. Medir el período y hallar el umbral</h2>
-      <p class="leadp">La magnitud que importa no es el ángulo, sino el tiempo. El truco para medirlo: soltar desde el reposo y detectar cuándo la velocidad vuelve a cero. Ese instante es media oscilación.</p>
+      <p class="leadp">La magnitud que importa no es el ángulo, sino el tiempo. Para medirlo, el péndulo se suelta desde el reposo y se detecta cuándo la velocidad vuelve a cero: ese instante es media oscilación.</p>
 
       <div class="cite">
-        <b>Cita de la guía.</b> <span class="quote">«Medir el <b>período real</b> en cada caso (detectar cuándo la velocidad vuelve a cero) y hacer una tabla con el <b>error porcentual</b> frente a T₀. Graficar el <b>error del período</b> en función de θ₀ y determinar a partir de qué ángulo el error supera el <b>1 %</b>».</span>
-        <br>Fuente: <b>proyecto5_pendulo.md, §5 «Lo que programan» (líneas 55–60)</b>, valores de referencia en <b>§6 (líneas 64–74)</b> y procedimiento en <b>§12, pasos 5–6 (líneas 186–191)</b>.
+        <b>Enunciado.</b> <span class="quote">«Medir el <b>período real</b> en cada caso (detectar cuándo la velocidad vuelve a cero) y hacer una tabla con el <b>error porcentual</b> frente a T₀. Graficar el <b>error del período</b> en función de θ₀ y determinar a partir de qué ángulo el error supera el <b>1 %</b>».</span>
       </div>
 
-      <div class="card">
-        <h4>Tabla de la guía (valores calculados en vivo)</h4>
-        <table>
-          <thead><tr><th>θ₀</th><th>T₀ (lineal)</th><th>T real</th><th>error vs T</th><th>error vs T₀</th></tr></thead>
-          <tbody id="periodTable"></tbody>
-        </table>
-        <p class="hint">La convención de la guía divide entre el período <b>real</b> T (§6, línea 74): por eso a 90° sale 15.28 % y no 18.03 %. El umbral del 1 % cae en <b id="thrText">22.9°</b>.</p>
+      <div class="card texcard compact" id="p3Tex">
+        <div class="texhead">
+          <h4 style="margin:0">Medir el período · LaTeX ↔ Python</h4>
+          <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+        </div>
+        <div class="texgrid texrows">
+          <div class="texcolheads"><div class="hp"><b>Período y umbral del 1 %</b><span>periodo.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">periodo.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">01</span><span class="txt">La velocidad vuelve a cero en medio período</span></div>
+              <div class="texmath" data-tex="\theta&#x27;(t^{*})=0\ \ \text{en el extremo opuesto}\;\Rightarrow\;T=2\,t^{*}"></div>
+              <div class="texsrc">\theta&#x27;(t^{*})=0\ \ \text{en el extremo opuesto}\;\Rightarrow\;T=2\,t^{*}</div>
+            </div>
+            <pre class="pycode" data-py>import math
+
+g, L = 9.81, 1.0
+# período lineal, 2.0061 s
+T0 = 2 * math.pi * math.sqrt(L / g)
+
+# un paso RK4 del péndulo real
+def paso(u, v, h):
+    f = lambda u, v: (v, -(g / L) * math.sin(u))
+    k1 = f(u, v)
+    k2 = f(u + h/2*k1[0], v + h/2*k1[1])
+    k3 = f(u + h/2*k2[0], v + h/2*k2[1])
+    k4 = f(u + h*k3[0], v + h*k3[1])
+    return (u + h/6*(k1[0] + 2*k2[0] + 2*k3[0] + k4[0]),
+            v + h/6*(k1[1] + 2*k2[1] + 2*k3[1] + k4[1]))
+
+def periodo_real(grados, h=1e-4):
+    # sale del reposo
+    u, v, t = math.radians(grados), 0.0, 0.0
+    while True:
+        v_ant = v
+        u, v = paso(u, v, h)
+        t += h
+        # θ&#x27; pasó de − a +: otro extremo
+        if v_ant &lt; 0 &lt;= v:
+            # se interpola entre los dos pasos para hallar t*
+            t_cero = t - h + h * (-v_ant) / (v - v_ant)
+            # ese instante es T/2
+            return 2 * t_cero
+
+print(f&quot;T(90°) = {periodo_real(90):.4f} s&quot;)
+# → T(90°) = 2.3678 s</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">02</span><span class="txt">Error porcentual del período</span></div>
+              <div class="texmath" data-tex="\begin{aligned}
+E&amp;=\frac{T-T_0}{T}\times 100\%\qquad\text{(contra }T\text{, como la guía)}\\
+E_{T_0}&amp;=\frac{T-T_0}{T_0}\times 100\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+E&amp;=\frac{T-T_0}{T}\times 100\%\qquad\text{(contra }T\text{, como la guía)}\\
+E_{T_0}&amp;=\frac{T-T_0}{T_0}\times 100\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># la guía divide entre T real
+def error_periodo(grados):
+    T = periodo_real(grados)
+    return (T - T0) / T * 100</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">03</span><span class="txt">Tabla de los cuatro casos</span></div>
+              <table class="papertable"><thead><tr><th>θ₀</th><th>T₀ (lineal)</th><th>T real</th><th>error vs T</th><th>error vs T₀</th></tr></thead><tbody id="periodTable"></tbody></table><p class="paperhint">Valores calculados en vivo. A 90° el error contra T es 15.28 % (contra T₀ sería 18.03 %).</p>
+            </div>
+            <pre class="pycode" data-py># los 4 casos del enunciado
+for d in (10, 45, 90, 150):
+    T = periodo_real(d)
+    # el mismo error de arriba
+    error = (T - T0) / T * 100
+    print(f&quot;{d:&gt;3}°  T = {T:.4f} s  error = {error:.2f} %&quot;)
+# →  10°  T = 2.0099 s  error = 0.19 %
+#    45°  T = 2.0863 s  error = 3.84 %
+#    90°  T = 2.3678 s  error = 15.28 %
+#   150°  T = 3.5351 s  error = 43.25 %</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">04</span><span class="txt">Umbral del 1 %</span></div>
+              <div class="texmath" data-tex="E(\theta_0)=1\%\;\Rightarrow\;\theta_0\approx 22.9^{\circ}"></div>
+              <div class="texsrc">E(\theta_0)=1\%\;\Rightarrow\;\theta_0\approx 22.9^{\circ}</div>
+              <p class="paperhint">En la página: el umbral del 1 % cae en <b id="thrText">22.9°</b>.</p>
+            </div>
+            <pre class="pycode" data-py># en 1° es &lt; 1 %, en 60° es &gt; 1 %
+a, b = 1.0, 60.0
+# bisección: se parte a la mitad
+for _ in range(30):
+    m = (a + b) / 2
+    if error_periodo(m) &lt; 1:
+        # el umbral está más arriba
+        a = m
+    else:
+        # el umbral está más abajo
+        b = m
+print(f&quot;umbral = {m:.1f}°&quot;)
+# → umbral = 22.9°</pre>
+          </div>
+        </div>
       </div>
+      <!-- fin p3Tex -->
 
       <div class="card">
-        <h4>Qué decir mientras se dibuja la curva</h4>
+        <h4>Lectura de la curva de error</h4>
         <ol class="steps">
           <li>El error es monótono: a más amplitud, más demora del péndulo real.</li>
           <li>Hasta ≈ <b>23°</b> el modelo lineal sirve para cronometrar (error ≤ 1 %).</li>
           <li>A 45° el error es 3.8 %; a 90°, 15.3 %; a 150°, 43 %. La aproximación ya no es defendible.</li>
-          <li>Señala la línea roja del 1 % y la intersección con la curva: ese es el criterio de diseño.</li>
+          <li>El punto donde la curva cruza la línea roja del 1 % es el criterio de diseño.</li>
         </ol>
       </div>
     </section>
 
     <!-- ======================= PERSONA 4 ======================= -->
     <section class="step reveal" id="p4" data-mode="anim" data-index="3">
-      <div class="head"><span class="who">INTEGRANTE 4 · ≈ 5 min</span><span class="minutes">pasos 7–8 de la guía</span></div>
+      <div class="head"><span class="who">INTEGRANTE 4</span><span class="minutes">simulación y conclusión</span></div>
       <h2>4. Animación 3D y conclusión</h2>
-      <p class="leadp">Este es el punto alto de la exposición: dos péndulos soltados al mismo tiempo desde 90°. El real se atrasa y la diferencia se ve a simple vista. Arrastra sobre la escena para girar la cámara.</p>
+      <p class="leadp">Dos péndulos soltados al mismo tiempo desde 90°: el real y el lineal. El real se atrasa y la diferencia se ve a simple vista.</p>
 
       <div class="cite">
-        <b>Cita de la guía.</b> <span class="quote">«La animación de los dos péndulos desfasándose es el punto alto. Cierre con la pregunta: <b>¿un reloj de péndulo adelanta o atrasa si se le aumenta la amplitud?</b>»</span>
-        <br>Fuente: <b>proyecto5_pendulo.md, §7 «En la exposición» (líneas 78–83)</b>; animación en <b>§5 (línea 60)</b> y cierre en <b>§12, paso 8 (líneas 196–198)</b>.
+        <b>Pregunta del enunciado.</b> <span class="quote">«<b>¿Un reloj de péndulo adelanta o atrasa si se le aumenta la amplitud?</b>»</span>
       </div>
 
       <div class="card">
-        <h4>Cómo dirigir la demo</h4>
+        <h4>Qué muestra la simulación</h4>
         <ol class="steps">
-          <li>Pulsa el botón <b>90°</b> y <b>Reiniciar</b>. Ambos salen de θ(0) = 90° con θ'(0) = 0.</li>
-          <li>Deja correr 10 segundos: el péndulo lineal (magenta) completa más oscilaciones que el real (dorado).</li>
-          <li>Cambia a <b>10°</b>: las dos masas se mueven juntas. Ese es el contraste.</li>
-          <li>Mueve L y g para mostrar que los parámetros son modificables y que las ecuaciones se recalculan.</li>
+          <li>A <b>90°</b>, los dos salen de θ(0) = 90° con θ'(0) = 0.</li>
+          <li>En 10 segundos el péndulo lineal (violeta) completa más oscilaciones que el real (dorado).</li>
+          <li>A <b>10°</b> las dos pesas se mueven juntas: ahí la aproximación funciona.</li>
+          <li>L y g se pueden cambiar y todo se recalcula.</li>
         </ol>
       </div>
 
-      <div class="verdict">
-        <h4>Conclusión de ingeniería (dila en voz alta)</h4>
-        <p>«Si aceptamos como mucho 1 % de error en el período, el ángulo de trabajo debe ser ≤ ~23°. Si necesitamos precisión de tiempo, diseñamos con θ₀ ≤ 10°, donde el error es 0.19 %. Y respondiendo a la pregunta final: <b>el reloj atrasa</b>, porque al aumentar la amplitud crece el período real; a 90° pierde unas 220 minutos por día».</p>
+      <div class="papernote">
+        <h4><span>Conclusión de ingeniería</span></h4>
+        <p>Si se acepta como mucho 1 % de error en el período, el ángulo de trabajo debe ser ≤ 23°. Si se necesita precisión de tiempo, se diseña con θ₀ ≤ 10°, donde el error es 0.19 %. Y respondiendo a la pregunta: <b>el reloj atrasa</b>, porque al aumentar la amplitud crece el período real; a 90° pierde unos 220 minutos por día.</p>
       </div>
     </section>
 
     <!-- ======================= CIERRE ======================= -->
     <section class="step reveal" id="cierre" data-mode="cierre" data-index="3">
-      <div class="head"><span class="who">TODOS · 5 min</span><span class="minutes">defensa</span></div>
+      <div class="head"><span class="who">TODOS</span><span class="minutes">preguntas</span></div>
       <h2>Cierre y preguntas</h2>
-      <p class="leadp">Todos los integrantes deben hablar y responder sobre su propio trabajo. Si alguien no expone, esa persona saca 0 (§9, línea 144). Si usaste IA, declárala en el README (§11, líneas 157–164).</p>
+      <p class="leadp">Gracias por su atención. Quedamos atentos a sus preguntas.</p>
       <div class="card">
-        <h4>Preguntas que suelen caer</h4>
+        <h4>Preguntas frecuentes</h4>
         <ol class="steps">
           <li><b>¿Por qué T₀ no depende de la amplitud?</b> Porque en θ'' + ω²θ = 0 la frecuencia es ω = √(g/L); la amplitud solo escala la solución.</li>
           <li><b>¿Cómo saben que el integrador está bien?</b> Porque coincide con la solución exacta deducida a mano y con la solución elíptica del modelo real.</li>
@@ -1128,8 +1314,8 @@ T = T0/a                       <span class="pyo"># 2.3679 s</span></pre>
           <li><b>¿Qué pasa si agrandan el paso h?</b> La trayectoria se deforma; al reducirlo diez veces la curva se estabiliza.</li>
         </ol>
       </div>
-      <div class="card">
-        <h4>Checklist rápido (§13, líneas 211–228)</h4>
+      <div class="papernote">
+        <h4><span>Lo que cubre el proyecto</span></h4>
         <div class="checks">
           <span>Ecuaciones + origen de términos</span><span>Solución analítica completa</span><span>Taylor 10° y 90°</span>
           <span>Numérica vs exacta superpuestas</span><span>Tabla de 4 períodos</span><span>Curva de error + 1 %</span>
@@ -1171,7 +1357,7 @@ const NOTEBOOKS = {
 import numpy as np
 import matplotlib.pyplot as plt
 
-L, g = 1.0, 9.81                     # datos de la guia (§2)
+L, g = 1.0, 9.81                     # datos del enunciado
 
 # sen(t) = t - t^3/6 + t^5/120 - ...
 # Para angulos pequenos se conserva solo t -> modelo lineal
@@ -1207,7 +1393,7 @@ import matplotlib.pyplot as plt
 L, g = 1.0, 9.81
 a = np.deg2rad(90.0)                 # theta0 en RADIANES
 
-# De 2do orden a 1er orden (§8):  u = theta, v = theta'
+# De 2do orden a 1er orden:  u = theta, v = theta'
 #   real:   u' = v ; v' = -(g/L)*sen(u)
 #   lineal: u' = v ; v' = -(g/L)*u
 def F(u, v, real):
@@ -2002,7 +2188,7 @@ function setMode(mode){
              verify:{label:'MODO 2 · RK4 Y VERIFICACIÓN',chart:'verify'},
              error:{label:'MODO 3 · PERÍODO Y UMBRAL',chart:'error'},
              anim:{label:'MODO 4 · ANIMACIÓN 3D',chart:'cases'},
-             cierre:{label:'CIERRE · DEFENSA',chart:'cases'}}[mode];
+             cierre:{label:'CIERRE · PREGUNTAS',chart:'cases'}}[mode];
   $('modeLabel').textContent=map.label;
   S.modeChart=map.chart;
   $('chartTitle').textContent = S.view==='code'
@@ -2184,12 +2370,15 @@ let taxRendered = false;
 function renderTaxLatex(){
   // Python de cada renglón: resaltado tipo editor y números de línea seguidos en todo el
   // archivo, como si fuera un solo punto_a_mano.py abierto en el editor
-  let ln=0;
-  document.querySelectorAll('pre.pycode[data-py]').forEach(pre=>{
-    if(pre.dataset.hl) return;
-    pre.innerHTML=pre.textContent.split('\n')
-      .map(l=>'<span class="ln">'+(++ln)+'</span>'+hlLine(l)).join('\n');
-    pre.dataset.hl='1';
+  // (cada tarjeta es un archivo distinto: la numeración vuelve a empezar en 1)
+  document.querySelectorAll('.texrows').forEach(hoja=>{
+    let ln=0;
+    hoja.querySelectorAll('pre.pycode[data-py]').forEach(pre=>{
+      if(pre.dataset.hl) return;
+      pre.innerHTML=pre.textContent.split('\n')
+        .map(l=>'<span class="ln">'+(++ln)+'</span>'+hlLine(l)).join('\n');
+      pre.dataset.hl='1';
+    });
   });
   if(taxRendered || typeof katex === 'undefined') return;
   document.querySelectorAll('.texmath[data-tex]').forEach(el=>{
