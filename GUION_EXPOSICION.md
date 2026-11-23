@@ -1,38 +1,47 @@
 # Guion de exposición (15 min + 5 de preguntas)
 
 **Pantalla:** `simulador_3d_exposicion.html` (doble clic, no necesita internet). Se avanza haciendo
-scroll: cada bloque es la intervención de un integrante y el menú de arriba salta a cada uno
-(Portada · 1 · A mano · 2 · RK4 · 3 · Período · 4 · 3D y cierre).
-
-Todos hablan: quien no expone saca 0. Cada uno debe poder explicar *cualquier* parte de su bloque
-sin leer, incluido el Python que se ve en pantalla. Si son 3, el Integrante 4 se reparte entre el 2 y el 3.
+scroll y el menú de arriba salta a cada parte (Portada · 1 · A mano · 2 · RK4 · 3 · Período · 4 · 3D y cierre).
+La página no muestra nombres: dice «Parte 1… 4» y «Cierre». El reparto es este:
 
 | Min | Quién | Qué se dice | Qué se muestra |
 |---|---|---|---|
-| 0–1 | Integrante 1 | La pregunta del proyecto: ¿hasta qué ángulo vale sen θ ≈ θ? | Portada |
-| 1–5 | Integrante 1 | **El ejercicio a mano** (Puntos 1, 2 y 3). Ver «Bloque 1» abajo | Bloque 1: el 3D se oculta y aparece el ejercicio a todo el ancho, con la hoja (LaTeX) a la izquierda y el editor (Python) a la derecha |
-| 5–8 | Integrante 2 | **Del papel al código:** de segundo orden a sistema (u = θ, v = θ'), el paso RK4 y la verificación contra las dos soluciones exactas | Bloque 2: el sistema, el paso RK4, las dos columnas LaTeX ↔ Python y la gráfica de verificación |
-| 8–11 | Integrante 3 | **Período y umbral:** se mide cuándo θ' vuelve a cero (medio período), la tabla de los 4 casos y el error del 1 % en 22.9° | Bloque 3: tabla en vivo y curva de error con la línea roja del 1 % |
-| 11–15 | Integrante 4 | **Punto alto:** los dos péndulos soltados a 90°, el real se atrasa. Después, la conclusión de ingeniería y la pregunta del reloj | Bloque 4: render 3D (botones 90° y 10°) |
-| 15–20 | Todos | Preguntas | Bloque «Cierre y preguntas» |
+| 0:00–3:30 | Santiago | La pregunta del proyecto y el **Punto 1** (pasos 01 a 11, hasta T₀ ≈ 2.0061 s) | Portada y Parte 1: el 3D se oculta y aparece la hoja con el ejercicio |
+| 3:30–6:00 | Cristian | **Punto 2 y Punto 3** (pasos 12 a 21: Taylor, 0.51 % y 57.08 %) | Parte 1, segunda mitad de la hoja |
+| 6:00–9:30 | Diego | **RK4 y verificación** contra las dos soluciones exactas | Parte 2: hoja + `verificacion.py` y la gráfica de verificación |
+| 9:30–12:30 | Caterine | **Medir el período**, tabla de los 4 casos y umbral del 1 % (22.9°) | Parte 3: tabla en vivo y curva de error |
+| 12:30–14:00 | Diego | **Demo 3D:** 90° contra 10° | Parte 4: render 3D |
+| 14:00–15:00 | Caterine | **Conclusión de ingeniería** y la pregunta del reloj | Parte 4: nota de la conclusión |
+| 15:00–20:00 | Todos | Preguntas | Cierre |
 
-## Bloque 1 · el ejercicio a mano (Integrante 1, 4 min)
+Todos hablan: quien no expone saca 0. Cada uno debe poder explicar *cualquier* parte de su bloque
+sin leer, incluido el Python de su parte.
 
-La tarjeta tiene 21 pasos numerados. No hay tiempo de leerlos todos: se recorren con scroll y se
+## Parte 1 · el ejercicio a mano (Santiago y Cristian, 6 min)
+
+La hoja tiene 21 pasos numerados, igual que el PDF (5) del taller. Se recorre con scroll y se
 detiene en los marcados con ★.
 
-- **Punto 1** (≈ 2.5 min): 01 ecuación y condiciones · 03 se reemplaza y se factoriza eʳᵗ ·
-  ★ 04 se despeja r = ±iω · 05 solución general (e⁰ = 1) · 06 y 08 las dos condiciones iniciales (C₁ = θ₀, C₂ = 0) ·
-  ★ 09 θ(t) = θ₀cos(√(g/L)·t) · ★ 10 T₀ = 2π√(L/g) · ★ 11 evaluación numérica: T₀ ≈ 2.0061 s con L = 1 m y g = 9.81 m/s².
-- **Punto 2** (≈ 20 s): ★ 12 θ₀ no aparece en T₀ (2.0061 s para cualquier ángulo); el péndulo real sí depende de la amplitud (T > T₀).
-- **Punto 3** (≈ 1 min): 15 derivadas de sen θ en 0 · 16 serie hasta θ⁵ · ★ 17 sen θ ≈ θ ·
-  ★ 19 y 20 error de 0.51 % a 10° y de 57.08 % a 90° · 21 tabla resumen y conclusión.
-- Cierre del bloque: «Ahora vamos a comprobar con el programa cuándo el péndulo real deja de obedecer T₀».
+- **Santiago · Punto 1** (3:30): 01 ecuación y condiciones · 03 se reemplaza y se factoriza eʳᵗ ·
+  ★ 04 se despeja r = ±iω (i = √−1, ω = frecuencia natural) · 05 solución general (e⁰ = 1) ·
+  06 y 08 las dos condiciones iniciales (C₁ = θ₀, C₂ = 0) · ★ 09 θ(t) = θ₀cos(√(g/L)·t) ·
+  ★ 10 T₀ = 2π√(L/g) · ★ 11 evaluación numérica: T₀ ≈ 2.0061 s con L = 1 m y g = 9.81 m/s².
+- **Cristian · Punto 2** (≈ 30 s): ★ 12 θ₀ no aparece en T₀ (2.0061 s para cualquier ángulo);
+  el péndulo real sí depende de la amplitud (T > T₀, tarda más).
+- **Cristian · Punto 3** (≈ 2 min): 13 y 14 Taylor y Maclaurin · 15 derivadas de sen θ en 0 · 16 la serie ·
+  ★ 17 sen θ ≈ θ · ★ 19 y 20 error de 0.51 % a 10° y de 57.08 % a 90° · 21 tabla resumen y conclusión.
+- Cierre de Cristian: «Ahora vamos a comprobar con el programa cuándo el péndulo real deja de obedecer T₀».
 
-Para cada paso, a la derecha está la misma operación en Python con su salida real (`# → T0 = 2.0061 s`).
-El botón **Ver código LaTeX** muestra el código fuente de las fórmulas, por si lo piden.
+Por defecto la hoja muestra solo el LaTeX. Botones (arriba de la tarjeta y también en el encabezado de la hoja):
+- **✎ Ver pasos:** muestra una nota a lápiz sobre cada ecuación con lo que hace ese paso, dicho simple.
+  Sirve de apoyo para explicar; otro toque las oculta.
+- **‹/› Ver cód:** saca el editor con el Python de cada paso desde detrás de la hoja. Úsenlo si la profe
+  pregunta por el código.
+- **Ver código LaTeX:** muestra el código fuente de las fórmulas.
 
-## Bloque 4 · la demo (Integrante 4)
+Las hojas de RK4 (Parte 2) y del período (Parte 3) también tienen **✎ Ver pasos**.
+
+## Parte 4 · la demo (Diego)
 
 1. Botón **90°** y **Reiniciar**: los dos salen de θ(0) = 90° con θ'(0) = 0.
 2. Dejar correr unos 10 s: el lineal (violeta) completa más oscilaciones que el real (dorado).

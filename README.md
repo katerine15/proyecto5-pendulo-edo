@@ -16,7 +16,7 @@ El tablero web más grande quedó como extra en [`tablero-avanzado/`](tablero-av
 | Archivo | Qué es |
 |---|---|
 | `simulador_3d.html` | **Simulador principal** para la exposición: vista 3D y 2D, casos del enunciado, tabla de períodos, 7 gráficas y el ejercicio a mano paso a paso |
-| `simulador_3d_exposicion.html` | Guion visual de exposición en 4 voces. El **ejercicio a mano completo** (Puntos 1, 2 y 3, como en `Ecusamano/`) aparece renglón por renglón: a la izquierda en **LaTeX** sobre una hoja de cuaderno y a la derecha su paralelo en **Python** (`math`/`numpy`) en un editor; al llegar ahí el 3D se oculta y la sección ocupa toda la pantalla. La verificación del Punto 2 (RK4) va en dos columnas. Incluye modo claro/oscuro |
+| `simulador_3d_exposicion.html` | Página de la exposición en 4 partes. El **ejercicio a mano completo** (Puntos 1, 2 y 3, igual que el PDF (5) de `Ecusamano/`) aparece en **LaTeX** sobre una hoja de cuaderno, paso a paso. **Ver pasos** muestra notas a lápiz que explican cada paso y **Ver cód** saca de detrás de la hoja su paralelo en **Python** (`math`/`numpy`). Al llegar ahí el 3D se oculta y la sección ocupa toda la pantalla. RK4 y el período también tienen su hoja y su código. Incluye modo claro/oscuro y control de velocidad |
 | `GUION_EXPOSICION.md` | Quién habla, cuánto tiempo, qué se muestra y preguntas probables |
 | `requirements.txt` | Librerías de Python que necesita el proyecto |
 | `pendulo.py` | Programa principal: modelo, RK4, solución exacta, medición del período, gráficas y animación |

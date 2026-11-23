@@ -209,13 +209,10 @@ td.hi{color:var(--real);font-weight:600}
 .texcard{--texL:0px;position:relative;z-index:2;padding:20px 22px 24px;
   clip-path:inset(0 0 0 var(--texL) round 18px);transition:clip-path .7s cubic-bezier(.2,.8,.2,1),box-shadow .5s ease}
 body.eq-focus .texcard{clip-path:inset(0 0 0 0 round 18px);box-shadow:0 30px 90px rgba(0,0,0,.5)}
-/* Sin overflow:hidden (rompería el encabezado fijo): las esquinas las redondea cada hoja */
-.texgrid.texrows{position:relative;display:flex;flex-direction:column;gap:0;border-radius:14px;
-  box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(148,163,184,.18)}
-.texgrid.texrows::before{border-radius:14px 0 0 14px}
-.texgrid.texrows::after{border-radius:0 14px 14px 0}
-.texcolheads .hp{border-top-left-radius:14px}
-.texcolheads .he{border-top-right-radius:14px}
+/* Sin overflow:hidden (rompería el encabezado fijo): cada hoja lleva sus esquinas y su sombra */
+.texgrid.texrows{position:relative;display:flex;flex-direction:column;gap:0}
+.texgrid.texrows::before,.texgrid.texrows::after{border-radius:14px}
+.texcolheads .hp,.texcolheads .he{border-radius:14px 14px 0 0}
 .texrows .pycode,.texrows .tx .texmath{overscroll-behavior-x:contain}
 /* Papel: blanco cálido, grano de fibra, cuadrícula azul y margen rojo */
 .texgrid.texrows::before{content:"";position:absolute;left:0;top:0;bottom:0;width:50%;z-index:0;pointer-events:none;
@@ -236,23 +233,60 @@ body.eq-focus .texcard{clip-path:inset(0 0 0 0 round 18px);box-shadow:0 30px 90p
     linear-gradient(90deg,#181818 0,#181818 50px,rgba(255,255,255,.06) 50px,rgba(255,255,255,.06) 51px,transparent 51px),
     radial-gradient(120% 70% at 50% 0%,rgba(255,255,255,.035),transparent 60%);
   background-size:160px 160px,100% 100%,100% 100%}
-/* Capas (de abajo hacia arriba): papel 1 · contenido del papel 2 · editor 3 · código 4.
-   Las filas no crean su propio contexto de capas, así la hoja puede pasar por DEBAJO del editor. */
+/* Capas (de abajo hacia arriba): editor 1 · código 2 · papel 3 · contenido del papel 4.
+   Las filas no crean su propio contexto de capas, así el editor puede esconderse DEBAJO de la hoja. */
 .texcolheads,.texpart,.texrow{position:relative;z-index:auto}
-.texgrid.texrows::before{z-index:1}
-.texgrid.texrows::after{z-index:3;box-shadow:-16px 0 28px -10px rgba(0,0,0,.5)}
-.texrow .tx,.texpart .pp{position:relative;z-index:2}
-.texrow .pycode,.texpart .pc{position:relative;z-index:4}
-.texcolheads .hp{position:relative;z-index:5}
-.texcolheads .he{position:relative;z-index:7}
-/* La hoja sale de detrás del editor al llegar (.paper-in) y vuelve a esconderse al salir */
+.texgrid.texrows::after{z-index:1;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.texrow .pycode,.texpart .pc{position:relative;z-index:2}
+.texgrid.texrows::before{z-index:3;
+  box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(120,95,60,.18),18px 0 30px -12px rgba(0,0,0,.45)}
+.texrow .tx,.texpart .pp{position:relative;z-index:4}
+.texcolheads .he{position:relative;z-index:5}
+.texcolheads .hp{position:relative;z-index:7}
+/* Por defecto solo se ve la hoja, centrada, y el editor espera escondido justo detrás de ella.
+   "Ver cód" (.show-code) corre la hoja a la izquierda y el editor sale hacia la derecha.
+   Solo se animan desplazamientos: no cambia el alto de la página. */
 .texgrid.texrows::before,.texrow .tx,.texpart .pp,.texcolheads .hp{
-  transform:translateX(100%);transition:transform .55s cubic-bezier(.55,0,.75,.25)}
-.texcard.paper-in .texgrid.texrows::before,.texcard.paper-in .texrow .tx,
-.texcard.paper-in .texpart .pp,.texcard.paper-in .texcolheads .hp{
-  transform:translateX(0);transition:transform .9s cubic-bezier(.16,1,.3,1) .18s}
+  transform:translateX(50%);transition:transform .65s cubic-bezier(.65,0,.35,1)}
+.texgrid.texrows::after,.texrow .pycode,.texpart .pc,.texcolheads .he{
+  transform:translateX(-50%);visibility:hidden;
+  transition:transform .65s cubic-bezier(.65,0,.35,1),visibility 0s linear .65s}
+.texcard.show-code .texgrid.texrows::before,.texcard.show-code .texrow .tx,
+.texcard.show-code .texpart .pp,.texcard.show-code .texcolheads .hp{transform:translateX(0)}
+.texcard.show-code .texgrid.texrows::after,.texcard.show-code .texrow .pycode,
+.texcard.show-code .texpart .pc,.texcard.show-code .texcolheads .he{
+  transform:translateX(0);visibility:visible;transition:transform .65s cubic-bezier(.65,0,.35,1),visibility 0s}
+/* Con el código escondido, cada fila mide solo lo que mide su LaTeX (hoja compacta, sin huecos).
+   Al pulsar "Ver cód" el código vuelve a la fila y cada renglón queda frente a su Python. */
+.texcard:not(.compact):not(.show-code) .texrow .pycode{position:absolute;top:0;right:0;width:50%}
+/* Notas "a lápiz" de cada paso (botón "Ver pasos"): letra manuscrita gris grafito, un poco
+   inclinada, arriba a la izquierda de la ecuación. Fuentes del sistema: no se descarga nada. */
+.texrow .nota{display:none;margin:2px 0 6px;max-width:94%;
+  font:16px/1.35 "Ink Free","Segoe Print","Bradley Hand","Comic Sans MS",cursive;color:#4b5563;
+  text-shadow:0 0 .4px rgba(31,41,55,.55);transform:rotate(-1.2deg);transform-origin:left center}
+.texrow .nota::before{content:"✎ ";opacity:.7}
+.texcard.show-notes .texrow .nota{display:block;animation:notaLapiz .4s ease-out}
+@keyframes notaLapiz{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:reduce){.texcard.show-notes .texrow .nota{animation:none}}
+.notesbtn[aria-pressed="true"]{background:rgba(250,204,21,.18);border-color:#d4a017;color:var(--ink)}
+.texcolheads .hp .notesbtn{margin-left:auto;align-self:center;padding:4px 10px;border-radius:7px;
+  font:600 11px var(--mono);background:#fff;color:#374151;border:1px solid rgba(55,65,81,.35)}
+.texcolheads .hp .notesbtn[aria-pressed="true"]{background:#fde68a;border-color:#d4a017;color:#1f2937}
+.texcolheads .hp .notesbtn + .codebtn{margin-left:8px}
+/* Encabezado de la hoja en una sola línea: si falta espacio se acorta el subtítulo */
+.texcolheads .hp{flex-wrap:nowrap;align-items:center}
+.texcolheads .hp b{white-space:nowrap;flex:none}
+.texcolheads .hp span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.texcolheads .hp .notesbtn,.texcolheads .hp .codebtn{white-space:nowrap;flex:none}
+/* Botones de la tarjeta y copia de "Ver cód" en el encabezado fijo de la hoja */
+.texbtns{display:flex;gap:8px;flex-wrap:wrap}
+.codebtn[aria-pressed="true"]{background:rgba(55,148,255,.2);border-color:#3794ff;color:var(--ink)}
+.texcolheads .hp .codebtn{margin-left:auto;align-self:center;padding:4px 10px;border-radius:7px;
+  font:600 11px var(--mono);background:#0f172a;color:#e2e8f0;border:1px solid rgba(15,23,42,.35)}
+.texcolheads .hp .codebtn[aria-pressed="true"]{background:#3794ff;border-color:#3794ff;color:#fff}
 @media (prefers-reduced-motion:reduce){
-  .texgrid.texrows::before,.texrow .tx,.texpart .pp,.texcolheads .hp{transform:none!important;transition:none!important}
+  .texgrid.texrows::before,.texgrid.texrows::after,.texrow .tx,.texrow .pycode,.texpart .pp,.texpart .pc,
+  .texcolheads .hp,.texcolheads .he{transition:none!important}
 }
 /* Encabezado: espiral del cuaderno | barra de título del editor */
 /* sticky siempre crea su propio contexto de capas: va por encima de las dos hojas, y adentro
@@ -320,7 +354,9 @@ body.light .texrow .tx .texmath{color:#111827}
 .texcard.compact .texcolheads .hp{border-radius:14px 14px 0 0}
 .texcard.compact .texcolheads .he{border-radius:0;height:38px}
 .texcard.compact .texrow,.texcard.compact .texpart{grid-template-columns:1fr}
-.texcard.compact .texrow .tx,.texcard.compact .texcolheads .hp,.texcard.compact .texpart .pp{transform:none!important;transition:none!important}
+.texcard.compact .texrow .tx,.texcard.compact .texcolheads .hp,.texcard.compact .texpart .pp,
+.texcard.compact .texrow .pycode,.texcard.compact .texcolheads .he,.texcard.compact .texpart .pc{
+  transform:none!important;transition:none!important;visibility:visible!important}
 .texcard.compact .texrow .tx{border-bottom:0;border-top:2px solid rgba(37,99,235,.18)}
 .texcard.compact .texrow .pycode{background:#1e1e1e linear-gradient(90deg,#181818 0,#181818 50px,rgba(255,255,255,.06) 50px,rgba(255,255,255,.06) 51px,transparent 51px);
   border-bottom:0;font-size:12.5px}
@@ -348,7 +384,10 @@ body.light .texrow .tx .texmath{color:#111827}
 /* Celular y tablet: cada renglón apila la hoja y el editor */
 @media(max-width:980px){
   .texgrid.texrows::before,.texgrid.texrows::after{display:none}
-  .texrow .tx,.texpart .pp,.texcolheads .hp{transform:none!important;transition:none!important}
+  .texrow .tx,.texpart .pp,.texcolheads .hp,.texrow .pycode,.texpart .pc,.texcolheads .he{
+    transform:none!important;transition:none!important;visibility:visible!important}
+  /* en celular el código va debajo de cada paso, solo si se pidió con "Ver cód" */
+  .texcard:not(.compact):not(.show-code) .texrow .pycode{display:none}
   .texcolheads{display:none}
   .texpart,.texrow{grid-template-columns:1fr}
   .texpart .pp,.texrow .tx{background:#fffdf7}
@@ -492,10 +531,10 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
   <div class="rule reveal" style="--d:.18s"><b>Regla del proyecto:</b> primero la matemática, después el programa. El programa <b>verifica</b> la solución analítica; no la reemplaza.</div>
 
   <div class="speakers">
-    <article class="spk reveal" style="--d:.24s"><div class="n">INTEGRANTE 1</div><h3>El punto a mano</h3><p>Ecuación, linealización, solución exacta y Taylor.</p></article>
-    <article class="spk reveal" style="--d:.30s"><div class="n">INTEGRANTE 2</div><h3>Del papel al código</h3><p>Sistema de 1er orden, RK4 y verificación.</p></article>
-    <article class="spk reveal" style="--d:.36s"><div class="n">INTEGRANTE 3</div><h3>Período y umbral</h3><p>Detección de θ′ = 0, tabla y error del 1 %.</p></article>
-    <article class="spk reveal" style="--d:.42s"><div class="n">INTEGRANTE 4</div><h3>Animación y cierre</h3><p>Escena 3D, conclusión y pregunta del reloj.</p></article>
+    <article class="spk reveal" style="--d:.24s"><div class="n">PARTE 1</div><h3>El punto a mano</h3><p>Ecuación, linealización, solución exacta y Taylor.</p></article>
+    <article class="spk reveal" style="--d:.30s"><div class="n">PARTE 2</div><h3>Del papel al código</h3><p>Sistema de 1er orden, RK4 y verificación.</p></article>
+    <article class="spk reveal" style="--d:.36s"><div class="n">PARTE 3</div><h3>Período y umbral</h3><p>Detección de θ′ = 0, tabla y error del 1 %.</p></article>
+    <article class="spk reveal" style="--d:.42s"><div class="n">PARTE 4</div><h3>Animación y cierre</h3><p>Escena 3D, conclusión y pregunta del reloj.</p></article>
   </div>
 </section>
 
@@ -564,7 +603,7 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
   <div class="story">
     <!-- ======================= PERSONA 1 ======================= -->
     <section class="step reveal" id="p1" data-mode="manual" data-index="0">
-      <div class="head"><span class="who">INTEGRANTE 1</span><span class="minutes">solución analítica</span></div>
+      <div class="head"><span class="who">PARTE 1</span><span class="minutes">solución analítica</span></div>
       <h2>1. El punto a mano</h2>
       <p class="leadp">Primero la matemática: resolvemos a mano el modelo lineal, deducimos su período y justificamos la aproximación con Taylor. Después el programa comprueba esta solución.</p>
 
@@ -587,15 +626,20 @@ body.light .zoomctl button{background:rgba(255,255,255,.85)}
 
       <div class="card texcard" id="p1Latex">
         <div class="texhead">
-          <h4 style="margin:0">El ejercicio a mano · LaTeX ↔ Python</h4>
-          <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          <h4 style="margin:0">El ejercicio a mano</h4>
+          <div class="texbtns">
+            <button type="button" class="texbtn notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button>
+            <button type="button" class="texbtn codebtn" aria-pressed="false" onclick="toggleCode(this)">‹/› Ver cód</button>
+            <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          </div>
         </div>
         <div class="texgrid texrows">
-          <div class="texcolheads"><div class="hp"><b>Taller · Péndulo simple</b><span>punto_a_mano.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">punto_a_mano.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texcolheads"><div class="hp"><b>Taller · Péndulo simple</b><span>Resolución paso a paso</span><button type="button" class="notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button><button type="button" class="codebtn" aria-pressed="false" onclick="toggleCode(this)">‹/› Ver cód</button></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">punto_a_mano.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
           <div class="texpart"><div class="pp"><b>Punto 1</b><span>Resolver la ecuación lineal con θ(0) = θ₀, θ&#x27;(0) = 0 y deducir T₀ = 2π√(L/g).</span></div><div class="pc"># ── PUNTO 1 ────────────────────────────</div></div>
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">01</span><span class="txt">Ecuación lineal y condiciones iniciales</span></div>
+              <div class="nota">La ecuación del péndulo con sen θ ≈ θ. Arranca en θ₀ y quieto.</div>
               <div class="texmath" data-tex="\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0"></div>
               <div class="texsrc">\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0</div>
             </div>
@@ -612,6 +656,7 @@ dtheta0 = 0.0</pre>
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">02</span><span class="txt">Se propone θ = eʳᵗ y se deriva</span></div>
+              <div class="nota">Probamos una exponencial y sacamos sus dos derivadas.</div>
               <div class="texmath" data-tex="\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}"></div>
               <div class="texsrc">\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}</div>
             </div>
@@ -626,6 +671,7 @@ d2theta_e = lambda r, t: r**2 * math.exp(r*t)</pre>
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">03</span><span class="txt">Se reemplaza y se factoriza eʳᵗ</span></div>
+              <div class="nota">Metemos θ y θ&#x27;&#x27; en la ecuación. eʳᵗ nunca es 0, así que queda r² + g/L = 0.</div>
               <div class="texmath" data-tex="\begin{aligned}
 r^{2}e^{rt}+\frac{g}{L}\,e^{rt}&amp;=0\\
 e^{rt}\left(r^{2}+\frac{g}{L}\right)&amp;=0\\
@@ -645,17 +691,18 @@ caracteristica = [1, 0, g / L]</pre>
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">04</span><span class="txt">Se despeja r</span></div>
+              <div class="nota">Sale la raíz de un número negativo: por eso aparece i.</div>
               <div class="texmath" data-tex="\begin{aligned}
 r^{2}&amp;=-\frac{g}{L}\\
 \sqrt{r^{2}}&amp;=\pm\sqrt{-\frac{g}{L}}\\
-r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\\
-r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}
+r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\qquad\leftarrow\ i=\sqrt{-1}\ \text{(unidad imaginaria)}\\
+r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}\ \text{(frecuencia natural)}
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
 r^{2}&amp;=-\frac{g}{L}\\
 \sqrt{r^{2}}&amp;=\pm\sqrt{-\frac{g}{L}}\\
-r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\\
-r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}
+r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\qquad\leftarrow\ i=\sqrt{-1}\ \text{(unidad imaginaria)}\\
+r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}\ \text{(frecuencia natural)}
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># raíces del polinomio
@@ -669,15 +716,16 @@ print(round(omega, 4))
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">05</span><span class="txt">Raíces complejas → solución general</span></div>
+              <div class="nota">Raíces a ± bi con a = 0: la solución es cosenos y senos.</div>
               <div class="texmath" data-tex="\begin{aligned}
 r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
-\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos\omega t+C_2\sen\omega t\right)\\
-e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos\omega t+C_2\sen\omega t
+\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos(\omega t)+C_2\sen(\omega t)\right)\\
+e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos(\omega t)+C_2\sen(\omega t)
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
 r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
-\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos\omega t+C_2\sen\omega t\right)\\
-e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos\omega t+C_2\sen\omega t
+\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos(\omega t)+C_2\sen(\omega t)\right)\\
+e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos(\omega t)+C_2\sen(\omega t)
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># r = a ± bi → a = 0, b = ω
@@ -692,16 +740,19 @@ def theta_general(t, C1, C2):
           </div>
           <div class="texrow">
             <div class="tx">
-              <div class="lbl"><span class="num">06</span><span class="txt">Primera condición: θ(0) = θ₀</span></div>
+              <div class="lbl"><span class="num">06</span><span class="txt">Primera condición: θ(0) = θ₀ (ángulo inicial o amplitud)</span></div>
+              <div class="nota">En t = 0: cos 0 = 1 y sen 0 = 0, así sale C₁ = θ₀.</div>
               <div class="texmath" data-tex="\begin{aligned}
 \theta(0)&amp;=C_1\cos(\omega\cdot 0)+C_2\sen(\omega\cdot 0)=\theta_0\\
+&amp;=C_1\cos(0)+C_2\sen(0)=\theta_0\\
 &amp;=C_1(1)+C_2(0)=\theta_0\\
-&amp;\Rightarrow\;C_1=\theta_0
+&amp;=C_1+0=\theta_0\;\Rightarrow\;C_1=\theta_0
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
 \theta(0)&amp;=C_1\cos(\omega\cdot 0)+C_2\sen(\omega\cdot 0)=\theta_0\\
+&amp;=C_1\cos(0)+C_2\sen(0)=\theta_0\\
 &amp;=C_1(1)+C_2(0)=\theta_0\\
-&amp;\Rightarrow\;C_1=\theta_0
+&amp;=C_1+0=\theta_0\;\Rightarrow\;C_1=\theta_0
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># θ(0) = C1·cos(0) + C2·sen(0) = C1·1 + C2·0
@@ -709,7 +760,8 @@ C1 = theta0                          # entonces C1 = θ0</pre>
           </div>
           <div class="texrow">
             <div class="tx">
-              <div class="lbl"><span class="num">07</span><span class="txt">Se deriva θ(t)</span></div>
+              <div class="lbl"><span class="num">07</span><span class="txt">Se deriva θ(t) para obtener velocidad angular</span></div>
+              <div class="nota">Derivamos para tener la velocidad θ&#x27;.</div>
               <div class="texmath" data-tex="\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)"></div>
               <div class="texsrc">\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)</div>
             </div>
@@ -720,15 +772,20 @@ C1 = theta0                          # entonces C1 = θ0</pre>
           </div>
           <div class="texrow">
             <div class="tx">
-              <div class="lbl"><span class="num">08</span><span class="txt">Segunda condición: θ&#x27;(0) = 0</span></div>
+              <div class="lbl"><span class="num">08</span><span class="txt">Segunda condición: θ&#x27;(0) = 0 (se suelta desde el reposo)</span></div>
+              <div class="nota">Al soltarlo la velocidad es 0: de ahí sale C₂ = 0.</div>
               <div class="texmath" data-tex="\begin{aligned}
-\theta&#x27;(0)&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
+\theta&#x27;(0)&amp;=-C_1\,\omega\sen(\omega\cdot 0)+C_2\,\omega\cos(\omega\cdot 0)=0\\
+&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
 &amp;=-C_1\,\omega(0)+C_2\,\omega(1)=0\\
+&amp;=0+C_2\,\omega=0\\
 C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
-\theta&#x27;(0)&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
+\theta&#x27;(0)&amp;=-C_1\,\omega\sen(\omega\cdot 0)+C_2\,\omega\cos(\omega\cdot 0)=0\\
+&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
 &amp;=-C_1\,\omega(0)+C_2\,\omega(1)=0\\
+&amp;=0+C_2\,\omega=0\\
 C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
 \end{aligned}</div>
             </div>
@@ -740,6 +797,7 @@ print(dtheta_general(0, C1, C2))
           <div class="texrow key">
             <div class="tx">
               <div class="lbl"><span class="num">09</span><span class="txt">Se sustituye C₁ y C₂ · solución particular</span></div>
+              <div class="nota">Con C₁ y C₂ el péndulo lineal queda como un coseno.</div>
               <div class="texmath" data-tex="\begin{aligned}
 \theta(t)&amp;=\theta_0\cos(\omega t)+0\cdot\sen(\omega t)\\
 \Rightarrow\;\theta(t)&amp;=\theta_0\cos(\omega t)\\
@@ -763,12 +821,13 @@ print(math.isclose(theta(1.0), theta_general(1.0, C1, C2)))
           <div class="texrow key">
             <div class="tx">
               <div class="lbl"><span class="num">10</span><span class="txt">Período T₀</span></div>
+              <div class="nota">Un ciclo del coseno mide 2π: despejamos el tiempo de una vuelta.</div>
               <div class="texmath" data-tex="\begin{aligned}
-\omega\cdot T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{g}/\sqrt{L}}=\frac{2\pi\sqrt{L}}{\sqrt{g}}\\
+\omega\cdot T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{\frac{g}{L}}}=\frac{2\pi}{\frac{\sqrt{g}}{\sqrt{L}}}=2\pi\,\frac{\sqrt{L}}{\sqrt{g}}\\
 T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
-\omega\cdot T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{g}/\sqrt{L}}=\frac{2\pi\sqrt{L}}{\sqrt{g}}\\
+\omega\cdot T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{\frac{g}{L}}}=\frac{2\pi}{\frac{\sqrt{g}}{\sqrt{L}}}=2\pi\,\frac{\sqrt{L}}{\sqrt{g}}\\
 T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}
 \end{aligned}</div>
             </div>
@@ -780,6 +839,7 @@ print(math.isclose(T0, 2*math.pi*math.sqrt(L/g)))
           <div class="texrow result">
             <div class="tx">
               <div class="lbl"><span class="num">11</span><span class="txt">Evaluación numérica (L = 1 m, g = 9.81 m/s²)</span></div>
+              <div class="nota">Con L = 1 m y g = 9.81 m/s² una vuelta dura unos 2 segundos.</div>
               <div class="texmath" data-tex="T_0=2\pi\sqrt{\frac{1}{9.81}}\approx 2.0061\ \text{s}"></div>
               <div class="texsrc">T_0=2\pi\sqrt{\frac{1}{9.81}}\approx 2.0061\ \text{s}</div>
             </div>
@@ -793,15 +853,20 @@ print(math.isclose(theta(T0), theta0))
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">12</span><span class="txt">T₀ no depende de θ₀</span></div>
+              <div class="nota">θ₀ no está en la fórmula: en el lineal el período no cambia con el ángulo. En el real sí.</div>
               <div class="texmath" data-tex="\begin{aligned}
 \text{lineal:}\quad &amp;T_0=2\pi\sqrt{\frac{L}{g}}\qquad(\theta_0\ \text{no aparece})\\
-&amp;T_0=2.0061\ \text{s}\ \text{para cualquier}\ \theta_0\\
-\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\;\Rightarrow\;\theta_0\uparrow\;\Rightarrow\;T&gt;T_0
+&amp;T_0=2.0061\ \text{s para cualquier}\ \theta_0\\
+&amp;\text{(ángulo pequeño o grande)}\\
+\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\\
+&amp;\Rightarrow\;\text{mayor amplitud}\ \theta_0\;\Rightarrow\;T&gt;T_0\ \text{(tarda más)}
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
 \text{lineal:}\quad &amp;T_0=2\pi\sqrt{\frac{L}{g}}\qquad(\theta_0\ \text{no aparece})\\
-&amp;T_0=2.0061\ \text{s}\ \text{para cualquier}\ \theta_0\\
-\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\;\Rightarrow\;\theta_0\uparrow\;\Rightarrow\;T&gt;T_0
+&amp;T_0=2.0061\ \text{s para cualquier}\ \theta_0\\
+&amp;\text{(ángulo pequeño o grande)}\\
+\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\\
+&amp;\Rightarrow\;\text{mayor amplitud}\ \theta_0\;\Rightarrow\;T&gt;T_0\ \text{(tarda más)}
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># 4 amplitudes distintas
@@ -818,13 +883,14 @@ for grados in (10, 45, 90, 150):
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">13</span><span class="txt">Polinomio de Taylor centrado en a</span></div>
+              <div class="nota">Escribimos una función como una suma de potencias.</div>
               <div class="texmath" data-tex="\begin{aligned}
-f(\theta)&amp;\approx f(a)+f&#x27;(a)(\theta-a)\\
-&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}
+f(\theta)&amp;=f(a)+f&#x27;(a)(\theta-a)\\
+&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}+\cdots
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
-f(\theta)&amp;\approx f(a)+f&#x27;(a)(\theta-a)\\
-&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}
+f(\theta)&amp;=f(a)+f&#x27;(a)(\theta-a)\\
+&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}+\cdots
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># Σ f⁽ⁿ⁾(a)/n! · (θ − a)ⁿ
@@ -836,19 +902,18 @@ def taylor(derivadas, th, centro=0.0):
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">14</span><span class="txt">Centro a = 0 (Maclaurin)</span></div>
+              <div class="nota">Centramos en 0 porque el péndulo oscila alrededor de la vertical.</div>
               <div class="texmath" data-tex="\begin{aligned}
-f(\theta)&amp;\approx\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}\\
-&amp;\quad+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}\\
+f(\theta)&amp;=\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\cdots\\
 &amp;\qquad (0!=1,\;\;1!=1,\;\;\theta^{0}=1)\\
-f(\theta)&amp;\approx f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
-&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}
+f(\theta)&amp;=f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
+&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}+\cdots
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
-f(\theta)&amp;\approx\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}\\
-&amp;\quad+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}\\
+f(\theta)&amp;=\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\cdots\\
 &amp;\qquad (0!=1,\;\;1!=1,\;\;\theta^{0}=1)\\
-f(\theta)&amp;\approx f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
-&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}
+f(\theta)&amp;=f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
+&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}+\cdots
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># a = 0: la vertical
@@ -859,6 +924,7 @@ print(math.factorial(0), math.factorial(1))
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">15</span><span class="txt">Derivadas de sen θ evaluadas en 0</span></div>
+              <div class="nota">Las derivadas se repiten cada 4; en 0 valen 0, 1, 0, −1, …</div>
               <div class="texmath" data-tex="\begin{aligned}
 f(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f(0)=\sen 0=0\\
 f&#x27;(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f&#x27;(0)=\cos 0=1\\
@@ -888,15 +954,16 @@ print([d + 0.0 for d in derivadas])
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">16</span><span class="txt">Se reemplaza y se simplifican los factoriales</span></div>
+              <div class="nota">Reemplazamos las derivadas: solo quedan las potencias impares.</div>
               <div class="texmath" data-tex="\begin{aligned}
-\sen\theta&amp;\approx 0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}\\
-&amp;=\theta-\frac{\theta^{3}}{3!}+\frac{\theta^{5}}{5!}\\
-&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}
+\sen\theta&amp;=0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}-\cdots\\
+&amp;=0+\theta+0-\frac{\theta^{3}}{3!}+0+\frac{\theta^{5}}{5!}-\cdots\\
+&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}-\cdots
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
-\sen\theta&amp;\approx 0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}\\
-&amp;=\theta-\frac{\theta^{3}}{3!}+\frac{\theta^{5}}{5!}\\
-&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}
+\sen\theta&amp;=0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}-\cdots\\
+&amp;=0+\theta+0-\frac{\theta^{3}}{3!}+0+\frac{\theta^{5}}{5!}-\cdots\\
+&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}-\cdots
 \end{aligned}</div>
             </div>
             <pre class="pycode" data-py># cada derivada entre n!
@@ -910,6 +977,7 @@ print([round(c, 5) + 0.0 for c in coef])
           <div class="texrow key">
             <div class="tx">
               <div class="lbl"><span class="num">17</span><span class="txt">Ángulo pequeño: se desprecian θ³/6 y θ⁵/120</span></div>
+              <div class="nota">Si θ es pequeño, θ³ y θ⁵ son casi 0: sen θ ≈ θ.</div>
               <div class="texmath" data-tex="\theta\ \text{pequeño (rad)}:\quad \frac{\theta^{3}}{6}\approx 0,\quad \frac{\theta^{5}}{120}\approx 0\;\;\Rightarrow\;\;\boxed{\sen\theta\approx\theta}"></div>
               <div class="texsrc">\theta\ \text{pequeño (rad)}:\quad \frac{\theta^{3}}{6}\approx 0,\quad \frac{\theta^{5}}{120}\approx 0\;\;\Rightarrow\;\;\boxed{\sen\theta\approx\theta}</div>
             </div>
@@ -923,6 +991,7 @@ print(f&quot;sen = {math.sin(x):.5f}  lineal = {lineal:.5f}&quot;)
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">18</span><span class="txt">Error relativo porcentual</span></div>
+              <div class="nota">Cuánto nos equivocamos al cambiar sen θ por θ, en porcentaje.</div>
               <div class="texmath" data-tex="\begin{aligned}
 E_r&amp;=\frac{|\text{valor real}-\text{valor aprox.}|}{|\text{valor real}|}\times 100\%\\
 E_r&amp;=\frac{|\sen\theta_0-\theta_0|}{|\sen\theta_0|}\times 100\%
@@ -940,7 +1009,8 @@ def error_relativo(grados):
           </div>
           <div class="texrow">
             <div class="tx">
-              <div class="lbl"><span class="num">19</span><span class="txt">θ₀ = 10°</span></div>
+              <div class="lbl"><span class="num">19</span><span class="txt">Para θ₀ = 10°</span></div>
+              <div class="nota">A 10° el error es menor al 1 %: la aproximación sirve.</div>
               <div class="texmath" data-tex="\begin{aligned}
 \theta_0&amp;=10^{\circ}\cdot\frac{\pi}{180^{\circ}}\approx 0.17453\ \text{rad}\\
 \sen(10^{\circ})&amp;\approx 0.17365\\
@@ -962,7 +1032,8 @@ print(f&quot;{error_relativo(10):.2f} %&quot;)
           </div>
           <div class="texrow">
             <div class="tx">
-              <div class="lbl"><span class="num">20</span><span class="txt">θ₀ = 90°</span></div>
+              <div class="lbl"><span class="num">20</span><span class="txt">Para θ₀ = 90°</span></div>
+              <div class="nota">A 90° el error es de 57 %: ya no sirve.</div>
               <div class="texmath" data-tex="\begin{aligned}
 \theta_0&amp;=90^{\circ}\cdot\frac{\pi}{180^{\circ}}=\frac{\pi}{2}\approx 1.57080\ \text{rad}\\
 \sen(90^{\circ})&amp;=1.00000\\
@@ -985,6 +1056,7 @@ print(f&quot;{error_relativo(90):.2f} %&quot;)
           <div class="texrow result">
             <div class="tx">
               <div class="lbl"><span class="num">21</span><span class="txt">Resumen y conclusión</span></div>
+              <div class="nota">Sirve para ángulos pequeños, no para grandes.</div>
               <div class="texmath" data-tex="\begin{gathered}
 \begin{array}{c|c|c|c|c}
 \theta_0 &amp; \theta_0\ (\text{rad}) &amp; \sen\theta_0 &amp; \theta_0\ (\text{aprox.}) &amp; E_r\\ \hline
@@ -992,7 +1064,9 @@ print(f&quot;{error_relativo(90):.2f} %&quot;)
 90^{\circ} &amp; 1.57080 &amp; 1.00000 &amp; 1.57080 &amp; 57.08\%
 \end{array}\\[8pt]
 10^{\circ}:\ E_r=0.51\%&lt;1\%\;\Rightarrow\;\sen\theta\approx\theta\ \text{válida}\\
-90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}
+\text{para oscilaciones pequeñas}\\[6pt]
+90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}\\
+\text{para ángulos grandes}
 \end{gathered}"></div>
               <div class="texsrc">\begin{gathered}
 \begin{array}{c|c|c|c|c}
@@ -1001,7 +1075,9 @@ print(f&quot;{error_relativo(90):.2f} %&quot;)
 90^{\circ} &amp; 1.57080 &amp; 1.00000 &amp; 1.57080 &amp; 57.08\%
 \end{array}\\[8pt]
 10^{\circ}:\ E_r=0.51\%&lt;1\%\;\Rightarrow\;\sen\theta\approx\theta\ \text{válida}\\
-90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}
+\text{para oscilaciones pequeñas}\\[6pt]
+90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}\\
+\text{para ángulos grandes}
 \end{gathered}</div>
             </div>
             <pre class="pycode" data-py># las dos filas de la tabla
@@ -1031,7 +1107,7 @@ print(error_relativo(10) &lt; 1, error_relativo(90) &lt; 1)
 
     <!-- ======================= PERSONA 2 ======================= -->
     <section class="step reveal" id="p2" data-mode="verify" data-index="1">
-      <div class="head"><span class="who">INTEGRANTE 2</span><span class="minutes">método numérico</span></div>
+      <div class="head"><span class="who">PARTE 2</span><span class="minutes">método numérico</span></div>
       <h2>2. Del papel al código: RK4 y verificación</h2>
       <p class="leadp">Un integrador no resuelve una ecuación de segundo orden directamente: primero la partimos en dos ecuaciones de primer orden. Después demostramos que el código coincide con la deducción.</p>
 
@@ -1055,13 +1131,17 @@ print(error_relativo(10) &lt; 1, error_relativo(90) &lt; 1)
       <div class="card texcard compact" id="p2Tex">
         <div class="texhead">
           <h4 style="margin:0">Del papel al código · LaTeX ↔ Python</h4>
-          <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          <div class="texbtns">
+            <button type="button" class="texbtn notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button>
+            <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          </div>
         </div>
         <div class="texgrid texrows">
           <div class="texcolheads"><div class="hp"><b>RK4 y verificación</b><span>verificacion.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">verificacion.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">01</span><span class="txt">De 2º orden a sistema de 1er orden</span></div>
+              <div class="nota">Partimos la ecuación en dos: una para el ángulo y otra para la velocidad.</div>
               <div class="texmath" data-tex="\begin{aligned}
 u=\theta,\quad v&amp;=\theta&#x27;\\
 u&#x27;&amp;=v\\
@@ -1095,6 +1175,7 @@ def F_lineal(t, y):
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">02</span><span class="txt">Un paso de RK4</span></div>
+              <div class="nota">RK4 avanza con 4 pendientes; las dos del medio cuentan doble.</div>
               <div class="texmath" data-tex="\begin{aligned}
 k_1&amp;=F\left(t_n,\;y_n\right)\\
 k_2&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_1\right)\\
@@ -1131,6 +1212,7 @@ y_{n+1}&amp;=y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)
           <div class="texrow key">
             <div class="tx">
               <div class="lbl"><span class="num">03</span><span class="txt">Verificación 1 · modelo lineal contra la solución a mano</span></div>
+              <div class="nota">La simulación y la fórmula hecha a mano casi no se diferencian.</div>
               <div class="texmath" data-tex="\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}"></div>
               <div class="texsrc">\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}</div>
             </div>
@@ -1147,6 +1229,7 @@ print(f&quot;{np.max(np.abs(Y[:, 0] - exacta)):.2e} rad&quot;)
           <div class="texrow result">
             <div class="tx">
               <div class="lbl"><span class="num">04</span><span class="txt">Verificación 2 · modelo real contra la solución exacta</span></div>
+              <div class="nota">El período exacto del péndulo real sale de una integral elíptica.</div>
               <div class="texmath" data-tex="\begin{aligned}
 T&amp;=\frac{2T_0}{\pi}\,K\!\left(\sen\frac{\theta_0}{2}\right)=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
 \theta_0=90^{\circ}\;\Rightarrow\;T&amp;\approx 2.3678\ \text{s}
@@ -1180,7 +1263,7 @@ print(f&quot;T(90°) = {periodo_exacto(90):.4f} s&quot;)
 
     <!-- ======================= PERSONA 3 ======================= -->
     <section class="step reveal" id="p3" data-mode="error" data-index="2">
-      <div class="head"><span class="who">INTEGRANTE 3</span><span class="minutes">medición del error</span></div>
+      <div class="head"><span class="who">PARTE 3</span><span class="minutes">medición del error</span></div>
       <h2>3. Medir el período y hallar el umbral</h2>
       <p class="leadp">La magnitud que importa no es el ángulo, sino el tiempo. Para medirlo, el péndulo se suelta desde el reposo y se detecta cuándo la velocidad vuelve a cero: ese instante es media oscilación.</p>
 
@@ -1191,13 +1274,17 @@ print(f&quot;T(90°) = {periodo_exacto(90):.4f} s&quot;)
       <div class="card texcard compact" id="p3Tex">
         <div class="texhead">
           <h4 style="margin:0">Medir el período · LaTeX ↔ Python</h4>
-          <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          <div class="texbtns">
+            <button type="button" class="texbtn notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button>
+            <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          </div>
         </div>
         <div class="texgrid texrows">
           <div class="texcolheads"><div class="hp"><b>Período y umbral del 1 %</b><span>periodo.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">periodo.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">01</span><span class="txt">La velocidad vuelve a cero en medio período</span></div>
+              <div class="nota">Cuando la velocidad vuelve a 0 va por la mitad: el período es el doble.</div>
               <div class="texmath" data-tex="\theta&#x27;(t^{*})=0\ \ \text{en el extremo opuesto}\;\Rightarrow\;T=2\,t^{*}"></div>
               <div class="texsrc">\theta&#x27;(t^{*})=0\ \ \text{en el extremo opuesto}\;\Rightarrow\;T=2\,t^{*}</div>
             </div>
@@ -1237,6 +1324,7 @@ print(f&quot;T(90°) = {periodo_real(90):.4f} s&quot;)
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">02</span><span class="txt">Error porcentual del período</span></div>
+              <div class="nota">Cuánto más tarda el real que el lineal, en porcentaje.</div>
               <div class="texmath" data-tex="\begin{aligned}
 E&amp;=\frac{T-T_0}{T}\times 100\%\qquad\text{(contra }T\text{, como la guía)}\\
 E_{T_0}&amp;=\frac{T-T_0}{T_0}\times 100\%
@@ -1254,6 +1342,7 @@ def error_periodo(grados):
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">03</span><span class="txt">Tabla de los cuatro casos</span></div>
+              <div class="nota">A más ángulo, más error.</div>
               <table class="papertable"><thead><tr><th>θ₀</th><th>T₀ (lineal)</th><th>T real</th><th>error vs T</th><th>error vs T₀</th></tr></thead><tbody id="periodTable"></tbody></table><p class="paperhint">Valores calculados en vivo. A 90° el error contra T es 15.28 % (contra T₀ sería 18.03 %).</p>
             </div>
             <pre class="pycode" data-py># los 4 casos del enunciado
@@ -1270,6 +1359,7 @@ for d in (10, 45, 90, 150):
           <div class="texrow result">
             <div class="tx">
               <div class="lbl"><span class="num">04</span><span class="txt">Umbral del 1 %</span></div>
+              <div class="nota">El ángulo donde el error llega al 1 %: 22.9°.</div>
               <div class="texmath" data-tex="E(\theta_0)=1\%\;\Rightarrow\;\theta_0\approx 22.9^{\circ}"></div>
               <div class="texsrc">E(\theta_0)=1\%\;\Rightarrow\;\theta_0\approx 22.9^{\circ}</div>
               <p class="paperhint">En la página: el umbral del 1 % cae en <b id="thrText">22.9°</b>.</p>
@@ -1305,7 +1395,7 @@ print(f&quot;umbral = {m:.1f}°&quot;)
 
     <!-- ======================= PERSONA 4 ======================= -->
     <section class="step reveal" id="p4" data-mode="anim" data-index="3">
-      <div class="head"><span class="who">INTEGRANTE 4</span><span class="minutes">simulación y conclusión</span></div>
+      <div class="head"><span class="who">PARTE 4</span><span class="minutes">simulación y conclusión</span></div>
       <h2>4. Animación 3D y conclusión</h2>
       <p class="leadp">Dos péndulos soltados al mismo tiempo desde 90°: el real y el lineal. El real se atrasa y la diferencia se ve a simple vista.</p>
 
@@ -1331,7 +1421,7 @@ print(f&quot;umbral = {m:.1f}°&quot;)
 
     <!-- ======================= CIERRE ======================= -->
     <section class="step reveal" id="cierre" data-mode="cierre" data-index="3">
-      <div class="head"><span class="who">TODOS</span><span class="minutes">preguntas</span></div>
+      <div class="head"><span class="who">CIERRE</span><span class="minutes">preguntas</span></div>
       <h2>Cierre y preguntas</h2>
       <p class="leadp">Gracias por su atención. Quedamos atentos a sus preguntas.</p>
       <div class="card">
@@ -2389,27 +2479,32 @@ function layoutTexCard(){
   // clip-path se abre hacia la izquierda mientras el 3D se desvanece (ver .texcard en el CSS)
   card.style.setProperty('--texL',off+'px');
 }
-/* La hoja de papel sale de detrás del editor cuando la sección ya entró bien en pantalla
-   (su borde de arriba pasó el 72 % del alto) y se vuelve a esconder cuando, al seguir
-   bajando, su final sube por encima del 38 %: así se ve la animación antes de cambiar de
-   sección. Subiendo de nuevo, vuelve a salir. */
-function initPaperSlide(){
-  const card=$('p1Latex');
+/* "Ver cód": por defecto la sección 1 muestra solo la hoja con el LaTeX. El botón saca el
+   editor con el Python desde detrás de la hoja hacia la derecha (la animación está en el
+   CSS, clase .show-code) y otro toque lo vuelve a esconder. Hay dos botones (arriba de la
+   tarjeta y en el encabezado fijo de la hoja) y los dos se mantienen iguales. */
+window.toggleCode = function(btn){
+  const card=btn.closest('.texcard');
   if(!card) return;
-  let pendiente=false;
-  const actualizar=()=>{
-    pendiente=false;
-    const r=card.getBoundingClientRect(), vh=window.innerHeight;
-    card.classList.toggle('paper-in', r.top<vh*0.72 && r.bottom>vh*0.38);
-  };
-  const pedir=()=>{ if(!pendiente){ pendiente=true; requestAnimationFrame(actualizar); } };
-  window.addEventListener('scroll',pedir,{passive:true});
-  window.addEventListener('resize',pedir);
-  actualizar();
-}
+  const on=card.classList.toggle('show-code');
+  card.querySelectorAll('.codebtn').forEach(b=>{
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? '‹/› Ocultar cód' : '‹/› Ver cód';
+  });
+};
+
+/* "Ver pasos": muestra u oculta las notas a lápiz de cada paso (qué hace, dicho simple). */
+window.toggleNotes = function(btn){
+  const card=btn.closest('.texcard');
+  if(!card) return;
+  const on=card.classList.toggle('show-notes');
+  card.querySelectorAll('.notesbtn').forEach(b=>{
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? '✎ Ocultar pasos' : '✎ Ver pasos';
+  });
+};
 
 function initTexCardLayout(){
-  initPaperSlide();
   layoutTexCard();
   window.addEventListener('resize',layoutTexCard);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutTexCard);
