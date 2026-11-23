@@ -43,12 +43,14 @@ Las hojas de RK4 (Parte 2) y del período (Parte 3) también tienen **✎ Ver pa
 
 ## Parte 4 · la demo (Diego)
 
+Son 90 segundos: lo importante son estos tres pasos.
+
 1. Botón **90°** y **Reiniciar**: los dos salen de θ(0) = 90° con θ'(0) = 0.
 2. Dejar correr unos 10 s: el lineal (violeta) completa más oscilaciones que el real (dorado).
 3. Botón **10°**: las dos pesas se mueven juntas. Ese es el contraste.
-4. Mover **L** y **g** para mostrar que los parámetros se pueden modificar.
-5. Cámara: arrastrar gira; la rueda, el pellizco o **+ / −** acercan; doble clic sobre un péndulo lo enfoca;
-   **⟲** vuelve a la vista completa.
+
+Solo si sobra tiempo: **🐢 Lento** para ver el desfase, mover **L** y **g**, o la cámara (arrastrar gira;
+la rueda, el pellizco o **+ / −** acercan; doble clic sobre un péndulo lo enfoca; **⟲** vuelve a la vista completa).
 
 ## Conclusión de ingeniería
 

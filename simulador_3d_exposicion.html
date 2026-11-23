@@ -1175,7 +1175,7 @@ def F_lineal(t, y):
           <div class="texrow">
             <div class="tx">
               <div class="lbl"><span class="num">02</span><span class="txt">Un paso de RK4</span></div>
-              <div class="nota">RK4 avanza con 4 pendientes; las dos del medio cuentan doble.</div>
+              <div class="nota">Mide la pendiente 4 veces: al inicio, dos en la mitad y al final. Pesos 1+2+2+1 = 6, por eso entre 6.</div>
               <div class="texmath" data-tex="\begin{aligned}
 k_1&amp;=F\left(t_n,\;y_n\right)\\
 k_2&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_1\right)\\
@@ -1212,7 +1212,7 @@ y_{n+1}&amp;=y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)
           <div class="texrow key">
             <div class="tx">
               <div class="lbl"><span class="num">03</span><span class="txt">Verificación 1 · modelo lineal contra la solución a mano</span></div>
-              <div class="nota">La simulación y la fórmula hecha a mano casi no se diferencian.</div>
+              <div class="nota">Con L = 1 m, la pesa se separa menos que el ancho de un átomo: es la misma curva.</div>
               <div class="texmath" data-tex="\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}"></div>
               <div class="texsrc">\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}</div>
             </div>
@@ -1229,17 +1229,17 @@ print(f&quot;{np.max(np.abs(Y[:, 0] - exacta)):.2e} rad&quot;)
           <div class="texrow result">
             <div class="tx">
               <div class="lbl"><span class="num">04</span><span class="txt">Verificación 2 · modelo real contra la solución exacta</span></div>
-              <div class="nota">El período exacto del péndulo real sale de una integral elíptica.</div>
+              <div class="nota">T₀ dividido por un número que vale 1 a 0° y baja al abrir el ángulo: por eso el real tarda más.</div>
               <div class="texmath" data-tex="\begin{aligned}
-T&amp;=\frac{2T_0}{\pi}\,K\!\left(\sen\frac{\theta_0}{2}\right)=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
-\theta_0=90^{\circ}\;\Rightarrow\;T&amp;\approx 2.3678\ \text{s}
+T&amp;=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
+\theta_0=90^{\circ}\;\Rightarrow\;T&amp;=\frac{2.0061}{0.8472}\approx 2.3678\ \text{s}
 \end{aligned}"></div>
               <div class="texsrc">\begin{aligned}
-T&amp;=\frac{2T_0}{\pi}\,K\!\left(\sen\frac{\theta_0}{2}\right)=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
-\theta_0=90^{\circ}\;\Rightarrow\;T&amp;\approx 2.3678\ \text{s}
+T&amp;=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
+\theta_0=90^{\circ}\;\Rightarrow\;T&amp;=\frac{2.0061}{0.8472}\approx 2.3678\ \text{s}
 \end{aligned}</div>
             </div>
-            <pre class="pycode" data-py># sale de la integral elíptica
+            <pre class="pycode" data-py># período exacto, sin sen θ ≈ θ
 def periodo_exacto(grados):
     T0 = 2 * math.pi / w
     a, b = 1.0, math.cos(math.radians(grados) / 2)
