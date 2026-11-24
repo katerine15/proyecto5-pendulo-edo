@@ -1,25 +1,2 @@
-.env
-.env.local
 __pycache__/
-.venv/
 .pytest_cache/
-node_modules/
-tablero-avanzado/frontend/dist/
-*.log
-tablero-avanzado/assets/blender/*.blend1
-*.tsbuildinfo
-probe.out.txt
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-tablero-avanzado/backend/.venv/
-tablero-avanzado/frontend/node_modules/
-
-*.pyc
-.ipynb_checkpoints/
-
-# Modelo 3D: intermedios que regenera modelo3d/construir_modelo.py (ya van comprimidos en vendor/pendulo_modelo.js)
-modelo3d/*.blend1
-modelo3d/salida/*
-!modelo3d/salida/vista_previa.png

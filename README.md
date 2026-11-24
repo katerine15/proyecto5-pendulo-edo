@@ -5,143 +5,195 @@ Ecuaciones Diferenciales · Unidad 3 · Institución Universitaria Colegio Mayor
 Compara el péndulo real `θ'' + (g/L) sen θ = 0` con su aproximación lineal `θ'' + (g/L) θ = 0`
 (L = 1 m, g = 9.81 m/s²) y mide hasta qué amplitud sirve la aproximación.
 
-**Resultado principal:** T₀ = 2.0061 s. El error del período pasa del 1 % a partir de θ₀ ≈ 23°
-(22.8° midiendo contra T₀, 22.9° midiendo contra el período real).
+> **Resultado principal:** T₀ = 2.0061 s. El error del período pasa del 1 % a partir de θ₀ ≈ 23° (22.9°).
 
-No necesita servidor ni instalar nada para verlo: `simulador_3d.html` abre con doble clic.
-El tablero web más grande quedó como extra en [`tablero-avanzado/`](tablero-avanzado/).
+---
 
-## Archivos
+## ▶ Ver el proyecto
 
-| Archivo | Qué es |
-|---|---|
-| `simulador_3d.html` | **Simulador principal** para la exposición: vista 3D y 2D, casos del enunciado, tabla de períodos, 7 gráficas y el ejercicio a mano paso a paso |
-| `simulador_3d_exposicion.html` | Página de la exposición en 4 partes. El **ejercicio a mano completo** (Puntos 1, 2 y 3, igual que el PDF (5) de `Ecusamano/`) aparece en **LaTeX** sobre una hoja de cuaderno, paso a paso. **Ver pasos** muestra notas a lápiz que explican cada paso y **Ver cód** saca de detrás de la hoja su paralelo en **Python** (`math`/`numpy`). Al llegar ahí el 3D se oculta y la sección ocupa toda la pantalla. RK4 y el período también tienen su hoja y su código. Incluye modo claro/oscuro y control de velocidad |
-| `GUION_EXPOSICION.md` | Quién habla, cuánto tiempo, qué se muestra y preguntas probables |
-| `requirements.txt` | Librerías de Python que necesita el proyecto |
-| `pendulo.py` | Programa principal: modelo, RK4, solución exacta, medición del período, gráficas y animación |
-| `pendulo_colab.ipynb` | El mismo código en cuaderno, para correrlo en Google Colab (sirve desde el navegador del celular) |
-| `simulador.html` | Simulador ligero en un solo archivo (2D), por si el equipo no soporta 3D |
-| `vendor/` | Librerías guardadas localmente (Three.js r128, Tailwind compilado, Font Awesome y KaTeX para las fórmulas del simulador de exposición) para que funcione sin internet. `vendor/pendulo_modelo.js` es el modelo 3D del aparato (lo genera `modelo3d/`) |
-| `modelo3d/` | Modelo 3D del aparato hecho en **Blender 5.2**: `construir_modelo.py` lo construye y hornea la luz, `empaquetar.py` lo comprime en `vendor/pendulo_modelo.js`, y `pendulo.blend` se puede abrir en Blender. Ver «Modelo 3D» abajo |
-| `tailwind.config.js`, `tailwind.input.css` | Solo para recompilar `vendor/tailwind.css` si se cambian clases del simulador 3D |
-| `figuras/` | Resultados de `pendulo.py`: 3 gráficas PNG, la animación GIF y la tabla CSV |
-| `tests/` | Pruebas automáticas de `pendulo.py` (T₀, los 4 períodos, verificación, umbral y Taylor) |
-| `tablero-avanzado/` | Extra: tablero web con servidor (FastAPI + React). Necesita Python 3.12, `uv` y Node 22. Ver su README |
+| Forma | Qué hacer | Necesita instalar |
+|---|---|---|
+| **En línea (recomendado)** | Abrir **https://katerine15.github.io/proyecto5-pendulo-edo/** | Nada |
+| **Descargado** | En GitHub: botón verde **Code → Download ZIP**, descomprimir y doble clic en **`index.html`** | Nada (funciona sin internet) |
+| **Programa en Python** | Doble clic en **`Ejecutar Python.bat`** (Windows) o ver [Instalación](#instalación-del-programa-en-python) | Python 3 |
 
-## Cómo ejecutarlo
+La página de la exposición contiene todo el proyecto: el ejercicio resuelto a mano en LaTeX, su paralelo en Python,
+la verificación con RK4, la tabla de períodos, el umbral del 1 %, la animación 3D de los dos péndulos y la conclusión.
 
-### Código Python
+---
 
-**En el computador**
+## Instalación del programa en Python
+
+La página **no** necesita esto. Solo hace falta para correr `pendulo.py`, que genera las gráficas, la tabla y la
+animación GIF.
+
+### Requisitos
+
+| Requisito | Versión | Para qué |
+|---|---|---|
+| Python | 3.9 o superior (probado con 3.12) | Lenguaje del programa |
+| numpy | cualquiera reciente (probado con 2.5) | Cálculo numérico |
+| matplotlib | cualquiera reciente (probado con 3.11) | Gráficas y animación |
+| pillow | cualquiera reciente (probado con 13.0) | Guardar la animación como GIF |
+| pytest | cualquiera reciente | Pruebas automáticas (opcional) |
+
+Las librerías se instalan solas con `requirements.txt`; solo hay que tener Python.
+
+### 1. Instalar Python (solo si no lo tiene)
+
+Para saber si ya está instalado, abrir una terminal y escribir `python --version` (en Windows también `py --version`).
+Si responde `Python 3.x`, pasar al paso 2.
+
+- **Windows:** descargar de https://www.python.org/downloads/ y, **en la primera pantalla del instalador, marcar
+  la casilla «Add python.exe to PATH»** antes de darle *Install Now*.
+- **macOS:** descargar de https://www.python.org/downloads/ o, con Homebrew, `brew install python`.
+- **Linux (Debian/Ubuntu):** `sudo apt install python3 python3-pip python3-venv`.
+
+### 2. Ejecutar
+
+**Windows, sin terminal:** doble clic en **`Ejecutar Python.bat`**. La primera vez instala las librerías (un minuto
+aproximadamente); después corre el programa, muestra la tabla de períodos y abre la carpeta `python/figuras/`.
+
+**Cualquier sistema, desde la terminal** (abierta en la carpeta del proyecto):
 
 ```bash
-pip install -r requirements.txt
-python pendulo.py
+# Windows
+py -m pip install -r python/requirements.txt
+py python/pendulo.py
+
+# macOS / Linux
+python3 -m pip install -r python/requirements.txt
+python3 python/pendulo.py
 ```
 
-**En Visual Studio Code**
-
-Se necesita instalado una sola vez: Python 3 (en Windows, marcar *Add Python to PATH* al
-instalarlo), Git y VS Code con la extensión **Python**.
-
-1. En VS Code: *Ctrl+Shift+P* → **Git: Clone** → pegar
-   `https://github.com/katerine15/proyecto5-pendulo-edo` y abrir la carpeta.
-2. Abrir la terminal (*Terminal → New Terminal*) y escribir:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Abrir `pendulo.py` y darle ▶ (*Run Python File*), arriba a la derecha, o en la terminal:
-   `python pendulo.py`.
-4. Tarda cerca de un minuto. La tabla de períodos sale en la terminal y las gráficas y el GIF
-   quedan en la carpeta `figuras/`.
-
-- El cuaderno `pendulo_colab.ipynb` también abre en VS Code, celda por celda como en Colab.
-  Necesita además la extensión **Jupyter** y `pip install ipykernel`.
-- Si en Windows no se reconocen `pip` o `python`, usar `py -m pip install -r requirements.txt`
-  y `py pendulo.py`.
-
-**Pruebas automáticas**
+<details>
+<summary><b>Opcional: instalar en un entorno virtual</b> (no mezcla las librerías con el resto del equipo)</summary>
 
 ```bash
+# Windows (PowerShell)
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r python/requirements.txt
+python python/pendulo.py
+
+# macOS / Linux
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r python/requirements.txt
+python python/pendulo.py
+```
+
+Para salir del entorno: `deactivate`.
+</details>
+
+<details>
+<summary><b>Opcional: desde Visual Studio Code</b></summary>
+
+1. Instalar la extensión **Python** (de Microsoft).
+2. *File → Open Folder* y elegir la carpeta del proyecto.
+3. Abrir `python/pendulo.py` y darle ▶ (*Run Python File*), arriba a la derecha.
+   La primera vez, en la terminal de VS Code: `pip install -r python/requirements.txt`.
+</details>
+
+### 3. Qué debe salir
+
+Tarda cerca de un minuto. En la terminal:
+
+```
+Verificación lineal: diferencia máxima numérica vs exacta = 1.88e-11 rad
+
+T0 (lineal) = 2.0061 s
+
+   θ0 | T real [s] | error vs T0 | error vs T
+-----------------------------------------------
+  10° |     2.0099 |       0.19% |      0.19%
+  45° |     2.0863 |       4.00% |      3.84%
+  90° |     2.3678 |      18.03% |     15.28%
+ 150° |     3.5351 |      76.22% |     43.25%
+
+El error del período supera el 1 % a partir de θ0 ≈ 22.8°
+```
+
+Y en `python/figuras/` quedan:
+
+| Archivo | Qué muestra |
+|---|---|
+| `1_verificacion_lineal.png` | RK4 contra la solución a mano θ₀·cos(ωt): las curvas se superponen (diferencia ~10⁻¹¹ rad) |
+| `2_real_vs_lineal.png` | Las dos ecuaciones a 10°, 45°, 90° y 150° |
+| `3_error_periodo.png` | Error del período contra θ₀, con el umbral del 1 % |
+| `4_animacion_90grados.gif` | Los dos péndulos soltados a 90°, desfasándose |
+| `tabla_periodos.csv` | La tabla de períodos y errores |
+
+### 4. Pruebas automáticas (opcional)
+
+```bash
+cd python
 python -m pytest
 ```
 
-Deben salir 10 pruebas en verde (tarda unos segundos).
+Deben salir **10 pruebas en verde**: comprueban T₀, los cuatro períodos, la verificación, el umbral y Taylor.
 
-**En Google Colab (sin instalar nada)**
+---
 
-1. Entrar a https://colab.research.google.com
-2. *Archivo → Subir cuaderno* y elegir `pendulo_colab.ipynb`
-3. *Entorno de ejecución → Ejecutar todas*
+## Problemas frecuentes
 
-### Simuladores
+| Problema | Solución |
+|---|---|
+| `'python' no se reconoce como un comando` (Windows) | Usar `py` en vez de `python`. Si tampoco funciona, reinstalar Python marcando **Add python.exe to PATH**. |
+| `'pip' no se reconoce` | Usar `py -m pip ...` (Windows) o `python3 -m pip ...` (macOS/Linux). |
+| `ModuleNotFoundError: No module named 'numpy'` (o matplotlib, PIL) | Falta instalar las librerías: `py -m pip install -r python/requirements.txt`. |
+| `externally-managed-environment` (Linux) | Usar el entorno virtual de arriba. |
+| El `.bat` se abre y se cierra | Abrirlo desde una terminal para ver el mensaje, o instalar Python como en el paso 1. |
+| La página abre pero no se ve el 3D | El navegador no tiene WebGL activo: activar la *aceleración por hardware* en la configuración del navegador o usar Chrome/Edge/Firefox actualizados. El resto de la página (fórmulas, gráficas, tablas) funciona igual. |
+| Las letras de la página cambian sin internet | Normal: sin conexión usa la tipografía del sistema. Las fórmulas y el 3D funcionan igual. |
 
-Abrir `simulador_3d.html` (o `simulador.html`) con doble clic en cualquier navegador,
-o desde VS Code con la extensión *Live Server*. No necesitan Python.
-No necesitan internet; sin conexión solo cambia la tipografía.
-Si el repositorio se publica con GitHub Pages, `index.html` lleva a `simulador_3d.html`.
+---
 
-**Las 7 gráficas del simulador 3D**
+## Estructura
 
-1. θ(t) en tiempo real, real contra lineal.
-2. Los 4 casos del enunciado (10°, 45°, 90°, 150°).
-3. Error del período contra θ₀, con el umbral del 1 %.
-4. Taylor: sen θ, θ y θ − θ³/6.
-5. Verificación: RK4 contra la solución exacta del péndulo real (funciones elípticas de Jacobi) y contra θ₀cos(ωt).
-6. Espacio de fases: θ contra θ'.
-7. Energía con Euler explícito, Euler simpléctico y RK4: por qué se usa RK4.
+```
+Proyecto 5 - Pendulo/
+├── index.html              Página de la exposición (abrir con doble clic, no necesita internet)
+├── Ejecutar Python.bat     Corre el programa en Python con doble clic (Windows)
+├── web/                    Lo que usa index.html
+│   ├── three.min.js          Three.js r128: dibuja la escena 3D
+│   ├── pendulo_modelo.js     Modelo 3D del aparato (hecho en Blender 5.2)
+│   └── katex/                KaTeX: dibuja las fórmulas en LaTeX
+├── python/                 El programa en Python
+│   ├── pendulo.py            Modelo, RK4, solución exacta, período, gráficas y animación
+│   ├── requirements.txt      Librerías que necesita
+│   ├── tests/                Pruebas automáticas
+│   ├── pytest.ini
+│   └── figuras/              Resultados de pendulo.py (ya generados)
+├── solucion-a-mano/        El ejercicio resuelto a mano (Puntos 1, 2 y 3)
+└── docs/
+    ├── Enunciado - Proyectos EDO U3.pdf
+    └── GUION_EXPOSICION.md   Quién habla, cuánto tiempo, qué se muestra y preguntas probables
+```
 
-El botón **Respuestas a mano** muestra los puntos 1, 2 y 3 renglón por renglón, igual que en el cuaderno.
+## Qué entrega cada parte del enunciado
 
-### Modelo 3D (simulador de exposición)
-
-La escena 3D de `simulador_3d_exposicion.html` es un aparato de laboratorio modelado en Blender:
-base de nogal, columnas y viga de aluminio, rodamientos, transportadores con la zona del 1 % y
-placas con la ecuación de cada péndulo. El modelo queda arriba y la gráfica debajo, sin taparlo.
-
-- **Cámara:** arrastrar gira la vista; la rueda del mouse, el pellizco o los botones **+ / −** acercan;
-  el doble clic sobre un péndulo se acerca a él; clic derecho, Shift+arrastrar o dos dedos mueven la vista;
-  **⟲** vuelve a la vista completa.
-- **Por qué corre en cualquier equipo:** el aparato tiene unos 7 800 triángulos y pesa 344 KB.
-  La luz y las sombras del soporte están *horneadas* en una textura, así que el navegador no las
-  calcula; no hay sombras en tiempo real; solo se dibuja cuando algo cambia, y si el equipo va lento
-  baja la resolución solo. Sin WebGL o sin el archivo del modelo, usa la escena simple anterior.
-- **Para regenerarlo** (solo si se cambia el modelo):
-  ```bash
-  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python modelo3d/construir_modelo.py
-  python modelo3d/empaquetar.py
-  ```
-  El primero tarda menos de un minuto con GPU y deja una vista previa en `modelo3d/salida/vista_previa.png`.
-
-## Qué produce `pendulo.py`
-
-1. `1_verificacion_lineal.png` — numérica (RK4) vs exacta `θ0·cos(ωt)` del modelo lineal y su diferencia (~1e-11 rad).
-2. `2_real_vs_lineal.png` — las dos ecuaciones para θ0 = 10°, 45°, 90° y 150°.
-3. `3_error_periodo.png` — error del período frente a T0 entre 1° y 170°, con el umbral del 1 %.
-4. `4_animacion_90grados.gif` — los dos péndulos soltados a 90°, lado a lado.
-5. `tabla_periodos.csv` — período real y error porcentual (frente a T0 y frente a T).
+| Se pide | Dónde está |
+|---|---|
+| Ejercicio resuelto a mano | `solucion-a-mano/` y la Parte 1 de la página (la misma solución en LaTeX, paso a paso) |
+| Código que corra, con README | `python/pendulo.py` y este README |
+| Las dos ecuaciones a 10°, 45°, 90° y 150° | `python/figuras/2_real_vs_lineal.png` y la gráfica de casos de la página |
+| Tabla de períodos con el error frente a T₀ | `python/figuras/tabla_periodos.csv`, la terminal y la Parte 3 de la página |
+| Error del período contra θ₀ y umbral del 1 % | `python/figuras/3_error_periodo.png` y la Parte 3 de la página |
+| Simulación superpuesta con la solución exacta | `python/figuras/1_verificacion_lineal.png` y la Parte 2 de la página (RK4 contra las dos soluciones exactas) |
+| Animación de los dos péndulos a 90° | `python/figuras/4_animacion_90grados.gif` y la escena 3D de la página |
+| Conclusión de ingeniería | Parte 4 de la página y `docs/GUION_EXPOSICION.md` |
 
 ## Parámetros
 
-En `pendulo.py` están al inicio: `g`, `L`, el paso `h` y la lista `ANGULOS`. Si se cambian, se
-vuelve a correr y todo se recalcula. En el simulador 3D, L y g se cambian con los deslizadores.
+Al inicio de `python/pendulo.py` están `g`, `L`, el paso `h` y la lista `ANGULOS`. Si se cambian, se vuelve a correr
+y todo se recalcula. En la página, L y g se cambian con los deslizadores debajo de la escena 3D.
 
 ## Uso de inteligencia artificial
 
-- **Claude (Anthropic):** estructura de `pendulo.py`, el cuaderno de Colab, `simulador.html`,
-  la revisión de los valores de referencia y la redacción del desarrollo.
-- **Gemini (Google):** diseño inicial de `simulador_3d.html`. Claude lo revisó y corrigió:
-  el péndulo lineal pasó a usar la solución exacta deducida a mano, se quitó la fricción
-  (el modelo es sin amortiguamiento), se corrigió el umbral (22.9°, no 23.1°), se amplió el eje
-  de la gráfica de error y se guardaron las librerías localmente.
-- **Del tablero avanzado** (`tablero-avanzado/`, hecho por el grupo con apoyo de IA, ver su README) se
-  tomaron las ideas de la verificación con la solución exacta elíptica, el espacio de fases, la
-  comparación de energía Euler/RK4 y el guion de exposición. Claude las implementó en `simulador_3d.html`,
-  escribió `tests/` y `GUION_EXPOSICION.md`, y reescribió la ventana del ejercicio a mano.
-- **Modelo 3D:** Claude escribió `modelo3d/construir_modelo.py` (modelado y horneado en Blender 5.2),
-  `modelo3d/empaquetar.py` y la escena 3D de `simulador_3d_exposicion.html` (carga del modelo,
-  transportadores, cámara con zoom y gráfica debajo del modelo).
+- **Claude (Anthropic):** estructura de `pendulo.py`, la página de la exposición (escena 3D, gráficas, hojas en
+  LaTeX con su paralelo en Python), el modelo 3D en Blender, las pruebas, la revisión de los valores de
+  referencia y la redacción del guion.
+- **Gemini (Google):** diseño inicial del simulador 3D, revisado y corregido después.
 
 El grupo revisó, ejecutó y es responsable de cada línea.
-<!-- Ajusten esta sección según lo que realmente hayan hecho. -->

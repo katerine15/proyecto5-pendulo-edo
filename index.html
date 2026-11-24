@@ -2,10 +2,2634 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="refresh" content="0; url=simulador_3d.html">
-<title>Proyecto 5 — El péndulo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proyecto 5 · El péndulo — ¿Cuándo vale la aproximación lineal?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- KaTeX local: fórmulas LaTeX renderizadas sin internet -->
+<link rel="stylesheet" href="web/katex/katex.min.css">
+<script src="web/katex/katex.min.js"></script>
+<style>
+:root{
+  --bg:#080d16; --bg2:#0d1420; --panel:rgba(16,24,38,.86); --line:rgba(148,163,184,.18);
+  --ink:#e8eef7; --muted:#94a3b8; --real:#f5b642; --lin:#e879f9; --ok:#34d399;
+  --accent:#38bdf8; --warn:#fb7185; --display:"Archivo",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace; --body:"IBM Plex Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(900px 500px at 12% -10%,rgba(56,189,248,.13),transparent 60%),
+             radial-gradient(800px 500px at 92% 10%,rgba(232,121,249,.10),transparent 60%);}
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--accent),var(--lin),var(--real));z-index:100;transition:width .12s linear}
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:10px 22px;background:rgba(8,13,22,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{font-family:var(--display);font-weight:800;letter-spacing:-.02em;font-size:15px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--accent)}
+.navchips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.navchips a{font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:99px;
+  border:1px solid var(--line);transition:.25s;white-space:nowrap}
+.navchips a:hover,.navchips a.active{color:var(--ink);border-color:var(--accent);background:rgba(56,189,248,.12)}
+.timer{font-family:var(--mono);font-size:11px;color:var(--muted);border-left:1px solid var(--line);padding-left:14px;white-space:nowrap}
+.themebtn{font-size:10.5px;padding:5px 9px;white-space:nowrap}
+.hero{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:72px 24px 42px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,68px);line-height:1.02;letter-spacing:-.035em;margin:0;max-width:16ch}
+.hero h1 span{background:linear-gradient(100deg,var(--accent),var(--lin) 55%,var(--real));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{max-width:68ch;color:#b8c5d6;font-size:16px;margin:20px 0 26px}
+.rule{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:12px;
+  background:rgba(245,182,66,.09);border:1px solid rgba(245,182,66,.28);color:#f8d99b;font-size:13px}
+.rule b{color:var(--real)}
+.speakers{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:34px}
+.spk{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;transition:.3s}
+.spk:hover{transform:translateY(-4px);border-color:rgba(56,189,248,.45)}
+.spk .n{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em}
+.spk h3{font-family:var(--display);font-size:15px;margin:8px 0 6px}
+.spk p{font-size:12px;color:var(--muted);margin:0}
+.spk .time{font-family:var(--mono);font-size:11px;color:var(--real);margin-top:10px;display:block}
+.layout{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 24px 100px;
+  display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:30px;align-items:start}
+.stagewrap{position:relative;align-self:stretch;min-height:0}
+.stage{position:sticky;top:70px;border:1px solid var(--line);border-radius:20px;background:var(--panel);
+  backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45);
+  transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease}
+.stagehead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.stagehead .mode{font-family:var(--mono);font-size:11px;color:var(--accent)}
+.stagehead .dots{display:flex;gap:5px}
+.stagehead .dots i{width:6px;height:6px;border-radius:50%;background:#334155;transition:.3s}
+.stagehead .dots i.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.visual{position:relative;height:390px;background:radial-gradient(circle at 50% 30%,#101c2e,#070b13 72%);overflow:hidden}
+#threeHost{position:absolute;inset:0}
+#threeHost canvas{display:block;width:100%;height:100%;cursor:grab}
+#threeHost canvas:active{cursor:grabbing}
+.chartbox{position:relative;margin:10px;height:176px;border-radius:12px;z-index:3;
+  background:rgba(6,11,20,.94);border:1px solid var(--line);backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;overflow:hidden;transition:height .3s cubic-bezier(.2,.8,.2,1)}
+/* Al ver el código, el 3D se oculta (no se dibuja) y el cuaderno usa todo el espacio */
+.stage.code-view .visual{height:0!important}
+.stage.code-view .chartbox{height:clamp(300px,60vh,580px)!important}
+.zoomctl{position:absolute;right:10px;top:10px;z-index:4;display:flex;flex-direction:column;gap:6px}
+.zoomctl button{width:32px;height:32px;padding:0;border-radius:9px;font:600 16px/1 var(--mono);
+  background:rgba(6,11,20,.72);backdrop-filter:blur(6px)}
+.zoomhint{position:absolute;right:50px;top:12px;font:10px var(--mono);color:var(--muted);pointer-events:none;
+  padding:3px 8px;border-radius:7px;background:rgba(6,11,20,.7);opacity:0;transition:opacity .25s}
+.visual:hover .zoomhint{opacity:.9}
+body.light .zoomhint{background:rgba(255,255,255,.85)}
+.charthead{display:flex;align-items:center;gap:6px;padding:4px 7px;flex:0 0 auto;
+  border-bottom:1px solid var(--line);background:rgba(15,23,42,.85)}
+.charthead .ttl{font:10px var(--mono);color:var(--muted);margin-right:auto;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.charthead button{font-size:10px;padding:3px 8px;border-radius:6px;letter-spacing:.02em}
+.charthead button.on{background:rgba(56,189,248,.18);border-color:var(--accent);color:#bfe9ff}
+.charthead button.on.code{background:rgba(52,211,153,.16);border-color:var(--ok);color:#b6f5da}
+.chartbody{position:relative;flex:1;min-height:0}
+#chart{width:100%;height:100%;display:block}
+.code-mode #chart{display:none}
+#codePane{display:none;height:100%;overflow:auto;background:#070c15;font:11px/1.5 var(--mono)}
+.code-mode #codePane{display:block}
+.nbhead{display:flex;align-items:center;gap:8px;padding:6px 9px;position:sticky;top:0;z-index:2;
+  background:#0d1523;border-bottom:1px solid rgba(148,163,184,.16)}
+.nbdots{display:flex;gap:4px}
+.nbdots i{width:7px;height:7px;border-radius:50%;background:#fb7185}
+.nbdots i:nth-child(2){background:#f5b642}.nbdots i:nth-child(3){background:#34d399}
+.nbname{color:#cbd5e1;font-size:10.5px}
+.nbbadge{margin-left:auto;font-size:9px;color:#34d399;border:1px solid rgba(52,211,153,.35);
+  border-radius:99px;padding:1px 7px}
+.nbcode{padding:7px 0 14px}
+.cl{display:flex;white-space:pre;min-height:16.5px}
+.cl:hover{background:rgba(56,189,248,.05)}
+.ln{flex:0 0 34px;text-align:right;padding-right:9px;color:#3d4d63;user-select:none}
+.cs{flex:1;padding-right:10px;color:#dbe6f2;white-space:pre}
+.cm{color:#5f8f74;font-style:italic}
+.kw{color:#e879f9}
+.st{color:#f5b642}
+.nm{color:#7dd3fc}
+.fn{color:#67e8f9}
+.hud{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:5px;font-family:var(--mono);font-size:11px;pointer-events:none}
+.hud .row{display:flex;gap:8px;align-items:center}
+.hud .tag{padding:2px 7px;border-radius:6px;font-weight:600}
+.hud .r{color:var(--real);background:rgba(245,182,66,.12);border:1px solid rgba(245,182,66,.3)}
+.hud .l{color:var(--lin);background:rgba(232,121,249,.12);border:1px solid rgba(232,121,249,.3)}
+.hud .v{color:#cbd5e1}
+.controls{padding:12px 14px 14px;border-top:1px solid var(--line)}
+.ctrlrow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.ctrl{flex:1 1 130px;min-width:120px}
+.ctrl label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px}
+.ctrl label b{font-family:var(--mono);color:var(--ink);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--accent);height:18px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+/* Velocidad de reproducción: centro = normal, con un "imán" que da un tirón al llegar */
+.speedrow{display:flex;align-items:center;gap:10px;margin-top:10px}
+.slowbtn{flex:none}
+.slowbtn[aria-pressed="true"]{background:rgba(56,189,248,.18);border-color:var(--accent);color:var(--ink)}
+.speedctl{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.speedctl label{font-size:11px;color:var(--muted);white-space:nowrap}
+.speedctl label b{display:inline-block;min-width:62px;font-family:var(--mono);font-weight:500;color:var(--ink)}
+.speedend{font:10px var(--mono);color:var(--muted);flex:none}
+.speedtrack{position:relative;flex:1;min-width:80px;display:flex;align-items:center}
+.speedtrack input{margin:0}
+.speedmid{position:absolute;left:50%;top:50%;width:2px;height:14px;border-radius:1px;transform:translate(-50%,-50%);
+  background:var(--accent);opacity:.75;pointer-events:none}
+.speedtrack.snap{animation:tiron .3s ease-out}
+.speedtrack.snap .speedmid{animation:pulsoMitad .45s ease-out}
+@keyframes tiron{0%{transform:translateX(0)}25%{transform:translateX(-3px)}55%{transform:translateX(2px)}100%{transform:translateX(0)}}
+@keyframes pulsoMitad{0%{height:14px;opacity:.75}35%{height:22px;opacity:1;box-shadow:0 0 10px var(--accent)}100%{height:14px;opacity:.75}}
+@media (prefers-reduced-motion:reduce){.speedtrack.snap,.speedtrack.snap .speedmid{animation:none}}
+button{font:inherit;font-size:11px;font-weight:600;color:#cbd5e1;background:rgba(30,41,59,.8);
+  border:1px solid var(--line);border-radius:9px;padding:6px 10px;cursor:pointer;transition:.2s}
+button:hover{border-color:var(--accent);color:#fff}
+button.primary{background:var(--accent);border-color:var(--accent);color:#04121d}
+button.case.on{background:rgba(245,182,66,.18);border-color:var(--real);color:#ffd899}
+.story{min-width:0}
+.step{min-height:88vh;padding:60px 0 40px;scroll-margin-top:74px}
+.step .head{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:#04121d;background:var(--accent);
+  padding:4px 9px;border-radius:99px;font-weight:600}
+.step h2{font-family:var(--display);font-size:clamp(25px,3.4vw,38px);line-height:1.08;letter-spacing:-.025em;margin:0}
+.minutes{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+.leadp{font-size:15px;color:#c2cedd;margin:0 0 18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
+.card h4{font-family:var(--display);font-size:14px;margin:0 0 10px;color:#fff}
+.cite{border-left:3px solid var(--real);background:rgba(245,182,66,.07);padding:12px 14px;border-radius:0 10px 10px 0;
+  font-size:12.5px;color:#e6d2ac;margin:14px 0}
+.cite b{color:var(--real)}
+.quote{font-style:italic;color:#f3e3c4}
+ol.steps{margin:0;padding-left:20px}
+ol.steps li{margin:9px 0;font-size:13.5px;color:#d6e0ed}
+ol.steps li b{color:#fff}
+.eq{font-family:var(--mono);font-size:13px;color:#bfe9ff;background:rgba(56,189,248,.07);
+  border:1px solid rgba(56,189,248,.18);border-radius:9px;padding:8px 11px;margin:8px 0;overflow-x:auto;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini{background:rgba(15,23,42,.7);border:1px solid var(--line);border-radius:11px;padding:11px}
+.mini .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.mini .v{font-family:var(--mono);font-size:20px;font-weight:600;color:#fff;margin-top:3px}
+.mini .v small{font-size:11px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+td{font-family:var(--mono);color:#dbe5f1}
+td.hi{color:var(--real);font-weight:600}
+.hint{font-size:12px;color:var(--muted);margin-top:10px}
+.verdict{border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.08);border-radius:14px;padding:16px;margin-top:14px}
+.verdict h4{color:var(--ok);margin:0 0 8px;font-family:var(--display);font-size:15px}
+.verdict p{margin:0;font-size:14px;color:#d6f5e8}
+.checks{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.checks span{font-size:11px;padding:5px 9px;border-radius:99px;border:1px solid var(--line);color:#a9b8c9}
+.srccite{font-family:var(--mono);font-size:11.5px;color:var(--muted);background:rgba(148,163,184,.08);
+  border:1px solid var(--line);border-radius:8px;padding:6px 9px;display:inline-block;margin-top:8px}
+/* Deducción y verificación en dos columnas: LaTeX | Python */
+.texgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.texcol{min-width:0}
+.texhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.texhead b{font-family:var(--display);font-size:12px;color:#fff}
+.texhead .tag2{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.texstep{padding:9px 11px;margin-bottom:7px;border-left:2px solid rgba(148,163,184,.22);
+  border-radius:0 10px 10px 0;background:rgba(8,13,22,.55)}
+.texstep.key{border-left-color:var(--accent);background:rgba(56,189,248,.07)}
+.texstep.result{border-left-color:var(--ok);background:rgba(52,211,153,.07)}
+.texstep .n{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.texmath{color:#dceeff;font-size:12px;overflow-x:auto;padding:3px 0}
+.texstep.key .texmath{color:#bfe9ff}
+.texstep.result .texmath{color:#b7f7d9}
+.texsrc{display:none;font-family:var(--mono);font-size:10.5px;color:#7f8fa3;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
+.texgrid.show-src .texsrc{display:block}
+.texgrid.show-src .texmath{display:none}
+.texexpl{font-size:11.5px;color:#9fb0c4;margin-top:5px;line-height:1.45}
+.pycode{margin:0;font-family:var(--mono);font-size:11px;line-height:1.5;color:#d6e0ed;white-space:pre-wrap;overflow-wrap:anywhere}
+.pyc{color:#64748b}.pyk{color:#c084fc}.pyn{color:#fbbf24}.pyf{color:var(--accent)}.pyo{color:var(--ok)}
+.texbtn{font-size:10.5px;padding:4px 9px}
+/* ===== Ejercicio a mano: hoja de cuaderno (LaTeX) | editor de código (Python) =====
+   Cada renglón lleva su LaTeX y su Python a la misma altura. Las dos texturas son una sola
+   hoja continua detrás de todas las filas (::before = papel, ::after = editor), hechas con
+   CSS y un ruido SVG de pocos bytes: no hay imágenes que descargar.
+   En escritorio la tarjeta ocupa todo el ancho (layoutTexCard) y se "despliega" con clip-path
+   mientras el 3D se oculta; el alto de la página no cambia. */
+.texcard{--texL:0px;position:relative;z-index:2;padding:20px 22px 24px;
+  clip-path:inset(0 0 0 var(--texL) round 18px);transition:clip-path .7s cubic-bezier(.2,.8,.2,1),box-shadow .5s ease}
+body.eq-focus .texcard{clip-path:inset(0 0 0 0 round 18px);box-shadow:0 30px 90px rgba(0,0,0,.5)}
+/* Sin overflow:hidden (rompería el encabezado fijo): cada hoja lleva sus esquinas y su sombra */
+.texgrid.texrows{position:relative;display:flex;flex-direction:column;gap:0}
+.texgrid.texrows::before,.texgrid.texrows::after{border-radius:14px}
+.texcolheads .hp,.texcolheads .he{border-radius:14px 14px 0 0}
+.texrows .pycode,.texrows .tx .texmath{overscroll-behavior-x:contain}
+/* Papel: blanco cálido, grano de fibra, cuadrícula azul y margen rojo */
+.texgrid.texrows::before{content:"";position:absolute;left:0;top:0;bottom:0;width:50%;z-index:0;pointer-events:none;
+  background-color:#fffdf7;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,transparent 46px,rgba(220,38,38,.5) 46px,rgba(220,38,38,.5) 48px,transparent 48px),
+    linear-gradient(rgba(37,99,235,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(37,99,235,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,95,60,.06),transparent 18%,transparent 82%,rgba(120,95,60,.08));
+  background-size:180px 180px,100% 100%,24px 24px,24px 24px,100% 100%;
+  box-shadow:inset -10px 0 18px -12px rgba(60,40,20,.35)}
+/* Editor: fondo estilo VS Code, ruido sutil y canal de números de línea */
+.texgrid.texrows::after{content:"";position:absolute;right:0;top:0;bottom:0;width:50%;z-index:0;pointer-events:none;
+  background-color:#1e1e1e;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,#181818 0,#181818 50px,rgba(255,255,255,.06) 50px,rgba(255,255,255,.06) 51px,transparent 51px),
+    radial-gradient(120% 70% at 50% 0%,rgba(255,255,255,.035),transparent 60%);
+  background-size:160px 160px,100% 100%,100% 100%}
+/* Capas (de abajo hacia arriba): editor 1 · código 2 · papel 3 · contenido del papel 4.
+   Las filas no crean su propio contexto de capas, así el editor puede esconderse DEBAJO de la hoja. */
+.texcolheads,.texpart,.texrow{position:relative;z-index:auto}
+.texgrid.texrows::after{z-index:1;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.texrow .pycode,.texpart .pc{position:relative;z-index:2}
+.texgrid.texrows::before{z-index:3;
+  box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(120,95,60,.18),18px 0 30px -12px rgba(0,0,0,.45)}
+.texrow .tx,.texpart .pp{position:relative;z-index:4}
+.texcolheads .he{position:relative;z-index:5}
+.texcolheads .hp{position:relative;z-index:7}
+/* Por defecto solo se ve la hoja, centrada, y el editor espera escondido justo detrás de ella.
+   "Ver cód" (.show-code) corre la hoja a la izquierda y el editor sale hacia la derecha.
+   Solo se animan desplazamientos: no cambia el alto de la página. */
+.texgrid.texrows::before,.texrow .tx,.texpart .pp,.texcolheads .hp{
+  transform:translateX(50%);transition:transform .65s cubic-bezier(.65,0,.35,1)}
+.texgrid.texrows::after,.texrow .pycode,.texpart .pc,.texcolheads .he{
+  transform:translateX(-50%);visibility:hidden;
+  transition:transform .65s cubic-bezier(.65,0,.35,1),visibility 0s linear .65s}
+.texcard.show-code .texgrid.texrows::before,.texcard.show-code .texrow .tx,
+.texcard.show-code .texpart .pp,.texcard.show-code .texcolheads .hp{transform:translateX(0)}
+.texcard.show-code .texgrid.texrows::after,.texcard.show-code .texrow .pycode,
+.texcard.show-code .texpart .pc,.texcard.show-code .texcolheads .he{
+  transform:translateX(0);visibility:visible;transition:transform .65s cubic-bezier(.65,0,.35,1),visibility 0s}
+/* Con el código escondido, cada fila mide solo lo que mide su LaTeX (hoja compacta, sin huecos).
+   Al pulsar "Ver cód" el código vuelve a la fila y cada renglón queda frente a su Python. */
+.texcard:not(.compact):not(.show-code) .texrow .pycode{position:absolute;top:0;right:0;width:50%}
+/* Notas "a lápiz" de cada paso (botón "Ver pasos"): letra manuscrita gris grafito, un poco
+   inclinada, arriba a la izquierda de la ecuación. Fuentes del sistema: no se descarga nada. */
+.texrow .nota{display:none;margin:2px 0 6px;max-width:94%;
+  font:16px/1.35 "Ink Free","Segoe Print","Bradley Hand","Comic Sans MS",cursive;color:#4b5563;
+  text-shadow:0 0 .4px rgba(31,41,55,.55);transform:rotate(-1.2deg);transform-origin:left center}
+.texrow .nota::before{content:"✎ ";opacity:.7}
+.texcard.show-notes .texrow .nota{display:block;animation:notaLapiz .4s ease-out}
+@keyframes notaLapiz{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:reduce){.texcard.show-notes .texrow .nota{animation:none}}
+.notesbtn[aria-pressed="true"]{background:rgba(250,204,21,.18);border-color:#d4a017;color:var(--ink)}
+.texcolheads .hp .notesbtn{margin-left:auto;align-self:center;padding:4px 10px;border-radius:7px;
+  font:600 11px var(--mono);background:#fff;color:#374151;border:1px solid rgba(55,65,81,.35)}
+.texcolheads .hp .notesbtn[aria-pressed="true"]{background:#fde68a;border-color:#d4a017;color:#1f2937}
+.texcolheads .hp .notesbtn + .codebtn{margin-left:8px}
+/* Encabezado de la hoja en una sola línea: si falta espacio se acorta el subtítulo */
+.texcolheads .hp{flex-wrap:nowrap;align-items:center}
+.texcolheads .hp b{white-space:nowrap;flex:none}
+.texcolheads .hp span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.texcolheads .hp .notesbtn,.texcolheads .hp .codebtn{white-space:nowrap;flex:none}
+/* Botones de la tarjeta y copia de "Ver cód" en el encabezado fijo de la hoja */
+.texbtns{display:flex;gap:8px;flex-wrap:wrap}
+.codebtn[aria-pressed="true"]{background:rgba(55,148,255,.2);border-color:#3794ff;color:var(--ink)}
+.texcolheads .hp .codebtn{margin-left:auto;align-self:center;padding:4px 10px;border-radius:7px;
+  font:600 11px var(--mono);background:#0f172a;color:#e2e8f0;border:1px solid rgba(15,23,42,.35)}
+.texcolheads .hp .codebtn[aria-pressed="true"]{background:#3794ff;border-color:#3794ff;color:#fff}
+@media (prefers-reduced-motion:reduce){
+  .texgrid.texrows::before,.texgrid.texrows::after,.texrow .tx,.texrow .pycode,.texpart .pp,.texpart .pc,
+  .texcolheads .hp,.texcolheads .he{transition:none!important}
+}
+/* Encabezado: espiral del cuaderno | barra de título del editor */
+/* sticky siempre crea su propio contexto de capas: va por encima de las dos hojas, y adentro
+   la parte de papel (.hp) igual se esconde debajo de la barra del editor (.he) */
+.texcolheads{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);position:sticky;top:57px;z-index:8!important}
+.texcolheads .hp{display:flex;align-items:baseline;gap:12px;padding:20px 18px 10px 62px;background-color:#fffdf7;
+  background-image:radial-gradient(circle at 13px 10px,#c7ccd4 0,#c7ccd4 4px,#5b6472 5px,transparent 6px);
+  background-size:26px 22px;background-repeat:repeat-x;border-bottom:2px solid rgba(37,99,235,.25);color:#1e293b}
+.texcolheads .hp b{font:700 15px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#0f172a}
+.texcolheads .hp span{font:11px var(--mono);color:#64748b}
+.texcolheads .he{display:flex;align-items:center;gap:12px;padding:0 14px;background:#2d2d30;border-bottom:1px solid #111}
+.texcolheads .dots{display:flex;gap:7px;font-style:normal}
+.texcolheads .dots b{width:11px;height:11px;border-radius:50%;background:#ff5f57}
+.texcolheads .dots b:nth-child(2){background:#febc2e}
+.texcolheads .dots b:nth-child(3){background:#28c840}
+.texcolheads .tab{align-self:stretch;display:flex;align-items:center;padding:0 14px;margin-top:8px;background:#1e1e1e;
+  border-top:2px solid #3794ff;border-radius:6px 6px 0 0;font:12px var(--mono);color:#e5e5e5}
+.texcolheads .lang{margin-left:auto;font:11px var(--mono);color:#8b8b8b}
+/* Separador de cada Punto */
+.texpart{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.texpart .pp{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:18px 18px 8px 62px}
+.texpart .pp b{font:700 20px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#0f172a;
+  background:linear-gradient(transparent 62%,rgba(250,204,21,.55) 62%);padding:0 4px}
+.texpart .pp span{font-size:14px;font-style:italic;color:#475569}
+.texpart .pc{display:flex;align-items:flex-end;padding:18px 16px 8px 64px;font:13px var(--mono);color:#6a9955;
+  white-space:nowrap;overflow:hidden}
+/* Cada renglón */
+.texrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:0;border-radius:0;overflow:visible;background:none}
+.texrow .tx{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:12px 18px 14px 62px;
+  border-bottom:1px dashed rgba(37,99,235,.22)}
+.texrow .lbl{display:flex;align-items:center;gap:9px;margin-bottom:4px;font:600 13.5px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#1d4ed8}
+.texrow .num{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  border:1.5px solid rgba(29,78,216,.55);font:700 10px var(--mono);color:#1d4ed8;margin-left:-38px}
+.texrow.key .lbl .txt{background:linear-gradient(transparent 58%,rgba(56,189,248,.35) 58%)}
+.texrow.result .lbl .txt{background:linear-gradient(transparent 58%,rgba(52,211,153,.45) 58%)}
+.texrow .tx .texmath{color:#111827;font-size:16.5px;padding:0;overflow-x:auto;overflow-y:hidden}
+.texrow .tx .texmath .katex-display{margin:.25em 0}
+.texrow .tx .texsrc{font-size:11.5px;color:#475569}
+.texrow .pycode{display:block;align-self:stretch;margin:0;padding:14px 16px 14px 0;background:none;color:#d4d4d4;
+  font-size:13px;line-height:1.62;white-space:pre;overflow-x:auto;overflow-wrap:normal;border-bottom:1px solid rgba(255,255,255,.04)}
+body.light .texrow .pycode{color:#d4d4d4}          /* el editor es oscuro en los dos temas */
+body.light .texrow .tx .texmath{color:#111827}
+.texrow .pycode .ln{display:inline-block;width:34px;margin-right:24px;text-align:right;color:#6e7681;user-select:none}
+.texrow .pycode .cm{color:#6a9955;font-style:normal}
+.texrow .pycode .kw{color:#c586c0}
+.texrow .pycode .st{color:#ce9178}
+.texrow .pycode .nm{color:#b5cea8}
+.texrow .pycode::-webkit-scrollbar,.texrow .tx .texmath::-webkit-scrollbar{height:6px}
+.texrow .pycode::-webkit-scrollbar-thumb{background:#424242;border-radius:3px}
+.texrow .tx .texmath::-webkit-scrollbar-thumb{background:rgba(37,99,235,.25);border-radius:3px}
+/* Papel suelto (misma textura de la hoja): tarjetas compactas, conclusión y checklist */
+.texcard.compact .texrow .tx,.papernote{
+  background-color:#fffdf7;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,transparent 46px,rgba(220,38,38,.5) 46px,rgba(220,38,38,.5) 48px,transparent 48px),
+    linear-gradient(rgba(37,99,235,.13) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(37,99,235,.13) 1px,transparent 1px);
+  background-size:180px 180px,100% 100%,24px 24px,24px 24px}
+/* Tarjetas compactas (secciones 2 y 3): la hoja y el editor van apilados dentro de la columna
+   de texto, así el panel de la izquierda sigue mostrando las gráficas en vivo. */
+.texcard.compact{clip-path:none;padding:16px 16px 18px}
+.texcard.compact .texgrid.texrows::before,.texcard.compact .texgrid.texrows::after{display:none}
+.texcard.compact .texcolheads{position:relative;top:auto;grid-template-columns:1fr}
+.texcard.compact .texcolheads .hp{border-radius:14px 14px 0 0}
+.texcard.compact .texcolheads .he{border-radius:0;height:38px}
+.texcard.compact .texrow,.texcard.compact .texpart{grid-template-columns:1fr}
+.texcard.compact .texrow .tx,.texcard.compact .texcolheads .hp,.texcard.compact .texpart .pp,
+.texcard.compact .texrow .pycode,.texcard.compact .texcolheads .he,.texcard.compact .texpart .pc{
+  transform:none!important;transition:none!important;visibility:visible!important}
+.texcard.compact .texrow .tx{border-bottom:0;border-top:2px solid rgba(37,99,235,.18)}
+.texcard.compact .texrow .pycode{background:#1e1e1e linear-gradient(90deg,#181818 0,#181818 50px,rgba(255,255,255,.06) 50px,rgba(255,255,255,.06) 51px,transparent 51px);
+  border-bottom:0;font-size:12.5px}
+.texcard.compact .texrow:last-child .pycode{border-radius:0 0 14px 14px}
+.texcard.compact .texrow .tx .texmath{font-size:15px}
+/* La tabla en vivo de la sección 3, escrita en la hoja */
+.papertable{width:100%;border-collapse:collapse;margin:6px 0 2px;font:13.5px var(--mono);color:#111827;background:none}
+.papertable th{padding:6px 8px;text-align:left;font:600 12px var(--display,'Space Grotesk'),system-ui,sans-serif;
+  color:#1d4ed8;background:none;border:0;border-bottom:2px solid rgba(37,99,235,.35)}
+.papertable td{padding:6px 8px;color:#111827;background:none;border:0;border-bottom:1px dashed rgba(37,99,235,.25)}
+.papertable td.hi{color:#b45309;font-weight:700}
+.paperhint{margin:8px 0 0;font-size:13px;font-style:italic;color:#475569}
+.paperhint b{color:#047857;font-style:normal}
+/* Notas en papel: conclusión de la sección 4 y checklist del cierre */
+.papernote{position:relative;margin:16px 0;padding:22px 22px 20px 62px;border-radius:14px;color:#1e293b;
+  box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 0 1px rgba(148,163,184,.18)}
+.papernote h4{margin:0 0 10px;font:700 18px var(--display,'Space Grotesk'),system-ui,sans-serif;color:#0f172a}
+.papernote h4 span{background:linear-gradient(transparent 62%,rgba(250,204,21,.55) 62%);padding:0 4px}
+.papernote p{margin:0;font-size:15px;line-height:1.7;color:#1e293b}
+.papernote p b{color:#b45309;background:linear-gradient(transparent 60%,rgba(52,211,153,.35) 60%)}
+.papernote .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px}
+.papernote .checks span{position:relative;padding:4px 0 4px 30px;font-size:14px;color:#1e293b;background:none;border:0}
+.papernote .checks span::before{content:"✓";position:absolute;left:0;top:3px;width:20px;height:20px;display:grid;place-items:center;
+  border:1.5px solid rgba(29,78,216,.55);border-radius:5px;font:700 13px var(--mono);color:#047857}
+/* Celular y tablet: cada renglón apila la hoja y el editor */
+@media(max-width:980px){
+  .texgrid.texrows::before,.texgrid.texrows::after{display:none}
+  .texrow .tx,.texpart .pp,.texcolheads .hp,.texrow .pycode,.texpart .pc,.texcolheads .he{
+    transform:none!important;transition:none!important;visibility:visible!important}
+  /* en celular el código va debajo de cada paso, solo si se pidió con "Ver cód" */
+  .texcard:not(.compact):not(.show-code) .texrow .pycode{display:none}
+  .texcolheads{display:none}
+  .texpart,.texrow{grid-template-columns:1fr}
+  .texpart .pp,.texrow .tx{background:#fffdf7}
+  .texpart .pc{display:none}
+  .texpart .pp{padding-left:18px}
+  .texrow .tx{padding-left:44px}
+  .texrow .num{margin-left:-30px}
+  .texrow .pycode{background:#1e1e1e;font-size:12px}
+  .texrow .pycode .ln{width:26px;margin-right:14px}
+  .texcard{padding:14px 12px 18px}
+  .texrow .tx .texmath{font-size:clamp(11.5px,3.4vw,14px)}
+}
+.katex-display{margin:.15em 0!important}
+/* Modo foco: el stage se desvanece SIN salir del flujo (evita saltos de scroll) */
+body.eq-focus .stage{opacity:0;transform:translateX(-40px) scale(.94);pointer-events:none;box-shadow:none}
+@media(max-width:980px){.texgrid{grid-template-columns:1fr}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+.reveal.in{opacity:1;transform:none}
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr;gap:0}
+  .stage{top:58px;z-index:20}
+  .visual{height:330px}
+  .chartbox{height:120px}
+  .step{min-height:auto;padding:46px 0}
+  .speakers{grid-template-columns:1fr 1fr}
+  .hero{padding-top:48px}
+}
+@media(max-width:560px){
+  .speakers{grid-template-columns:1fr}
+  .navchips{display:none}
+  .grid2{grid-template-columns:1fr}
+  .visual{height:250px}
+  .chartbox{height:92px}
+  .hud{font-size:9px}
+  .controls{padding:8px 10px 10px}
+  .timer{display:none}
+}
+
+/* ---------- MODO CLARO ---------- */
+body.light{color-scheme:light;
+  --bg:#f4f7fb; --bg2:#e8eef6; --panel:rgba(255,255,255,.94); --line:rgba(15,23,42,.14);
+  --ink:#0f172a; --muted:#475569; --real:#b45309; --lin:#a21caf; --ok:#047857;
+  --accent:#0369a1; --warn:#be123c}
+body.light::before{background:radial-gradient(900px 500px at 12% -10%,rgba(3,105,161,.09),transparent 60%),
+                            radial-gradient(800px 500px at 92% 10%,rgba(162,28,175,.07),transparent 60%)}
+body.light .topbar{background:rgba(255,255,255,.92)}
+body.light .navchips a:hover,body.light .navchips a.active{background:rgba(3,105,161,.10)}
+body.light .hero .lead{color:#475569}
+body.light .rule{background:rgba(180,83,9,.08);border-color:rgba(180,83,9,.3);color:#92400e}
+body.light .spk:hover{border-color:rgba(3,105,161,.45)}
+body.light .stage{box-shadow:0 20px 50px rgba(15,23,42,.16)}
+body.light .stagehead .dots i{background:#cbd5e1}
+body.light .visual{background:radial-gradient(circle at 50% 30%,#e8f1fb,#dbe7f5 72%)}
+body.light .chartbox{background:rgba(255,255,255,.96)}
+body.light .charthead{background:rgba(241,245,249,.96)}
+body.light .charthead button.on{background:rgba(3,105,161,.14);color:#075985}
+body.light .charthead button.on.code{background:rgba(4,120,87,.14);color:#065f46}
+body.light #codePane{background:#f8fafc}
+body.light .nbhead{background:#e8eef6;border-bottom-color:rgba(15,23,42,.12)}
+body.light .nbname{color:#0f172a}
+body.light .nbbadge{color:#047857;border-color:rgba(4,120,87,.35)}
+body.light .cl:hover{background:rgba(3,105,161,.06)}
+body.light .ln{color:#94a3b8}
+body.light .cs{color:#1e293b}
+body.light .cm{color:#15803d}
+body.light .kw{color:#a21caf}
+body.light .st{color:#b45309}
+body.light .nm{color:#0369a1}
+body.light .fn{color:#0e7490}
+body.light .hud .r{color:#b45309;background:rgba(180,83,9,.10);border-color:rgba(180,83,9,.3)}
+body.light .hud .l{color:#a21caf;background:rgba(162,28,175,.10);border-color:rgba(162,28,175,.3)}
+body.light .hud .v{color:#1e293b}
+body.light button{color:#1e293b;background:rgba(255,255,255,.9)}
+body.light button:hover{color:#0f172a}
+body.light button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+body.light button.case.on{background:rgba(180,83,9,.13);border-color:var(--real);color:#7c2d12}
+body.light .who{color:#fff}
+body.light .leadp{color:#334155}
+body.light .card h4{color:var(--ink)}
+body.light .cite{background:rgba(180,83,9,.07);color:#78350f}
+body.light .quote{color:#92400e}
+body.light ol.steps li{color:#1e293b}
+body.light ol.steps li b{color:#0f172a}
+body.light .eq{color:#075985;background:rgba(3,105,161,.07);border-color:rgba(3,105,161,.22)}
+body.light .mini{background:rgba(241,245,249,.9)}
+body.light .mini .v{color:var(--ink)}
+body.light td{color:#1e293b}
+body.light .verdict{background:rgba(4,120,87,.07);border-color:rgba(4,120,87,.32)}
+body.light .verdict p{color:#065f46}
+body.light .checks span{color:#475569}
+body.light .srccite{background:rgba(15,23,42,.04)}
+body.light .texhead b{color:var(--ink)}
+body.light .texstep{background:rgba(241,245,249,.9);border-left-color:rgba(15,23,42,.18)}
+body.light .texstep.key{background:rgba(3,105,161,.06);border-left-color:var(--accent)}
+body.light .texstep.result{background:rgba(4,120,87,.06);border-left-color:var(--ok)}
+body.light .texmath{color:#0f172a}
+body.light .texstep.key .texmath{color:#075985}
+body.light .texstep.result .texmath{color:#065f46}
+body.light .texsrc,body.light .texexpl{color:#475569}
+body.light .pycode{color:#1e293b}
+body.light .pyk{color:#86198f}
+body.light .pyn{color:#b45309}
+
+/* Escenario visible (pasos 2 a 4): el modelo 3D arriba y la gráfica debajo, sin taparse.
+   Las alturas siguen el alto de la pantalla para que todo el escenario quepa. */
+body:not(.eq-focus) .visual{height:clamp(240px,39vh,410px)}
+body:not(.eq-focus) .chartbox{height:clamp(130px,20vh,210px)}
+@media(max-width:980px){
+  body:not(.eq-focus) .visual{height:clamp(220px,36vh,340px)}
+  body:not(.eq-focus) .chartbox{height:140px}
+}
+@media(max-width:560px){
+  body:not(.eq-focus) .visual{height:clamp(190px,27vh,230px)}
+  body:not(.eq-focus) .chartbox{height:150px}
+  .charthead button{white-space:nowrap;padding:3px 6px}
+  .zoomctl button{width:28px;height:28px;font-size:14px}
+  .zoomhint{display:none}
+}
+body.light .zoomctl button{background:rgba(255,255,255,.85)}
+</style>
 </head>
 <body>
-<p><a href="simulador_3d.html">Abrir el simulador 3D</a> · <a href="simulador.html">Simulador ligero</a></p>
+<div id="progress"></div>
+
+<header class="topbar">
+  <div class="brand">P5 · <em>El péndulo</em></div>
+  <nav class="navchips">
+    <a href="#hero">Portada</a>
+    <a href="#p1">1 · A mano</a>
+    <a href="#p2">2 · RK4</a>
+    <a href="#p3">3 · Período</a>
+    <a href="#p4">4 · 3D y cierre</a>
+  </nav>
+  <button type="button" id="btnTheme" class="themebtn" aria-pressed="false" title="Alternar modo claro">☀ Modo claro</button>
+</header>
+
+<section class="hero" id="hero">
+  <p class="kicker reveal">Ecuaciones diferenciales · Unidad 3 · Colegio Mayor del Cauca</p>
+  <h1 class="reveal" style="--d:.06s">¿Cuándo vale la <span>aproximación lineal</span>?</h1>
+  <p class="lead reveal" style="--d:.12s">El péndulo real obedece θ'' + (g/L)·sen θ = 0, pero casi siempre se usa la aproximación sen θ ≈ θ. Aquí la resolvemos a mano, la verificamos con código, medimos su error y la vemos en una simulación 3D.</p>
+  <div class="rule reveal" style="--d:.18s"><b>Regla del proyecto:</b> primero la matemática, después el programa. El programa <b>verifica</b> la solución analítica; no la reemplaza.</div>
+
+  <div class="speakers">
+    <article class="spk reveal" style="--d:.24s"><div class="n">PARTE 1</div><h3>El punto a mano</h3><p>Ecuación, linealización, solución exacta y Taylor.</p></article>
+    <article class="spk reveal" style="--d:.30s"><div class="n">PARTE 2</div><h3>Del papel al código</h3><p>Sistema de 1er orden, RK4 y verificación.</p></article>
+    <article class="spk reveal" style="--d:.36s"><div class="n">PARTE 3</div><h3>Período y umbral</h3><p>Detección de θ′ = 0, tabla y error del 1 %.</p></article>
+    <article class="spk reveal" style="--d:.42s"><div class="n">PARTE 4</div><h3>Animación y cierre</h3><p>Escena 3D, conclusión y pregunta del reloj.</p></article>
+  </div>
+</section>
+
+<div class="layout">
+  <aside class="stagewrap">
+    <div class="stage" id="stage">
+      <div class="stagehead">
+        <span class="mode" id="modeLabel">MODO 1 · DEDUCCIÓN A MANO</span>
+        <span class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i></span>
+      </div>
+      <div class="visual">
+        <div id="threeHost"></div>
+        <div class="hud">
+          <div class="row"><span class="tag r">REAL · sen θ</span><span class="v" id="hudReal">θ = 90.0°</span></div>
+          <div class="row"><span class="tag l">LINEAL · θ</span><span class="v" id="hudLin">θ = 90.0°</span></div>
+          <div class="row"><span class="v" id="hudTime">t = 0.00 s · Δθ = 0.0°</span></div>
+        </div>
+        <div class="zoomctl">
+          <button id="zIn" title="Acercar (rueda del mouse o pellizco)" aria-label="Acercar">+</button>
+          <button id="zOut" title="Alejar" aria-label="Alejar">−</button>
+          <button id="zReset" title="Volver a la vista completa" aria-label="Vista completa">⟲</button>
+        </div>
+        <div class="zoomhint">arrastra: girar · doble clic: ir al péndulo · clic der./Shift: mover</div>
+      </div>
+        <div class="chartbox" id="chartbox">
+          <div class="charthead">
+            <span class="ttl" id="chartTitle">Render · Taylor</span>
+            <button id="tabRender" class="on" title="Ver la gráfica animada">▦ Render</button>
+            <button id="tabCode" class="code" title="Ver el código Python con la lógica comentada">&lt;/&gt; Código PY</button>
+          </div>
+          <div class="chartbody">
+            <canvas id="chart"></canvas>
+            <div id="codePane"></div>
+          </div>
+        </div>
+      <div class="controls">
+        <div class="ctrlrow">
+          <div class="ctrl"><label>θ₀ inicial <b id="vTheta">90.0°</b></label><input id="sTheta" type="range" min="1" max="170" step="0.5" value="90"></div>
+          <div class="ctrl"><label>Longitud L <b id="vL">1.00 m</b></label><input id="sL" type="range" min="0.25" max="2.5" step="0.05" value="1"></div>
+          <div class="ctrl"><label>Gravedad g <b id="vG">9.81 m/s²</b></label><input id="sG" type="range" min="1.6" max="20" step="0.01" value="9.81"></div>
+        </div>
+        <div class="btns">
+          <button class="primary" id="btnPlay">❚❚ Pausar</button>
+          <button id="btnReset">↺ Reiniciar</button>
+          <button class="case" data-case="10">10°</button>
+          <button class="case" data-case="45">45°</button>
+          <button class="case on" data-case="90">90°</button>
+          <button class="case" data-case="150">150°</button>
+        </div>
+        <div class="speedrow">
+          <button id="btnSlow" class="slowbtn" aria-pressed="false" title="Cámara lenta a 0.25×; otro toque vuelve a la velocidad normal">🐢 Lento</button>
+          <div class="speedctl">
+            <label for="sSpeed">Velocidad <b id="vSpeed">1× normal</b></label>
+            <span class="speedend">0.1×</span>
+            <div class="speedtrack" title="Centro = velocidad normal · doble clic para volver a 1×">
+              <input id="sSpeed" type="range" min="0" max="100" step="0.5" value="50" aria-label="Velocidad de reproducción">
+              <i class="speedmid" aria-hidden="true"></i>
+            </div>
+            <span class="speedend">2×</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="story">
+    <!-- ======================= PERSONA 1 ======================= -->
+    <section class="step reveal" id="p1" data-mode="manual" data-index="0">
+      <div class="head"><span class="who">PARTE 1</span><span class="minutes">solución analítica</span></div>
+      <h2>1. El punto a mano</h2>
+      <p class="leadp">Primero la matemática: resolvemos a mano el modelo lineal, deducimos su período y justificamos la aproximación con Taylor. Después el programa comprueba esta solución.</p>
+
+      <div class="cite">
+        <b>Enunciado.</b> <span class="quote">«Resolver la ecuación <b>lineal</b> con θ(0) = θ₀, θ'(0) = 0, y deducir el período <b>T₀ = 2π√(L/g)</b>. Observar que T₀ <b>no depende de la amplitud</b>. Justificar la aproximación con el polinomio de Taylor de sen θ y estimar el error relativo en θ₀ = 10° y en θ₀ = 90°»</span>
+      </div>
+
+      <div class="card">
+        <h4>El procedimiento en resumen</h4>
+        <ol class="steps">
+          <li><b>Modelo.</b> θ'' + (g/L)·sen θ = 0: θ'' es la aceleración angular y (g/L)·sen θ el término que lo devuelve a la vertical, con L = 1 m y g = 9.81 m/s².</li>
+          <li><b>Aproximación.</b> sen θ ≈ θ − θ³/6 + θ⁵/120; para ángulos pequeños se conserva solo θ. El error es de <b>0.51 % a 10°</b> y de <b>57.08 % a 90°</b>.</li>
+          <li><b>Ecuación característica.</b> De θ'' + (g/L)θ = 0 sale r² + g/L = 0, luego r = ± i√(g/L), con ω = √(g/L).</li>
+          <li><b>Solución general.</b> θ(t) = C₁·cos(ωt) + C₂·sen(ωt).</li>
+          <li><b>Condiciones iniciales.</b> θ(0) = θ₀ ⇒ C₁ = θ₀; θ'(0) = 0 ⇒ C₂ = 0. Por tanto <b>θ(t) = θ₀·cos(ωt)</b>.</li>
+          <li><b>Período.</b> T₀ = 2π/ω = <b>2π√(L/g) ≈ 2.0061 s</b>. θ₀ no aparece en la fórmula: el modelo lineal es isócrono.</li>
+        </ol>
+        <div class="eq">θ'' + (g/L)·sen θ = 0 → (sen θ ≈ θ) → θ'' + (g/L)·θ = 0 → θ(t) = θ₀·cos(ωt), ω = √(g/L)</div>
+      </div>
+
+      <div class="card texcard" id="p1Latex">
+        <div class="texhead">
+          <h4 style="margin:0">El ejercicio a mano</h4>
+          <div class="texbtns">
+            <button type="button" class="texbtn notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button>
+            <button type="button" class="texbtn codebtn" aria-pressed="false" onclick="toggleCode(this)">‹/› Ver cód</button>
+            <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          </div>
+        </div>
+        <div class="texgrid texrows">
+          <div class="texcolheads"><div class="hp"><b>Taller · Péndulo simple</b><span>Resolución paso a paso</span><button type="button" class="notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button><button type="button" class="codebtn" aria-pressed="false" onclick="toggleCode(this)">‹/› Ver cód</button></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">punto_a_mano.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texpart"><div class="pp"><b>Punto 1</b><span>Resolver la ecuación lineal con θ(0) = θ₀, θ&#x27;(0) = 0 y deducir T₀ = 2π√(L/g).</span></div><div class="pc"># ── PUNTO 1 ────────────────────────────</div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">01</span><span class="txt">Ecuación lineal y condiciones iniciales</span></div>
+              <div class="nota">La ecuación del péndulo con sen θ ≈ θ. Arranca en θ₀ y quieto.</div>
+              <div class="texmath" data-tex="\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0"></div>
+              <div class="texsrc">\theta&#x27;&#x27;+\frac{g}{L}\,\theta=0,\qquad \theta(0)=\theta_0,\quad \theta&#x27;(0)=0</div>
+            </div>
+            <pre class="pycode" data-py>import math                          # sen, cos, raíz, π
+import numpy as np                   # para np.roots
+
+# gravedad (m/s²) y largo (m)
+g, L = 9.81, 1.0
+# θ(0) = θ0, en radianes
+theta0 = math.radians(10)
+# θ&#x27;(0) = 0: se suelta quieto
+dtheta0 = 0.0</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">02</span><span class="txt">Se propone θ = eʳᵗ y se deriva</span></div>
+              <div class="nota">Probamos una exponencial y sacamos sus dos derivadas.</div>
+              <div class="texmath" data-tex="\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}"></div>
+              <div class="texsrc">\theta=e^{rt},\qquad \theta&#x27;=r\,e^{rt},\qquad \theta&#x27;&#x27;=r^{2}e^{rt}</div>
+            </div>
+            <pre class="pycode" data-py># se prueba θ = e^(rt) y se deriva dos veces
+# θ   = e^(rt)
+theta_e   = lambda r, t: math.exp(r*t)
+# θ&#x27;  = r·e^(rt)
+dtheta_e  = lambda r, t: r * math.exp(r*t)
+# θ&#x27;&#x27; = r²·e^(rt)
+d2theta_e = lambda r, t: r**2 * math.exp(r*t)</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">03</span><span class="txt">Se reemplaza y se factoriza eʳᵗ</span></div>
+              <div class="nota">Metemos θ y θ&#x27;&#x27; en la ecuación. eʳᵗ nunca es 0, así que queda r² + g/L = 0.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+r^{2}e^{rt}+\frac{g}{L}\,e^{rt}&amp;=0\\
+e^{rt}\left(r^{2}+\frac{g}{L}\right)&amp;=0\\
+e^{rt}\neq 0\;\Rightarrow\; r^{2}+\frac{g}{L}&amp;=0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+r^{2}e^{rt}+\frac{g}{L}\,e^{rt}&amp;=0\\
+e^{rt}\left(r^{2}+\frac{g}{L}\right)&amp;=0\\
+e^{rt}\neq 0\;\Rightarrow\; r^{2}+\frac{g}{L}&amp;=0
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># r²·e^(rt) + (g/L)·e^(rt) = e^(rt)·(r² + g/L) = 0
+# e^(rt) nunca es 0, así que queda r² + 0·r + g/L = 0
+# coeficientes de r², r y 1
+caracteristica = [1, 0, g / L]</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">04</span><span class="txt">Se despeja r</span></div>
+              <div class="nota">Sale la raíz de un número negativo: por eso aparece i.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+r^{2}&amp;=-\frac{g}{L}\\
+\sqrt{r^{2}}&amp;=\pm\sqrt{-\frac{g}{L}}\\
+r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\qquad\leftarrow\ i=\sqrt{-1}\ \text{(unidad imaginaria)}\\
+r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}\ \text{(frecuencia natural)}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+r^{2}&amp;=-\frac{g}{L}\\
+\sqrt{r^{2}}&amp;=\pm\sqrt{-\frac{g}{L}}\\
+r&amp;=\pm\sqrt{-1}\cdot\sqrt{\frac{g}{L}}\qquad\leftarrow\ i=\sqrt{-1}\ \text{(unidad imaginaria)}\\
+r&amp;=\pm i\sqrt{\frac{g}{L}}=\pm i\omega,\qquad \omega=\sqrt{\frac{g}{L}}\ \text{(frecuencia natural)}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># raíces del polinomio
+r1, r2 = np.roots(caracteristica)
+omega = math.sqrt(g / L)             # ω = √(g/L)
+print(f&quot;r = {abs(r1.real):.0f} ± {abs(r1.imag):.4f}i&quot;)
+# → r = 0 ± 3.1321i
+print(round(omega, 4))
+# → 3.1321</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">05</span><span class="txt">Raíces complejas → solución general</span></div>
+              <div class="nota">Raíces a ± bi con a = 0: la solución es cosenos y senos.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
+\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos(\omega t)+C_2\sen(\omega t)\right)\\
+e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos(\omega t)+C_2\sen(\omega t)
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+r&amp;=a\pm bi=0\pm i\omega\qquad(a=0,\;b=\omega)\\
+\theta(t)&amp;=e^{0\cdot t}\left(C_1\cos(\omega t)+C_2\sen(\omega t)\right)\\
+e^{0}=1\;\Rightarrow\;\theta(t)&amp;=C_1\cos(\omega t)+C_2\sen(\omega t)
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># r = a ± bi → a = 0, b = ω
+a, b = r1.real, abs(r1.imag)
+print(math.exp(a * 1.0))
+# → 1.0
+
+# e^(at)·(C1·cos bt + C2·sen bt)
+def theta_general(t, C1, C2):
+    return math.exp(a*t) * (C1*math.cos(b*t)
+                            + C2*math.sin(b*t))</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">06</span><span class="txt">Primera condición: θ(0) = θ₀ (ángulo inicial o amplitud)</span></div>
+              <div class="nota">En t = 0: cos 0 = 1 y sen 0 = 0, así sale C₁ = θ₀.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta(0)&amp;=C_1\cos(\omega\cdot 0)+C_2\sen(\omega\cdot 0)=\theta_0\\
+&amp;=C_1\cos(0)+C_2\sen(0)=\theta_0\\
+&amp;=C_1(1)+C_2(0)=\theta_0\\
+&amp;=C_1+0=\theta_0\;\Rightarrow\;C_1=\theta_0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta(0)&amp;=C_1\cos(\omega\cdot 0)+C_2\sen(\omega\cdot 0)=\theta_0\\
+&amp;=C_1\cos(0)+C_2\sen(0)=\theta_0\\
+&amp;=C_1(1)+C_2(0)=\theta_0\\
+&amp;=C_1+0=\theta_0\;\Rightarrow\;C_1=\theta_0
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># θ(0) = C1·cos(0) + C2·sen(0) = C1·1 + C2·0
+C1 = theta0                          # entonces C1 = θ0</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">07</span><span class="txt">Se deriva θ(t) para obtener velocidad angular</span></div>
+              <div class="nota">Derivamos para tener la velocidad θ&#x27;.</div>
+              <div class="texmath" data-tex="\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)"></div>
+              <div class="texsrc">\theta&#x27;(t)=-C_1\,\omega\sen(\omega t)+C_2\,\omega\cos(\omega t)</div>
+            </div>
+            <pre class="pycode" data-py>def dtheta_general(t, C1, C2):       # derivada de θ(t)
+    # (cos ωt)&#x27; = −ω·sen ωt   y   (sen ωt)&#x27; = ω·cos ωt
+    return (-C1*omega*math.sin(omega*t)
+            + C2*omega*math.cos(omega*t))</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">08</span><span class="txt">Segunda condición: θ&#x27;(0) = 0 (se suelta desde el reposo)</span></div>
+              <div class="nota">Al soltarlo la velocidad es 0: de ahí sale C₂ = 0.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta&#x27;(0)&amp;=-C_1\,\omega\sen(\omega\cdot 0)+C_2\,\omega\cos(\omega\cdot 0)=0\\
+&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
+&amp;=-C_1\,\omega(0)+C_2\,\omega(1)=0\\
+&amp;=0+C_2\,\omega=0\\
+C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta&#x27;(0)&amp;=-C_1\,\omega\sen(\omega\cdot 0)+C_2\,\omega\cos(\omega\cdot 0)=0\\
+&amp;=-C_1\,\omega\sen(0)+C_2\,\omega\cos(0)=0\\
+&amp;=-C_1\,\omega(0)+C_2\,\omega(1)=0\\
+&amp;=0+C_2\,\omega=0\\
+C_2\,\omega&amp;=0\;\Rightarrow\;C_2=\frac{0}{\omega}=0
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># θ&#x27;(0) = −C1·ω·sen(0) + C2·ω·cos(0) = C2·ω = 0
+C2 = dtheta0 / omega                 # C2·ω = 0 → C2 = 0
+print(dtheta_general(0, C1, C2))
+# → 0.0</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">09</span><span class="txt">Se sustituye C₁ y C₂ · solución particular</span></div>
+              <div class="nota">Con C₁ y C₂ el péndulo lineal queda como un coseno.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta(t)&amp;=\theta_0\cos(\omega t)+0\cdot\sen(\omega t)\\
+\Rightarrow\;\theta(t)&amp;=\theta_0\cos(\omega t)\\
+\omega=\sqrt{\frac{g}{L}}\;\Rightarrow\;\theta(t)&amp;=\boxed{\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\;t\right)}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta(t)&amp;=\theta_0\cos(\omega t)+0\cdot\sen(\omega t)\\
+\Rightarrow\;\theta(t)&amp;=\theta_0\cos(\omega t)\\
+\omega=\sqrt{\frac{g}{L}}\;\Rightarrow\;\theta(t)&amp;=\boxed{\theta_0\cos\!\left(\sqrt{\frac{g}{L}}\;t\right)}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># solución particular
+def theta(t):
+    # ω = √(g/L) ya reemplazado
+    return theta0 * math.cos(math.sqrt(g / L) * t)
+
+# isclose compara sin errores de redondeo
+print(math.isclose(theta(1.0), theta_general(1.0, C1, C2)))
+# → True</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">10</span><span class="txt">Período T₀</span></div>
+              <div class="nota">Un ciclo del coseno mide 2π: despejamos el tiempo de una vuelta.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\omega\cdot T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{\frac{g}{L}}}=\frac{2\pi}{\frac{\sqrt{g}}{\sqrt{L}}}=2\pi\,\frac{\sqrt{L}}{\sqrt{g}}\\
+T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\omega\cdot T_0=2\pi\;\Rightarrow\;T_0&amp;=\frac{2\pi}{\omega}=\frac{2\pi}{\sqrt{\frac{g}{L}}}=\frac{2\pi}{\frac{\sqrt{g}}{\sqrt{L}}}=2\pi\,\frac{\sqrt{L}}{\sqrt{g}}\\
+T_0&amp;=\boxed{2\pi\sqrt{\frac{L}{g}}}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># el coseno se repite cada 2π
+T0 = 2 * math.pi / omega
+print(math.isclose(T0, 2*math.pi*math.sqrt(L/g)))
+# → True</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">11</span><span class="txt">Evaluación numérica (L = 1 m, g = 9.81 m/s²)</span></div>
+              <div class="nota">Con L = 1 m y g = 9.81 m/s² una vuelta dura unos 2 segundos.</div>
+              <div class="texmath" data-tex="T_0=2\pi\sqrt{\frac{1}{9.81}}\approx 2.0061\ \text{s}"></div>
+              <div class="texsrc">T_0=2\pi\sqrt{\frac{1}{9.81}}\approx 2.0061\ \text{s}</div>
+            </div>
+            <pre class="pycode" data-py>print(f&quot;T0 = {T0:.4f} s&quot;)
+# → T0 = 2.0061 s
+# tras un período completo θ vuelve a θ0
+print(math.isclose(theta(T0), theta0))
+# → True</pre>
+          </div>
+          <div class="texpart"><div class="pp"><b>Punto 2</b><span>Observar que T₀ no depende de la amplitud: el péndulo real sí depende.</span></div><div class="pc"># ── PUNTO 2 ────────────────────────────</div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">12</span><span class="txt">T₀ no depende de θ₀</span></div>
+              <div class="nota">θ₀ no está en la fórmula: en el lineal el período no cambia con el ángulo. En el real sí.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\text{lineal:}\quad &amp;T_0=2\pi\sqrt{\frac{L}{g}}\qquad(\theta_0\ \text{no aparece})\\
+&amp;T_0=2.0061\ \text{s para cualquier}\ \theta_0\\
+&amp;\text{(ángulo pequeño o grande)}\\
+\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\\
+&amp;\Rightarrow\;\text{mayor amplitud}\ \theta_0\;\Rightarrow\;T&gt;T_0\ \text{(tarda más)}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\text{lineal:}\quad &amp;T_0=2\pi\sqrt{\frac{L}{g}}\qquad(\theta_0\ \text{no aparece})\\
+&amp;T_0=2.0061\ \text{s para cualquier}\ \theta_0\\
+&amp;\text{(ángulo pequeño o grande)}\\
+\text{real:}\quad &amp;\theta&#x27;&#x27;+\frac{g}{L}\sen\theta=0\\
+&amp;\Rightarrow\;\text{mayor amplitud}\ \theta_0\;\Rightarrow\;T&gt;T_0\ \text{(tarda más)}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># 4 amplitudes distintas
+for grados in (10, 45, 90, 150):
+    # θ0 no está en la fórmula
+    T = 2 * math.pi * math.sqrt(L / g)
+    print(f&quot;{grados:&gt;3}°  T0 = {T:.4f} s&quot;)
+# →  10°  T0 = 2.0061 s
+#    45°  T0 = 2.0061 s
+#    90°  T0 = 2.0061 s
+#   150°  T0 = 2.0061 s</pre>
+          </div>
+          <div class="texpart"><div class="pp"><b>Punto 3</b><span>Justificar sen θ ≈ θ con el polinomio de Taylor y estimar el error relativo en θ₀ = 10° y θ₀ = 90°.</span></div><div class="pc"># ── PUNTO 3 ────────────────────────────</div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">13</span><span class="txt">Polinomio de Taylor centrado en a</span></div>
+              <div class="nota">Escribimos una función como una suma de potencias.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+f(\theta)&amp;=f(a)+f&#x27;(a)(\theta-a)\\
+&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}+\cdots
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+f(\theta)&amp;=f(a)+f&#x27;(a)(\theta-a)\\
+&amp;\quad+\frac{f&#x27;&#x27;(a)}{2!}(\theta-a)^{2}+\frac{f&#x27;&#x27;&#x27;(a)}{3!}(\theta-a)^{3}+\cdots
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># Σ f⁽ⁿ⁾(a)/n! · (θ − a)ⁿ
+def taylor(derivadas, th, centro=0.0):
+    # n = 0, 1, 2, ... recorre las derivadas en orden
+    return sum(d / math.factorial(n) * (th - centro)**n
+               for n, d in enumerate(derivadas))</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">14</span><span class="txt">Centro a = 0 (Maclaurin)</span></div>
+              <div class="nota">Centramos en 0 porque el péndulo oscila alrededor de la vertical.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+f(\theta)&amp;=\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\cdots\\
+&amp;\qquad (0!=1,\;\;1!=1,\;\;\theta^{0}=1)\\
+f(\theta)&amp;=f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
+&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}+\cdots
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+f(\theta)&amp;=\frac{f(0)}{0!}\theta^{0}+\frac{f&#x27;(0)}{1!}\theta^{1}+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}+\cdots\\
+&amp;\qquad (0!=1,\;\;1!=1,\;\;\theta^{0}=1)\\
+f(\theta)&amp;=f(0)+f&#x27;(0)\,\theta+\frac{f&#x27;&#x27;(0)}{2!}\theta^{2}+\frac{f&#x27;&#x27;&#x27;(0)}{3!}\theta^{3}\\
+&amp;\quad+\frac{f^{(4)}(0)}{4!}\theta^{4}+\frac{f^{(5)}(0)}{5!}\theta^{5}+\cdots
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># a = 0: la vertical
+centro = 0.0
+print(math.factorial(0), math.factorial(1))
+# → 1 1</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">15</span><span class="txt">Derivadas de sen θ evaluadas en 0</span></div>
+              <div class="nota">Las derivadas se repiten cada 4; en 0 valen 0, 1, 0, −1, …</div>
+              <div class="texmath" data-tex="\begin{aligned}
+f(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f(0)=\sen 0=0\\
+f&#x27;(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f&#x27;(0)=\cos 0=1\\
+f&#x27;&#x27;(\theta)&amp;=-\sen\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;(0)=-\sen 0=0\\
+f&#x27;&#x27;&#x27;(\theta)&amp;=-\cos\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;&#x27;(0)=-\cos 0=-1\\
+f^{(4)}(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f^{(4)}(0)=\sen 0=0\\
+f^{(5)}(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f^{(5)}(0)=\cos 0=1
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+f(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f(0)=\sen 0=0\\
+f&#x27;(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f&#x27;(0)=\cos 0=1\\
+f&#x27;&#x27;(\theta)&amp;=-\sen\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;(0)=-\sen 0=0\\
+f&#x27;&#x27;&#x27;(\theta)&amp;=-\cos\theta &amp;&amp;\Rightarrow\; f&#x27;&#x27;&#x27;(0)=-\cos 0=-1\\
+f^{(4)}(\theta)&amp;=\sen\theta &amp;&amp;\Rightarrow\; f^{(4)}(0)=\sen 0=0\\
+f^{(5)}(\theta)&amp;=\cos\theta &amp;&amp;\Rightarrow\; f^{(5)}(0)=\cos 0=1
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># sen → cos → −sen → −cos y se repite cada 4
+ciclo = [math.sin, math.cos,
+         lambda x: -math.sin(x), lambda x: -math.cos(x)]
+# n % 4 dice en qué parte del ciclo va
+derivadas = [ciclo[n % 4](centro) for n in range(6)]
+# el + 0.0 es para que no salga -0.0
+print([d + 0.0 for d in derivadas])
+# → [0.0, 1.0, 0.0, -1.0, 0.0, 1.0]</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">16</span><span class="txt">Se reemplaza y se simplifican los factoriales</span></div>
+              <div class="nota">Reemplazamos las derivadas: solo quedan las potencias impares.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\sen\theta&amp;=0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}-\cdots\\
+&amp;=0+\theta+0-\frac{\theta^{3}}{3!}+0+\frac{\theta^{5}}{5!}-\cdots\\
+&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}-\cdots
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\sen\theta&amp;=0+(1)\,\theta+\frac{0}{2!}\theta^{2}-\frac{1}{3!}\theta^{3}+\frac{0}{4!}\theta^{4}+\frac{1}{5!}\theta^{5}-\cdots\\
+&amp;=0+\theta+0-\frac{\theta^{3}}{3!}+0+\frac{\theta^{5}}{5!}-\cdots\\
+&amp;=\theta-\frac{\theta^{3}}{6}+\frac{\theta^{5}}{120}-\cdots
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># cada derivada entre n!
+coef = [d / math.factorial(n)
+        for n, d in enumerate(derivadas)]
+print(math.factorial(3), math.factorial(5))
+# → 6 120
+print([round(c, 5) + 0.0 for c in coef])
+# → [0.0, 1.0, 0.0, -0.16667, 0.0, 0.00833]</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">17</span><span class="txt">Ángulo pequeño: se desprecian θ³/6 y θ⁵/120</span></div>
+              <div class="nota">Si θ es pequeño, θ³ y θ⁵ son casi 0: sen θ ≈ θ.</div>
+              <div class="texmath" data-tex="\theta\ \text{pequeño (rad)}:\quad \frac{\theta^{3}}{6}\approx 0,\quad \frac{\theta^{5}}{120}\approx 0\;\;\Rightarrow\;\;\boxed{\sen\theta\approx\theta}"></div>
+              <div class="texsrc">\theta\ \text{pequeño (rad)}:\quad \frac{\theta^{3}}{6}\approx 0,\quad \frac{\theta^{5}}{120}\approx 0\;\;\Rightarrow\;\;\boxed{\sen\theta\approx\theta}</div>
+            </div>
+            <pre class="pycode" data-py># ángulo pequeño, en radianes
+x = math.radians(5)
+# solo f(0) y f&#x27;(0)·θ
+lineal = taylor(derivadas[:2], x)
+print(f&quot;sen = {math.sin(x):.5f}  lineal = {lineal:.5f}&quot;)
+# → sen = 0.08716  lineal = 0.08727</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">18</span><span class="txt">Error relativo porcentual</span></div>
+              <div class="nota">Cuánto nos equivocamos al cambiar sen θ por θ, en porcentaje.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+E_r&amp;=\frac{|\text{valor real}-\text{valor aprox.}|}{|\text{valor real}|}\times 100\%\\
+E_r&amp;=\frac{|\sen\theta_0-\theta_0|}{|\sen\theta_0|}\times 100\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+E_r&amp;=\frac{|\text{valor real}-\text{valor aprox.}|}{|\text{valor real}|}\times 100\%\\
+E_r&amp;=\frac{|\sen\theta_0-\theta_0|}{|\sen\theta_0|}\times 100\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># |real − aprox| / |real| · 100
+def error_relativo(grados):
+    # primero a radianes
+    th = math.radians(grados)
+    return abs(math.sin(th) - th) / abs(math.sin(th)) * 100</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">19</span><span class="txt">Para θ₀ = 10°</span></div>
+              <div class="nota">A 10° el error es menor al 1 %: la aproximación sirve.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta_0&amp;=10^{\circ}\cdot\frac{\pi}{180^{\circ}}\approx 0.17453\ \text{rad}\\
+\sen(10^{\circ})&amp;\approx 0.17365\\
+E_r&amp;=\frac{|0.17365-0.17453|}{0.17365}\times 100\%\\
+&amp;=\frac{0.00088}{0.17365}\times 100\%\approx 0.51\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta_0&amp;=10^{\circ}\cdot\frac{\pi}{180^{\circ}}\approx 0.17453\ \text{rad}\\
+\sen(10^{\circ})&amp;\approx 0.17365\\
+E_r&amp;=\frac{|0.17365-0.17453|}{0.17365}\times 100\%\\
+&amp;=\frac{0.00088}{0.17365}\times 100\%\approx 0.51\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>th = math.radians(10)                # 10° · π/180
+print(f&quot;{th:.5f} rad   sen = {math.sin(th):.5f}&quot;)
+# → 0.17453 rad   sen = 0.17365
+print(f&quot;{error_relativo(10):.2f} %&quot;)
+# → 0.51 %</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">20</span><span class="txt">Para θ₀ = 90°</span></div>
+              <div class="nota">A 90° el error es de 57 %: ya no sirve.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+\theta_0&amp;=90^{\circ}\cdot\frac{\pi}{180^{\circ}}=\frac{\pi}{2}\approx 1.57080\ \text{rad}\\
+\sen(90^{\circ})&amp;=1.00000\\
+E_r&amp;=\frac{|1-1.57080|}{1}\times 100\%\\
+&amp;=0.57080\times 100\%=57.08\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+\theta_0&amp;=90^{\circ}\cdot\frac{\pi}{180^{\circ}}=\frac{\pi}{2}\approx 1.57080\ \text{rad}\\
+\sen(90^{\circ})&amp;=1.00000\\
+E_r&amp;=\frac{|1-1.57080|}{1}\times 100\%\\
+&amp;=0.57080\times 100\%=57.08\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>th = math.radians(90)                # 90° = π/2
+print(f&quot;{th:.5f} rad   sen = {math.sin(th):.5f}&quot;)
+# → 1.57080 rad   sen = 1.00000
+print(f&quot;{error_relativo(90):.2f} %&quot;)
+# → 57.08 %</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">21</span><span class="txt">Resumen y conclusión</span></div>
+              <div class="nota">Sirve para ángulos pequeños, no para grandes.</div>
+              <div class="texmath" data-tex="\begin{gathered}
+\begin{array}{c|c|c|c|c}
+\theta_0 &amp; \theta_0\ (\text{rad}) &amp; \sen\theta_0 &amp; \theta_0\ (\text{aprox.}) &amp; E_r\\ \hline
+10^{\circ} &amp; 0.17453 &amp; 0.17365 &amp; 0.17453 &amp; 0.51\%\\
+90^{\circ} &amp; 1.57080 &amp; 1.00000 &amp; 1.57080 &amp; 57.08\%
+\end{array}\\[8pt]
+10^{\circ}:\ E_r=0.51\%&lt;1\%\;\Rightarrow\;\sen\theta\approx\theta\ \text{válida}\\
+\text{para oscilaciones pequeñas}\\[6pt]
+90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}\\
+\text{para ángulos grandes}
+\end{gathered}"></div>
+              <div class="texsrc">\begin{gathered}
+\begin{array}{c|c|c|c|c}
+\theta_0 &amp; \theta_0\ (\text{rad}) &amp; \sen\theta_0 &amp; \theta_0\ (\text{aprox.}) &amp; E_r\\ \hline
+10^{\circ} &amp; 0.17453 &amp; 0.17365 &amp; 0.17453 &amp; 0.51\%\\
+90^{\circ} &amp; 1.57080 &amp; 1.00000 &amp; 1.57080 &amp; 57.08\%
+\end{array}\\[8pt]
+10^{\circ}:\ E_r=0.51\%&lt;1\%\;\Rightarrow\;\sen\theta\approx\theta\ \text{válida}\\
+\text{para oscilaciones pequeñas}\\[6pt]
+90^{\circ}:\ E_r=57.08\%\;\Rightarrow\;\text{deja de ser válida}\\
+\text{para ángulos grandes}
+\end{gathered}</div>
+            </div>
+            <pre class="pycode" data-py># las dos filas de la tabla
+for grados in (10, 90):
+    th = math.radians(grados)
+    print(f&quot;{grados:&gt;3}°  {th:.5f}  {math.sin(th):.5f}  &quot;
+          f&quot;{th:.5f}  {error_relativo(grados):.2f} %&quot;)
+# →  10°  0.17453  0.17365  0.17453  0.51 %
+#    90°  1.57080  1.00000  1.57080  57.08 %
+# ¿el error queda por debajo del 1 %?
+print(error_relativo(10) &lt; 1, error_relativo(90) &lt; 1)
+# → True False</pre>
+          </div>
+        </div>
+      </div>
+      <!-- fin p1Latex -->
+
+      <div class="card">
+        <h4>En vivo · Taylor y error de la aproximación</h4>
+        <div class="grid2">
+          <div class="mini"><div class="k">θ₀ actual</div><div class="v" id="tayAng">90.0°</div></div>
+          <div class="mini"><div class="k">error |θ − sen θ| / |sen θ|</div><div class="v" id="tayErr">57.08<small> %</small></div></div>
+        </div>
+        <p class="hint">El panel de la izquierda dibuja las tres curvas (sen θ, θ y θ − θ³/6). El error crece rápido: a 45° ya es ≈ 21 % y a 90° supera el 57 %.</p>
+      </div>
+    </section>
+
+    <!-- ======================= PERSONA 2 ======================= -->
+    <section class="step reveal" id="p2" data-mode="verify" data-index="1">
+      <div class="head"><span class="who">PARTE 2</span><span class="minutes">método numérico</span></div>
+      <h2>2. Del papel al código: RK4 y verificación</h2>
+      <p class="leadp">Un integrador no resuelve una ecuación de segundo orden directamente: primero la partimos en dos ecuaciones de primer orden. Después demostramos que el código coincide con la deducción.</p>
+
+      <div class="cite">
+        <b>Indicación de la guía.</b> <span class="quote">«Ningún integrador numérico resuelve directamente una ecuación de segundo orden: hay que convertirla primero. Con u = θ y v = θ', la ecuación queda: u' = v; v' = −(g/L)·sen u (real); v' = −(g/L)·u (lineal)».</span>
+      </div>
+
+      <div class="card">
+        <h4>El sistema y el paso RK4</h4>
+        <div class="eq">u = θ, v = θ' ⇒ u' = v, v' = −(g/L)·sen u  (o −(g/L)·u)</div>
+        <div class="eq">yₙ₊₁ = yₙ + (h/6)·(k₁ + 2k₂ + 2k₃ + k₄)</div>
+        <ol class="steps">
+          <li><b>RK4:</b> cuatro pendientes k₁…k₄ y un promedio ponderado en el que las dos de la mitad pesan el doble.</li>
+          <li><b>Verificación 1 (lineal):</b> RK4 aplicado a θ'' + (g/L)θ = 0 se superpone con la solución deducida a mano θ₀·cos(ωt); la diferencia es del orden de 1e-11 rad.</li>
+          <li><b>Verificación 2 (real):</b> RK4 coincide con la solución exacta en funciones elípticas de Jacobi; en el panel se ven como una sola curva.</li>
+          <li><b>Paso h:</b> al reducirlo diez veces la curva no cambia. Se usan subpasos de ≈ 1.7 ms para animar y 0.5 ms para medir períodos.</li>
+        </ol>
+        <p class="hint">Errores evitados: paso h demasiado grande, grados mezclados con radianes, unidades inconsistentes y curvas comparadas en vectores de tiempo distintos.</p>
+      </div>
+
+      <div class="card texcard compact" id="p2Tex">
+        <div class="texhead">
+          <h4 style="margin:0">Del papel al código · LaTeX ↔ Python</h4>
+          <div class="texbtns">
+            <button type="button" class="texbtn notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button>
+            <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          </div>
+        </div>
+        <div class="texgrid texrows">
+          <div class="texcolheads"><div class="hp"><b>RK4 y verificación</b><span>verificacion.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">verificacion.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">01</span><span class="txt">De 2º orden a sistema de 1er orden</span></div>
+              <div class="nota">Partimos la ecuación en dos: una para el ángulo y otra para la velocidad.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+u=\theta,\quad v&amp;=\theta&#x27;\\
+u&#x27;&amp;=v\\
+v&#x27;&amp;=-\frac{g}{L}\sen u\quad\text{(real)}\\
+v&#x27;&amp;=-\frac{g}{L}\,u\quad\ \ \text{(lineal)}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+u=\theta,\quad v&amp;=\theta&#x27;\\
+u&#x27;&amp;=v\\
+v&#x27;&amp;=-\frac{g}{L}\sen u\quad\text{(real)}\\
+v&#x27;&amp;=-\frac{g}{L}\,u\quad\ \ \text{(lineal)}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>import math
+import numpy as np
+
+g, L = 9.81, 1.0
+# ω, la misma del punto 1
+w = math.sqrt(g / L)
+
+# y = [u, v] = [θ, θ&#x27;]
+def F_real(t, y):
+    u, v = y
+    return np.array([v, -(g / L) * np.sin(u)])
+
+# igual, pero sen u ≈ u
+def F_lineal(t, y):
+    u, v = y
+    return np.array([v, -(g / L) * u])</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">02</span><span class="txt">Un paso de RK4</span></div>
+              <div class="nota">Mide la pendiente 4 veces: al inicio, dos en la mitad y al final. Pesos 1+2+2+1 = 6, por eso entre 6.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+k_1&amp;=F\left(t_n,\;y_n\right)\\
+k_2&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_1\right)\\
+k_3&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_2\right)\\
+k_4&amp;=F\left(t_n+h,\;y_n+h\,k_3\right)\\
+y_{n+1}&amp;=y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+k_1&amp;=F\left(t_n,\;y_n\right)\\
+k_2&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_1\right)\\
+k_3&amp;=F\!\left(t_n+\tfrac{h}{2},\;y_n+\tfrac{h}{2}k_2\right)\\
+k_4&amp;=F\left(t_n+h,\;y_n+h\,k_3\right)\\
+y_{n+1}&amp;=y_n+\frac{h}{6}\left(k_1+2k_2+2k_3+k_4\right)
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py>def rk4(F, y0, t):
+    # una fila por instante
+    Y = np.zeros((len(t), 2))
+    Y[0] = y0
+    h = t[1] - t[0]                  # paso fijo
+    for i in range(len(t) - 1):
+        # al inicio
+        k1 = F(t[i], Y[i])
+        # a la mitad
+        k2 = F(t[i] + h/2, Y[i] + h/2 * k1)
+        # a la mitad
+        k3 = F(t[i] + h/2, Y[i] + h/2 * k2)
+        # al final
+        k4 = F(t[i] + h, Y[i] + h * k3)
+        # las de la mitad pesan el doble
+        Y[i+1] = Y[i] + h/6 * (k1 + 2*k2 + 2*k3 + k4)
+    return Y</pre>
+          </div>
+          <div class="texrow key">
+            <div class="tx">
+              <div class="lbl"><span class="num">03</span><span class="txt">Verificación 1 · modelo lineal contra la solución a mano</span></div>
+              <div class="nota">Con L = 1 m, la pesa se separa menos que el ancho de un átomo: es la misma curva.</div>
+              <div class="texmath" data-tex="\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}"></div>
+              <div class="texsrc">\max_t\left|\,\theta_{\text{RK4}}(t)-\theta_0\cos(\omega t)\,\right|\approx 10^{-11}\ \text{rad}</div>
+            </div>
+            <pre class="pycode" data-py># el mismo caso de pendulo.py
+theta0 = math.radians(45)
+t = np.arange(0, 10 + 1e-9, 1e-3)    # h = 0.001 s
+Y = rk4(F_lineal, [theta0, 0.0], t)
+# la deducida a mano
+exacta = theta0 * np.cos(w * t)
+# mismo vector t para las dos curvas
+print(f&quot;{np.max(np.abs(Y[:, 0] - exacta)):.2e} rad&quot;)
+# → 1.88e-11 rad</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">04</span><span class="txt">Verificación 2 · modelo real contra la solución exacta</span></div>
+              <div class="nota">T₀ dividido por un número que vale 1 a 0° y baja al abrir el ángulo: por eso el real tarda más.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+T&amp;=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
+\theta_0=90^{\circ}\;\Rightarrow\;T&amp;=\frac{2.0061}{0.8472}\approx 2.3678\ \text{s}
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+T&amp;=\frac{T_0}{\operatorname{AGM}\!\left(1,\ \cos\frac{\theta_0}{2}\right)}\\
+\theta_0=90^{\circ}\;\Rightarrow\;T&amp;=\frac{2.0061}{0.8472}\approx 2.3678\ \text{s}
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># período exacto, sin sen θ ≈ θ
+def periodo_exacto(grados):
+    T0 = 2 * math.pi / w
+    a, b = 1.0, math.cos(math.radians(grados) / 2)
+    # media aritmético-geométrica
+    while abs(a - b) &gt; 1e-15:
+        a, b = (a + b) / 2, math.sqrt(a * b)
+    return T0 / a
+
+print(f&quot;T(90°) = {periodo_exacto(90):.4f} s&quot;)
+# → T(90°) = 2.3678 s</pre>
+          </div>
+        </div>
+      </div>
+      <!-- fin p2Tex -->
+
+      <div class="card">
+        <h4>La gráfica de verificación</h4>
+        <p class="leadp" style="margin:0;font-size:13px">Amarillo: RK4 del modelo real. Blanco discontinuo: solución elíptica exacta. Magenta: RK4 del modelo lineal. Cian discontinuo: θ₀·cos(ωt). Las parejas se superponen: eso es la verificación.</p>
+      </div>
+    </section>
+
+    <!-- ======================= PERSONA 3 ======================= -->
+    <section class="step reveal" id="p3" data-mode="error" data-index="2">
+      <div class="head"><span class="who">PARTE 3</span><span class="minutes">medición del error</span></div>
+      <h2>3. Medir el período y hallar el umbral</h2>
+      <p class="leadp">La magnitud que importa no es el ángulo, sino el tiempo. Para medirlo, el péndulo se suelta desde el reposo y se detecta cuándo la velocidad vuelve a cero: ese instante es media oscilación.</p>
+
+      <div class="cite">
+        <b>Enunciado.</b> <span class="quote">«Medir el <b>período real</b> en cada caso (detectar cuándo la velocidad vuelve a cero) y hacer una tabla con el <b>error porcentual</b> frente a T₀. Graficar el <b>error del período</b> en función de θ₀ y determinar a partir de qué ángulo el error supera el <b>1 %</b>».</span>
+      </div>
+
+      <div class="card texcard compact" id="p3Tex">
+        <div class="texhead">
+          <h4 style="margin:0">Medir el período · LaTeX ↔ Python</h4>
+          <div class="texbtns">
+            <button type="button" class="texbtn notesbtn" aria-pressed="false" onclick="toggleNotes(this)">✎ Ver pasos</button>
+            <button type="button" class="texbtn" onclick="toggleTaxSource(this)">Ver código LaTeX</button>
+          </div>
+        </div>
+        <div class="texgrid texrows">
+          <div class="texcolheads"><div class="hp"><b>Período y umbral del 1 %</b><span>periodo.tex</span></div><div class="he"><i class="dots"><b></b><b></b><b></b></i><span class="tab">periodo.py</span><span class="lang">Python 3 · math + numpy</span></div></div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">01</span><span class="txt">La velocidad vuelve a cero en medio período</span></div>
+              <div class="nota">Cuando la velocidad vuelve a 0 va por la mitad: el período es el doble.</div>
+              <div class="texmath" data-tex="\theta&#x27;(t^{*})=0\ \ \text{en el extremo opuesto}\;\Rightarrow\;T=2\,t^{*}"></div>
+              <div class="texsrc">\theta&#x27;(t^{*})=0\ \ \text{en el extremo opuesto}\;\Rightarrow\;T=2\,t^{*}</div>
+            </div>
+            <pre class="pycode" data-py>import math
+
+g, L = 9.81, 1.0
+# período lineal, 2.0061 s
+T0 = 2 * math.pi * math.sqrt(L / g)
+
+# un paso RK4 del péndulo real
+def paso(u, v, h):
+    f = lambda u, v: (v, -(g / L) * math.sin(u))
+    k1 = f(u, v)
+    k2 = f(u + h/2*k1[0], v + h/2*k1[1])
+    k3 = f(u + h/2*k2[0], v + h/2*k2[1])
+    k4 = f(u + h*k3[0], v + h*k3[1])
+    return (u + h/6*(k1[0] + 2*k2[0] + 2*k3[0] + k4[0]),
+            v + h/6*(k1[1] + 2*k2[1] + 2*k3[1] + k4[1]))
+
+def periodo_real(grados, h=1e-4):
+    # sale del reposo
+    u, v, t = math.radians(grados), 0.0, 0.0
+    while True:
+        v_ant = v
+        u, v = paso(u, v, h)
+        t += h
+        # θ&#x27; pasó de − a +: otro extremo
+        if v_ant &lt; 0 &lt;= v:
+            # se interpola entre los dos pasos para hallar t*
+            t_cero = t - h + h * (-v_ant) / (v - v_ant)
+            # ese instante es T/2
+            return 2 * t_cero
+
+print(f&quot;T(90°) = {periodo_real(90):.4f} s&quot;)
+# → T(90°) = 2.3678 s</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">02</span><span class="txt">Error porcentual del período</span></div>
+              <div class="nota">Cuánto más tarda el real que el lineal, en porcentaje.</div>
+              <div class="texmath" data-tex="\begin{aligned}
+E&amp;=\frac{T-T_0}{T}\times 100\%\qquad\text{(contra }T\text{, como la guía)}\\
+E_{T_0}&amp;=\frac{T-T_0}{T_0}\times 100\%
+\end{aligned}"></div>
+              <div class="texsrc">\begin{aligned}
+E&amp;=\frac{T-T_0}{T}\times 100\%\qquad\text{(contra }T\text{, como la guía)}\\
+E_{T_0}&amp;=\frac{T-T_0}{T_0}\times 100\%
+\end{aligned}</div>
+            </div>
+            <pre class="pycode" data-py># la guía divide entre T real
+def error_periodo(grados):
+    T = periodo_real(grados)
+    return (T - T0) / T * 100</pre>
+          </div>
+          <div class="texrow">
+            <div class="tx">
+              <div class="lbl"><span class="num">03</span><span class="txt">Tabla de los cuatro casos</span></div>
+              <div class="nota">A más ángulo, más error.</div>
+              <table class="papertable"><thead><tr><th>θ₀</th><th>T₀ (lineal)</th><th>T real</th><th>error vs T</th><th>error vs T₀</th></tr></thead><tbody id="periodTable"></tbody></table><p class="paperhint">Valores calculados en vivo. A 90° el error contra T es 15.28 % (contra T₀ sería 18.03 %).</p>
+            </div>
+            <pre class="pycode" data-py># los 4 casos del enunciado
+for d in (10, 45, 90, 150):
+    T = periodo_real(d)
+    # el mismo error de arriba
+    error = (T - T0) / T * 100
+    print(f&quot;{d:&gt;3}°  T = {T:.4f} s  error = {error:.2f} %&quot;)
+# →  10°  T = 2.0099 s  error = 0.19 %
+#    45°  T = 2.0863 s  error = 3.84 %
+#    90°  T = 2.3678 s  error = 15.28 %
+#   150°  T = 3.5351 s  error = 43.25 %</pre>
+          </div>
+          <div class="texrow result">
+            <div class="tx">
+              <div class="lbl"><span class="num">04</span><span class="txt">Umbral del 1 %</span></div>
+              <div class="nota">El ángulo donde el error llega al 1 %: 22.9°.</div>
+              <div class="texmath" data-tex="E(\theta_0)=1\%\;\Rightarrow\;\theta_0\approx 22.9^{\circ}"></div>
+              <div class="texsrc">E(\theta_0)=1\%\;\Rightarrow\;\theta_0\approx 22.9^{\circ}</div>
+              <p class="paperhint">En la página: el umbral del 1 % cae en <b id="thrText">22.9°</b>.</p>
+            </div>
+            <pre class="pycode" data-py># en 1° es &lt; 1 %, en 60° es &gt; 1 %
+a, b = 1.0, 60.0
+# bisección: se parte a la mitad
+for _ in range(30):
+    m = (a + b) / 2
+    if error_periodo(m) &lt; 1:
+        # el umbral está más arriba
+        a = m
+    else:
+        # el umbral está más abajo
+        b = m
+print(f&quot;umbral = {m:.1f}°&quot;)
+# → umbral = 22.9°</pre>
+          </div>
+        </div>
+      </div>
+      <!-- fin p3Tex -->
+
+      <div class="card">
+        <h4>Lectura de la curva de error</h4>
+        <ol class="steps">
+          <li>El error es monótono: a más amplitud, más demora del péndulo real.</li>
+          <li>Hasta ≈ <b>23°</b> el modelo lineal sirve para cronometrar (error ≤ 1 %).</li>
+          <li>A 45° el error es 3.8 %; a 90°, 15.3 %; a 150°, 43 %. La aproximación ya no es defendible.</li>
+          <li>El punto donde la curva cruza la línea roja del 1 % es el criterio de diseño.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ======================= PERSONA 4 ======================= -->
+    <section class="step reveal" id="p4" data-mode="anim" data-index="3">
+      <div class="head"><span class="who">PARTE 4</span><span class="minutes">simulación y conclusión</span></div>
+      <h2>4. Animación 3D y conclusión</h2>
+      <p class="leadp">Dos péndulos soltados al mismo tiempo desde 90°: el real y el lineal. El real se atrasa y la diferencia se ve a simple vista.</p>
+
+      <div class="cite">
+        <b>Pregunta del enunciado.</b> <span class="quote">«<b>¿Un reloj de péndulo adelanta o atrasa si se le aumenta la amplitud?</b>»</span>
+      </div>
+
+      <div class="card">
+        <h4>Qué muestra la simulación</h4>
+        <ol class="steps">
+          <li>A <b>90°</b>, los dos salen de θ(0) = 90° con θ'(0) = 0.</li>
+          <li>En 10 segundos el péndulo lineal (violeta) completa más oscilaciones que el real (dorado).</li>
+          <li>A <b>10°</b> las dos pesas se mueven juntas: ahí la aproximación funciona.</li>
+          <li>L y g se pueden cambiar y todo se recalcula.</li>
+        </ol>
+      </div>
+
+      <div class="papernote">
+        <h4><span>Conclusión de ingeniería</span></h4>
+        <p>Si se acepta como mucho 1 % de error en el período, el ángulo de trabajo debe ser ≤ 23°. Si se necesita precisión de tiempo, se diseña con θ₀ ≤ 10°, donde el error es 0.19 %. Y respondiendo a la pregunta: <b>el reloj atrasa</b>, porque al aumentar la amplitud crece el período real; a 90° pierde unos 220 minutos por día.</p>
+      </div>
+    </section>
+
+    <!-- ======================= CIERRE ======================= -->
+    <section class="step reveal" id="cierre" data-mode="cierre" data-index="3">
+      <div class="head"><span class="who">CIERRE</span><span class="minutes">preguntas</span></div>
+      <h2>Cierre y preguntas</h2>
+      <p class="leadp">Gracias por su atención. Quedamos atentos a sus preguntas.</p>
+      <div class="card">
+        <h4>Preguntas frecuentes</h4>
+        <ol class="steps">
+          <li><b>¿Por qué T₀ no depende de la amplitud?</b> Porque en θ'' + ω²θ = 0 la frecuencia es ω = √(g/L); la amplitud solo escala la solución.</li>
+          <li><b>¿Cómo saben que el integrador está bien?</b> Porque coincide con la solución exacta deducida a mano y con la solución elíptica del modelo real.</li>
+          <li><b>¿Qué hace el programa y qué no?</b> Verifica y mide; no sustituye la deducción. El error de la aproximación se mide, no se esconde.</li>
+          <li><b>¿Qué pasa si agrandan el paso h?</b> La trayectoria se deforma; al reducirlo diez veces la curva se estabiliza.</li>
+        </ol>
+      </div>
+      <div class="papernote">
+        <h4><span>Lo que cubre el proyecto</span></h4>
+        <div class="checks">
+          <span>Ecuaciones + origen de términos</span><span>Solución analítica completa</span><span>Taylor 10° y 90°</span>
+          <span>Numérica vs exacta superpuestas</span><span>Tabla de 4 períodos</span><span>Curva de error + 1 %</span>
+          <span>Animación a 90°</span><span>Conclusión concreta</span><span>README + IA declarada</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="web/three.min.js"></script>
+<script src="web/pendulo_modelo.js"></script>
+<script>
+/* =========================================================================
+   PROYECTO 5 · SIMULADOR DE EXPOSICIÓN
+   Física: RK4 + soluciones analíticas. Dibujo: Three.js (vendor local).
+   ========================================================================= */
+(function(){
+'use strict';
+
+/* ---------- 0. Estado ---------- */
+const S = {
+  theta0:90, L:1, g:9.81,
+  t:0, thR:Math.PI/2, omR:0, thL:Math.PI/2, omL:0,
+  running:true, mode:'manual', view:'render', speed:1,
+  hist:[], modeChart:'taylor', chartDirty:true, chartAnim:null,
+  firstAnim:true
+};
+const $ = id => document.getElementById(id);
+const rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+
+/* ---------- 0b. Cuadernos: código Python detrás de cada gráfica ---------- */
+const NOTEBOOKS = {
+  taylor: {
+    file:'punto1_taylor.ipynb',
+    title:'Render · Taylor de sen θ',
+    code:`# PUNTO 1 · Taylor de sen(theta) y error de la aproximacion
+import numpy as np
+import matplotlib.pyplot as plt
+
+L, g = 1.0, 9.81                     # datos del enunciado
+
+# sen(t) = t - t^3/6 + t^5/120 - ...
+# Para angulos pequenos se conserva solo t -> modelo lineal
+t = np.linspace(0, np.pi/2, 400)     # 0..90°, SIEMPRE en radianes
+real   = np.sin(t)
+lineal = t
+cubico = t - t**3/6                  # siguiente termino de Taylor
+
+def error_rel(grados):
+    # |theta - sen(theta)| / |sen(theta)| * 100
+    a = np.deg2rad(grados)
+    return abs(a - np.sin(a))/abs(np.sin(a))*100
+
+print("T0 =", round(2*np.pi*np.sqrt(L/g), 4), "s")  # 2.0061 s
+print("error 10°:", round(error_rel(10), 2), "%")   # 0.51 %
+print("error 90°:", round(error_rel(90), 2), "%")   # 57.08 %
+
+plt.plot(t, real,   label="sen(theta)")
+plt.plot(t, lineal, "--", label="theta")
+plt.plot(t, cubico, ":", label="theta - theta^3/6")
+plt.axvline(np.deg2rad(10), alpha=.5)   # marcas de la guia
+plt.axvline(np.deg2rad(90), alpha=.5)
+plt.xlabel("theta [rad]"); plt.ylabel("valor"); plt.legend()
+plt.show()`
+  },
+  verify: {
+    file:'punto2_rk4_verificacion.ipynb',
+    title:'Render · RK4 vs exacta',
+    code:`# PUNTO 2 · RK4 y verificacion contra la solucion exacta
+import numpy as np
+import matplotlib.pyplot as plt
+
+L, g = 1.0, 9.81
+a = np.deg2rad(90.0)                 # theta0 en RADIANES
+
+# De 2do orden a 1er orden:  u = theta, v = theta'
+#   real:   u' = v ; v' = -(g/L)*sen(u)
+#   lineal: u' = v ; v' = -(g/L)*u
+def F(u, v, real):
+    return np.array([v, -(g/L)*np.sin(u) if real else -(g/L)*u])
+
+def rk4(F, u0, t, real):
+    Y = np.zeros((len(t), 2))        # col 0: theta, col 1: v
+    Y[0] = [u0, 0.0]
+    h = t[1] - t[0]                  # h FIJO (no deltaTime)
+    for i in range(len(t)-1):
+        u, v = Y[i]
+        k1 = F(u,      v,      real)
+        k2 = F(u+h/2*k1[0], v+h/2*k1[1], real)
+        k3 = F(u+h/2*k2[0], v+h/2*k2[1], real)
+        k4 = F(u+h*k3[0],   v+h*k3[1],   real)
+        Y[i+1] = Y[i] + h/6*(k1 + 2*k2 + 2*k3 + k4)  # pesos 1-2-2-1
+    return Y
+
+t = np.arange(0, 8, 1e-3)            # MISMO vector de tiempos para todo
+yr = rk4(F, a, t, True)
+yl = rk4(F, a, t, False)
+
+# Verificacion 1: la lineal se confunde con la deducida a mano
+exacta_lineal = a*np.cos(np.sqrt(g/L)*t)
+print("max |RK4 - theta0*cos(wt)| =", np.max(abs(yl[:,0]-exacta_lineal)))
+
+# Verificacion 2: la exacta del real es eliptica de Jacobi (AGM en el HTML)
+plt.plot(t, yr[:,0], label="RK4 real")
+plt.plot(t, yl[:,0], label="RK4 lineal")
+plt.plot(t, exacta_lineal, "--", label="theta0*cos(w*t)")
+plt.xlabel("t [s]"); plt.ylabel("theta [rad]"); plt.legend()
+plt.show()`
+  },
+  error: {
+    file:'punto3_periodo_umbral.ipynb',
+    title:'Render · Error del período',
+    code:`# PUNTO 3 · Periodo real, tabla y umbral del 1%
+import numpy as np
+import matplotlib.pyplot as plt
+
+L, g = 1.0, 9.81
+T0 = 2*np.pi*np.sqrt(L/g)            # 2.0061 s (lineal, ideal)
+
+def paso(u, v, h):
+    # UN paso RK4 de u'=v, v'=-(g/L)*sen(u)
+    f = lambda U, V: np.array([V, -(g/L)*np.sin(U)])
+    k1=f(u,v); k2=f(u+h/2*k1[0], v+h/2*k1[1])
+    k3=f(u+h/2*k2[0], v+h/2*k2[1]); k4=f(u+h*k3[0], v+h*k3[1])
+    return (u + h/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]),
+            v + h/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]))
+
+def periodo_exacto(grados):
+    # AGM(1, cos(a/2)): T = T0 / AGM  (sin integrar)
+    a = np.deg2rad(abs(grados))
+    x, y = 1.0, np.cos(a/2)
+    while abs(x-y) > 1e-15:
+        x, y = (x+y)/2, np.sqrt(x*y)
+    return T0/x
+
+def medir_RK4(grados, h=5e-4):
+    # Soltar desde el reposo; cuando v=theta' vuelve a cero
+    # pasaron T/2. El periodo es el doble de ese instante.
+    u, v, t = np.deg2rad(abs(grados)), 0.0, 0.0
+    for _ in range(30000):
+        u_ant, v_ant = u, v
+        u, v = paso(u, v, h)
+        t += h
+        if v_ant < 0 <= v:             # cruce por cero interpolado
+            f = -v_ant/(v - v_ant)
+            return 2*(t - h + f*h)
+    return periodo_exacto(grados)
+
+for d in (10, 45, 90, 150):
+    T = periodo_exacto(d)
+    print(f"{d:3d}°  T={T:.4f} s   err/T={100*(T-T0)/T:5.2f} %")
+
+ang = np.arange(1, 171)              # barrido 1°..170°
+err = np.array([100*(periodo_exacto(d)-T0)/periodo_exacto(d) for d in ang])
+umbral = np.interp(1, err, ang)      # primer cruce con el 1%
+print("umbral 1% ≈", round(umbral,1), "°")   # 22.9°
+
+plt.plot(ang, err)
+plt.axhline(1, color="red", ls="--")         # tolerancia
+plt.axvline(umbral, color="green")
+plt.xlabel("theta0 [grados]"); plt.ylabel("error del periodo [%]")
+plt.show()`
+  },
+  cases: {
+    file:'punto4_cuatro_casos.ipynb',
+    title:'Render · 4 amplitudes',
+    code:`# PUNTO 4 · Cuatro amplitudes, real vs lineal
+import numpy as np
+import matplotlib.pyplot as plt
+
+L, g = 1.0, 9.81
+w0 = np.sqrt(g/L)
+t = np.arange(0, 6.2, 5e-4)          # mismo vector para TODAS las curvas
+
+def rk4_real(a, t, L, g):
+    # integrador del punto 2; devuelve theta(t) en radianes
+    u, v, out = a, 0.0, np.zeros(len(t))
+    h = t[1]-t[0]
+    for i in range(len(t)):
+        out[i] = u
+        f = lambda U, V: np.array([V, -(g/L)*np.sin(U)])
+        k1=f(u,v); k2=f(u+h/2*k1[0], v+h/2*k1[1])
+        k3=f(u+h/2*k2[0], v+h/2*k2[1]); k4=f(u+h*k3[0], v+h*k3[1])
+        u = u + h/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0])
+        v = v + h/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1])
+    return out
+
+colores = ["#38bdf8", "#34d399", "#f5b642", "#fb7185"]
+for d, c in zip((10, 45, 90, 150), colores):
+    a = np.deg2rad(d)
+    real   = rk4_real(a, t, L, g)     # numerico
+    lineal = a*np.cos(w0*t)           # analitico: theta0*cos(w*t)
+    plt.plot(t, np.rad2deg(real),   color=c, label=f"real {d}°")
+    plt.plot(t, np.rad2deg(lineal), color=c, ls=":", label=f"lineal {d}°")
+
+# A 90° el real se atrasa: su periodo es mayor (2.3678 s vs 2.0061 s).
+plt.xlabel("t [s]"); plt.ylabel("theta [grados]")
+plt.legend(ncol=2); plt.grid(alpha=.2)
+plt.show()`
+  }
+};
+
+/* Resaltado simple de Python: comentarios, cadenas, palabras clave y numeros */
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hlLine(line){
+  const s = escHtml(line);
+  return s.replace(/(#[^\n]*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\b(def|import|from|as|for|in|if|elif|else|while|return|lambda|None|True|False|and|or|not|print|range|len|abs|round|np|plt)\b|\b(\d+\.\d+|\d+)\b/g,
+    (m,cm,st,kw,nm)=>{
+      if(cm) return '<span class="cm">'+cm+'</span>';
+      if(st) return '<span class="st">'+st+'</span>';
+      if(kw) return '<span class="kw">'+kw+'</span>';
+      if(nm) return '<span class="nm">'+nm+'</span>';
+      return m;
+    });
+}
+function renderNotebook(){
+  const nb = NOTEBOOKS[S.modeChart] || NOTEBOOKS.taylor;
+  $('chartTitle').textContent = 'Cuaderno · '+nb.file;
+  const lines = nb.code.replace(/\n$/,'').split('\n').map((l,i)=>
+    '<div class="cl"><span class="ln">'+String(i+1).padStart(2,' ')+'</span>'+
+    '<span class="cs">'+hlLine(l)+'</span></div>').join('');
+  $('codePane').innerHTML =
+    '<div class="nbhead"><span class="nbdots"><i></i><i></i><i></i></span>'+
+    '<span class="nbname">'+nb.file+'</span><span class="nbbadge">Python 3 · comentado</span></div>'+
+    '<div class="nbcode">'+lines+'</div>';
+}
+function setView(view){
+  S.view = view;
+  const nb = NOTEBOOKS[S.modeChart] || NOTEBOOKS.taylor;
+  $('chartTitle').textContent = view==='code' ? 'Cuaderno · '+nb.file : nb.title;
+  $('chartbox').classList.toggle('code-mode',view==='code');
+  $('stage').classList.toggle('code-view',view==='code');
+  if(view!=='code') R3.needs=true;
+  $('tabRender').classList.toggle('on',view==='render');
+  $('tabCode').classList.toggle('on',view==='code');
+  if(view==='code') renderNotebook();
+  else { S.chartDirty=true; S.chartAnim={t0:performance.now(),dur:450}; }
+}
+
+/* ---------- 1. Física (misma que la guía) ---------- */
+function accelReal(th,om,L,g){ return -(g/L)*Math.sin(th); }
+function accelLin(th,om,L,g){ return -(g/L)*th; }
+
+function rk4Step(th,om,dt,acc,L,g){
+  const k1t=om,                 k1o=acc(th,om,L,g);
+  const k2t=om+0.5*dt*k1o,      k2o=acc(th+0.5*dt*k1t,om+0.5*dt*k1o,L,g);
+  const k3t=om+0.5*dt*k2o,      k3o=acc(th+0.5*dt*k2t,om+0.5*dt*k2o,L,g);
+  const k4t=om+dt*k3o,          k4o=acc(th+dt*k3t,om+dt*k3o,L,g);
+  return [th+(dt/6)*(k1t+2*k2t+2*k3t+k4t), om+(dt/6)*(k1o+2*k2o+2*k3o+k4o)];
+}
+
+function linearPeriod(L,g){ return 2*Math.PI*Math.sqrt(L/g); }
+function exactPeriod(th0,L,g){
+  const T0=linearPeriod(L,g), a=Math.abs(th0);
+  if(a<1e-8) return T0;
+  let x=1, y=Math.cos(a/2);
+  for(let i=0;i<40 && Math.abs(x-y)>1e-15;i++){ const nx=(x+y)/2; y=Math.sqrt(x*y); x=nx; }
+  return T0/x;
+}
+function linearSolution(t,th0,L,g){ return th0*Math.cos(Math.sqrt(g/L)*t); }
+
+/* Solución exacta del real: θ(t)=2·asin(k·sn(K−ωt|k²)) */
+function jacobiSn(u,m){
+  if(m<1e-12) return Math.sin(u);
+  const A=[1], C=[Math.sqrt(m)]; let b=Math.sqrt(1-m), n=0;
+  while(Math.abs(C[n])>1e-15 && n<30){ const an=A[n]; A.push((an+b)/2); C.push((an-b)/2); b=Math.sqrt(an*b); n++; }
+  let phi=Math.pow(2,n)*A[n]*u;
+  for(let i=n;i>0;i--) phi=(phi+Math.asin((C[i]/A[i])*Math.sin(phi)))/2;
+  return Math.sin(phi);
+}
+function ellipticK(m){
+  let a=1,b=Math.sqrt(1-m);
+  for(let i=0;i<40 && Math.abs(a-b)>1e-15;i++){ const an=(a+b)/2; b=Math.sqrt(a*b); a=an; }
+  return Math.PI/(2*a);
+}
+function exactRealTheta(t,th0,L,g){
+  const k=Math.sin(Math.abs(th0)/2), m=k*k, K=ellipticK(m), w=Math.sqrt(g/L);
+  return Math.sign(th0||1)*2*Math.asin(clamp(k*jacobiSn(K-w*t,m),-1,1));
+}
+function measurePeriodRK4(deg,L,g){
+  const th0=rad(Math.abs(deg)); if(th0<1e-6) return linearPeriod(L,g);
+  let th=th0,om=0,t=0; const dt=5e-4;
+  for(let i=0;i<30000;i++){
+    const po=om, pt=t;
+    [th,om]=rk4Step(th,om,dt,accelReal,L,g); t+=dt;
+    if(i>10 && po<0 && om>=0){ const f=-po/(om-po); return 2*(pt+f*dt); }
+  }
+  return exactPeriod(th0,L,g);
+}
+function taylorError(deg){
+  const a=rad(Math.abs(deg)); if(a<1e-9) return 0;
+  return Math.abs(a-Math.sin(a))/Math.abs(Math.sin(a))*100;
+}
+
+/* ---------- 2. Three.js: escena 3D ----------
+   El aparato se modeló en Blender 5.2 (modelo3d/construir_modelo.py) y viene empaquetado
+   en web/pendulo_modelo.js. Cómo se mantiene liviano para cualquier equipo:
+   · El soporte trae la luz y las sombras HORNEADAS en una textura: se dibuja con
+     MeshBasicMaterial, sin calcular luces. Solo las piezas metálicas y las pesas usan
+     material PBR, con un mapa de entorno que se genera una sola vez al iniciar.
+   · Sin sombras en tiempo real: la sombra de cada pesa es un difuminado que se mueve con ella.
+   · Se dibuja solo cuando algo cambia, y si un equipo va lento baja la resolución sola.
+   Si el modelo no carga, se usa la escena simple de antes. */
+let renderer=null,scene=null,camera=null,rigs=[],trails=[],lastFrame=0;
+// Cámara orbital: az/el giran, r acerca (6.6 = vista completa), tx/ty es el punto que se mira
+const CAM0={az:0.06,el:0.14,r:6.6,tx:0,ty:1.22};
+let cam=Object.assign({},CAM0), dragging=false, lastPointer=null;
+const R_MIN=1.5, R_MAX=10;
+const PIVOT_Y=2.65;
+const R3={pro:false, light:false, dials:[], ground:null, baseTop:-0.07, aniso:1,
+  visible:true, needs:true, lastKey:'', pr:1, prMax:1, ema:16.7, slow:0, lastT:0};
+
+function initThree(){
+  if(typeof THREE==='undefined'){ $('threeHost').innerHTML='<p style="padding:20px;color:#94a3b8;font:12px monospace">Three.js no disponible: se muestra solo la vista 2D.</p>'; return; }
+  const host=$('threeHost'), w=host.clientWidth||600, h=host.clientHeight||390;
+  const dpr=window.devicePixelRatio||1;
+  const weak=/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)||(navigator.hardwareConcurrency||8)<=4;
+  R3.prMax=Math.min(dpr,weak?1.5:2); R3.pr=R3.prMax;
+
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(42,w/h,0.1,100);
+  try{
+    // Antialias por hardware solo en pantallas de baja densidad: en las de alta ya sobra resolución
+    renderer=new THREE.WebGLRenderer({antialias:dpr<1.5,alpha:true,powerPreference:'high-performance'});
+  }catch(e){
+    $('threeHost').innerHTML='<p style="padding:20px;color:#94a3b8;font:12px monospace">Este equipo no tiene WebGL: se muestra solo la vista 2D.</p>';
+    renderer=null; return;
+  }
+  renderer.setClearColor(0x000000,0);           // fondo transparente: se ve el degradado del tema
+  renderer.setPixelRatio(R3.pr);
+  renderer.setSize(w,h);
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.05;
+  R3.aniso=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  host.appendChild(renderer.domElement);
+
+  R3.pro=!!(window.PENDULO_MODELO&&window.PENDULO_MODELO.mallas);
+  if(R3.pro){
+    try{ buildProScene(window.PENDULO_MODELO); }
+    catch(e){ console.warn('Modelo 3D:',e); R3.pro=false; scene=new THREE.Scene(); rigs=[]; R3.dials=[]; R3.ground=null; }
+  }
+  if(!R3.pro) buildSimpleScene();
+
+  // Estelas
+  rigs.forEach((rig,i)=>{
+    const N=70, arr=new Float32Array(N*3);
+    for(let k=0;k<N;k++){ arr[k*3]=rig.x; arr[k*3+1]=PIVOT_Y-S.L; arr[k*3+2]=0; }
+    const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(arr,3));
+    const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:i?0xe879f9:0xf5b642,transparent:true,opacity:0.5}));
+    scene.add(line); trails.push({line,arr,N});
+  });
+
+  bindCameraControls(renderer.domElement);
+  const c=renderer.domElement;
+  // Si el lienzo no está en pantalla no se dibuja
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(es=>{ R3.visible=es[0].isIntersecting; R3.needs=true; }).observe(host);
+  }
+  c.addEventListener('webglcontextlost',e=>{ e.preventDefault(); R3.visible=false; });
+  c.addEventListener('webglcontextrestored',()=>{ R3.visible=true; R3.needs=true; });
+}
+
+/* --- Controles de cámara: girar, acercar y mover la vista (mouse, táctil y botones) ---
+   · Arrastrar: girar.  · Rueda / pellizco / botones + −: acercar.
+   · Clic derecho, Shift+arrastrar o dos dedos: mover la vista.
+   · Doble clic sobre un péndulo: acercarse a él.  · ⟲: vista completa. */
+function bindCameraControls(c){
+  c.style.touchAction='pan-y';               // un dedo vertical sigue desplazando la página
+  const ptrs=new Map(); let pinch=null;
+  const pinchState=()=>{ const [a,b]=[...ptrs.values()];
+    return {d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2}; };
+  c.addEventListener('contextmenu',e=>e.preventDefault());
+  c.addEventListener('pointerdown',e=>{
+    c.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===2){ pinch=Object.assign(pinchState(),{r0:cam.r}); dragging=false; return; }
+    dragging=true; lastPointer={x:e.clientX,y:e.clientY,pan:e.button===2||e.shiftKey};
+  });
+  c.addEventListener('pointermove',e=>{
+    if(!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size>=2&&pinch){
+      const p=pinchState();
+      cam.r=clamp(pinch.r0*pinch.d/p.d,R_MIN,R_MAX);
+      panBy(p.mx-pinch.mx,p.my-pinch.my); pinch.mx=p.mx; pinch.my=p.my;
+      return;
+    }
+    if(!dragging||!lastPointer) return;
+    const dx=e.clientX-lastPointer.x, dy=e.clientY-lastPointer.y;
+    if(lastPointer.pan) panBy(dx,dy);
+    else{ cam.az=clamp(cam.az-dx*0.006,-1.3,1.3); cam.el=clamp(cam.el+dy*0.005,-0.2,1.1); }
+    lastPointer.x=e.clientX; lastPointer.y=e.clientY;
+  });
+  const up=e=>{
+    ptrs.delete(e.pointerId);
+    if(ptrs.size<2) pinch=null;
+    if(ptrs.size===1){ const [p]=ptrs.values(); dragging=true; lastPointer={x:p.x,y:p.y,pan:false}; }
+    if(ptrs.size===0){ dragging=false; lastPointer=null; }
+  };
+  c.addEventListener('pointerup',up); c.addEventListener('pointercancel',up);
+  c.addEventListener('wheel',e=>{ e.preventDefault(); cam.r=clamp(cam.r*Math.exp(e.deltaY*0.0012),R_MIN,R_MAX); },{passive:false});
+  // Doble clic: acercarse al péndulo más cercano (izquierda = real, derecha = lineal)
+  c.addEventListener('dblclick',e=>{
+    const rect=c.getBoundingClientRect(), left=(e.clientX-rect.left)<rect.width/2;
+    const rig=rigs[left?0:1]; if(!rig) return;
+    cam.tx=rig.x; cam.ty=PIVOT_Y-0.6*S.L; cam.r=3.2; cam.az=left?0.18:-0.18; cam.el=0.1;
+  });
+  const zoom=k=>{ cam.r=clamp(cam.r*k,R_MIN,R_MAX); };
+  const zi=$('zIn'), zo=$('zOut'), zr=$('zReset');
+  if(zi) zi.addEventListener('click',()=>zoom(0.78));
+  if(zo) zo.addEventListener('click',()=>zoom(1.28));
+  if(zr) zr.addEventListener('click',()=>{ Object.assign(cam,CAM0); });
+}
+// Mueve el punto que se mira, en el plano de la pantalla (los píxeles se pasan a metros)
+function panBy(dx,dy){
+  const host=$('threeHost'), h=Math.max(1,host.clientHeight);
+  const k=2*camR()*Math.tan(rad(21))/h;
+  if(cam.tx===CAM0.tx && cam.ty===CAM0.ty)            // parte del encuadre que se está viendo
+    cam.ty=Math.max(cam.ty,-0.34+camR()*Math.tan(rad(21))*0.9);
+  cam.tx=clamp(cam.tx-dx*k*Math.cos(cam.az),-3.4,3.4);
+  cam.ty=clamp(cam.ty+dy*k,-0.3,3.4);
+}
+// Distancia real de la cámara: la que hace entrar el aparato completo, por el factor de zoom
+function camR(){
+  const t21=Math.tan(rad(21)), a=camera?camera.aspect:1.5;
+  const dist=Math.max(1.95/t21,3.55/(t21*a));      // aparato (3.2 m × 6.2 m) con margen
+  return dist*(cam.r/6.6);
+}
+
+/* --- Decodificar la geometría comprimida del modelo --- */
+function b64(s,Type){
+  const bin=atob(s), u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return new Type(u.buffer);
+}
+function geomFrom(m){
+  const g=new THREE.BufferGeometry(), q=b64(m.pos,Uint16Array), p=new Float32Array(q.length);
+  for(let i=0;i<q.length;i++){ const a=i%3; p[i]=m.min[a]+q[i]/65535*m.rng[a]; }
+  g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(b64(m.nor,Int8Array),3,true));
+  if(m.uv) g.setAttribute('uv',new THREE.BufferAttribute(b64(m.uv,Uint16Array),2,true));
+  g.setIndex(new THREE.BufferAttribute(b64(m.idx,m.i32?Uint32Array:Uint16Array),1));
+  g.computeBoundingSphere();
+  return g;
+}
+function texFrom(uri,srgb){
+  const t=new THREE.TextureLoader().load(uri,()=>{R3.needs=true;});
+  if(srgb) t.encoding=THREE.sRGBEncoding;
+  t.anisotropy=R3.aniso;
+  return t;
+}
+
+/* --- Reflejos de estudio: 4 paneles de luz renderizados una vez a un mapa de entorno --- */
+function studioEnv(){
+  try{
+    const env=new THREE.Scene();
+    const room=new THREE.Mesh(new THREE.BoxGeometry(14,9,14),new THREE.MeshBasicMaterial({color:0x252d3c,side:THREE.BackSide}));
+    room.position.y=3; env.add(room);
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.MeshBasicMaterial({color:0x3b2a1b}));
+    floor.rotation.x=-Math.PI/2; floor.position.y=-1; env.add(floor);
+    const panel=(w,h,x,y,z,col,k)=>{
+      const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+        new THREE.MeshBasicMaterial({color:new THREE.Color(col).multiplyScalar(k),side:THREE.DoubleSide}));
+      m.position.set(x,y,z); m.lookAt(0,1.4,0); env.add(m);
+    };
+    panel(5,3, 4,6,5,     0xfff1dc,6);   // luz clave
+    panel(3,4,-6,3,3,     0xcfe2ff,2.4); // relleno frío
+    panel(9,1.2,0,7.6,0,  0xffffff,3.2); // cenital
+    panel(7,1.6,0,3,-6.5, 0xead8ff,2);   // contraluz
+    const pm=new THREE.PMREMGenerator(renderer);
+    const rt=pm.fromScene(env,0.03);
+    pm.dispose();
+    env.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+    return rt.texture;
+  }catch(e){ console.warn('Entorno 3D:',e); return null; }
+}
+
+/* --- Texturas dibujadas en canvas: transportadores y placas (nítidas y sin peso de archivo) --- */
+function canvasTex(w,h,draw){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const t=new THREE.CanvasTexture(c);
+  t.encoding=THREE.sRGBEncoding; t.anisotropy=R3.aniso;
+  t.userData={c,draw};
+  draw(c.getContext('2d'),w,h);
+  return t;
+}
+function redraw(t){ const c=t.userData.c; t.userData.draw(c.getContext('2d'),c.width,c.height); t.needsUpdate=true; }
+
+function drawDial(accent){
+  return (g,w,h)=>{
+    const L=R3.light, cx=w/2, cy=10, R=w/2-16, ink=L?'#1e293b':'#e2e8f0';
+    g.clearRect(0,0,w,h);
+    // Placa semicircular de acrílico ahumado
+    g.beginPath(); g.moveTo(cx-R-8,cy); g.arc(cx,cy,R+8,0,Math.PI,false); g.closePath();
+    const fill=g.createRadialGradient(cx,cy,R*0.1,cx,cy,R+8);
+    fill.addColorStop(0,L?'rgba(255,255,255,.30)':'rgba(15,23,42,.18)');
+    fill.addColorStop(1,L?'rgba(255,255,255,.72)':'rgba(15,23,42,.62)');
+    g.fillStyle=fill; g.fill();
+    g.lineWidth=3; g.strokeStyle=accent; g.globalAlpha=.75; g.stroke(); g.globalAlpha=1;
+    // Zona verde: |θ| < 22.9°, donde el error del período es menor al 1 %
+    const rz=rad(22.9);
+    g.beginPath(); g.arc(cx,cy,R*0.86,Math.PI/2-rz,Math.PI/2+rz,false);
+    g.lineWidth=R*0.07; g.strokeStyle=L?'rgba(4,120,87,.85)':'rgba(52,211,153,.9)'; g.stroke();
+    // Marcas cada 5°, largas cada 15°
+    g.strokeStyle=ink; g.fillStyle=ink;
+    for(let d=-90;d<=90;d+=5){
+      const a=Math.PI/2-rad(d), big=d%15===0, len=big?R*0.14:R*0.07;
+      g.lineWidth=big?6:3;
+      g.beginPath();
+      g.moveTo(cx+R*Math.cos(a),cy+R*Math.sin(a));
+      g.lineTo(cx+(R-len)*Math.cos(a),cy+(R-len)*Math.sin(a));
+      g.stroke();
+      if(d%30===0){
+        g.font='700 44px "IBM Plex Mono",ui-monospace,monospace'; g.textAlign='center'; g.textBaseline='middle';
+        g.fillText(Math.abs(d)+'°',cx+R*0.68*Math.cos(a),cy+R*0.68*Math.sin(a));
+      }
+    }
+    g.font='700 34px "IBM Plex Mono",ui-monospace,monospace'; g.textAlign='center';
+    g.fillStyle=L?'#047857':'#34d399';
+    g.fillText('< 1 % · ±22.9°',cx,cy+R*0.40);
+  };
+}
+function drawPlaque(title,eq,accent){
+  return (g,w,h)=>{
+    const grd=g.createLinearGradient(0,0,0,h);
+    grd.addColorStop(0,'#e9c784'); grd.addColorStop(.5,'#c99a4b'); grd.addColorStop(1,'#a87a35');
+    g.fillStyle=grd; g.fillRect(0,0,w,h);
+    // Cepillado fino del latón
+    g.globalAlpha=.08; g.fillStyle='#fff';
+    for(let y=0;y<h;y+=3) g.fillRect(0,y,w,1);
+    g.globalAlpha=1;
+    g.fillStyle=accent; g.fillRect(14,14,10,h-28);
+    g.strokeStyle='rgba(60,35,10,.55)'; g.lineWidth=3; g.strokeRect(5,5,w-10,h-10);
+    g.fillStyle='#3a240c'; g.textBaseline='middle'; g.textAlign='left';
+    g.font='700 34px "Space Grotesk",system-ui,sans-serif'; g.fillText(title,44,h*0.36);
+    g.font='500 26px "IBM Plex Mono",ui-monospace,monospace'; g.fillText(eq,44,h*0.72);
+  };
+}
+function blobTexture(){
+  return canvasTex(128,128,(g,w,h)=>{
+    const r=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);
+    r.addColorStop(0,'rgba(0,0,0,1)'); r.addColorStop(.45,'rgba(0,0,0,.55)'); r.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=r; g.fillRect(0,0,w,h);
+  });
+}
+
+function buildProScene(M){
+  const env=studioEnv();
+  const pbr=(o)=>{ const m=new THREE.MeshStandardMaterial(o); if(env){ m.envMap=env; } else { m.metalness=Math.min(m.metalness,0.35); } return m; };
+  const steel=pbr({color:0xc9ced6,metalness:1,roughness:0.32});
+  const brass=pbr({color:0xd9a441,metalness:1,roughness:0.2});
+  const violet=pbr({color:0xbf6ae8,metalness:0.7,roughness:0.24,emissive:0x2e0842,emissiveIntensity:0.5});
+
+  scene.add(new THREE.HemisphereLight(0xdbe7ff,0x2a1d12,0.35));
+  const key=new THREE.DirectionalLight(0xfff1e0,1.5); key.position.set(3,6,5); scene.add(key);
+
+  // Soporte con la luz horneada en Blender (una sola llamada de dibujo, sin cálculo de luces)
+  const T=M.texturas;
+  const atlas=texFrom(T.atlas,true);
+  const soporte=new THREE.Mesh(geomFrom(M.mallas.soporte),new THREE.MeshBasicMaterial({map:atlas,toneMapped:false}));
+  scene.add(soporte);
+  scene.add(new THREE.Mesh(geomFrom(M.mallas.metal),steel));
+
+  // Sombra de contacto del aparato sobre el piso (AO horneado)
+  R3.ground=new THREE.Mesh(geomFrom(M.mallas.piso),new THREE.MeshBasicMaterial({
+    color:0x000000,transparent:true,alphaMap:texFrom(T.sombra,false),depthWrite:false,opacity:0.9,toneMapped:false}));
+  R3.ground.renderOrder=-1;
+  scene.add(R3.ground);
+
+  const ejeG=geomFrom(M.mallas.eje), varG=geomFrom(M.mallas.varilla), pesaG=geomFrom(M.mallas.pesa);
+  const blobT=blobTexture();
+  const rigDefs=[
+    {x:M.rigsX[0],mat:brass, accent:'#f5b642',title:'PÉNDULO REAL',  eq:"θ'' + (g/L)·sen θ = 0"},
+    {x:M.rigsX[1],mat:violet,accent:'#d97ef5',title:'MODELO LINEAL',eq:"θ'' + (g/L)·θ = 0"}
+  ];
+  rigDefs.forEach(d=>{
+    // Transportador detrás del pivote
+    const dialT=canvasTex(1024,532,drawDial(d.accent)); R3.dials.push(dialT);
+    const dw=1.34, dh=dw*532/1024;
+    const dial=new THREE.Mesh(new THREE.PlaneGeometry(dw,dh),
+      new THREE.MeshBasicMaterial({map:dialT,transparent:true,depthWrite:false,toneMapped:false}));
+    dial.position.set(d.x,PIVOT_Y-dh/2+dh*10/532,-0.13); scene.add(dial);
+
+    // Placa de latón inclinada sobre la base
+    const ph=0.19, pw=0.92;
+    const plaqueT=canvasTex(512,106,drawPlaque(d.title,d.eq,d.accent));
+    const side=pbr({color:0xb8863b,metalness:1,roughness:0.35});
+    const plaque=new THREE.Mesh(new THREE.BoxGeometry(pw,ph,0.014),
+      [side,side,side,side,new THREE.MeshBasicMaterial({map:plaqueT,toneMapped:false}),side]);
+    const tilt=-1.0, up=new THREE.Vector3(0,Math.cos(tilt),Math.sin(tilt));
+    plaque.rotation.x=tilt;
+    plaque.position.set(d.x,R3.baseTop+0.008,0.5).addScaledVector(up,ph/2);
+    scene.add(plaque);
+
+    // Piezas móviles: eje (gira), varilla (gira y se estira con L) y pesa
+    const g=new THREE.Group(); g.position.set(d.x,PIVOT_Y,0); scene.add(g);
+    g.add(new THREE.Mesh(ejeG,steel));
+    const rod=new THREE.Mesh(varG,steel); g.add(rod);
+    const bob=new THREE.Mesh(pesaG,d.mat); g.add(bob);
+
+    // Sombra difusa de la pesa sobre la base
+    const blob=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+      new THREE.MeshBasicMaterial({map:blobT,transparent:true,depthWrite:false,opacity:0.5,toneMapped:false,
+        polygonOffset:true,polygonOffsetFactor:-2}));
+    blob.rotation.x=-Math.PI/2; blob.position.set(d.x,R3.baseTop+0.003,0); scene.add(blob);
+
+    rigs.push({x:d.x,group:g,rod,bob,blob});
+  });
+}
+
+/* --- Escena simple (respaldo si web/pendulo_modelo.js no está) --- */
+function buildSimpleScene(){
+  scene.add(new THREE.AmbientLight(0x9fb3c8,0.72));
+  scene.add(new THREE.HemisphereLight(0xdff1ff,0x101827,0.7));
+  const key=new THREE.DirectionalLight(0xfff4dd,2.0); key.position.set(3,7,5); scene.add(key);
+  const table=new THREE.Mesh(new THREE.BoxGeometry(9,0.22,4.4),
+    new THREE.MeshStandardMaterial({color:0x101a2b,roughness:0.5,metalness:0.3}));
+  table.position.y=-0.12; scene.add(table);
+  const steel=new THREE.MeshStandardMaterial({color:0x7b8ca3,metalness:0.85,roughness:0.25});
+  [-1.5,1.5].forEach((x,i)=>{
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,PIVOT_Y,20),steel);
+    post.position.set(x,PIVOT_Y/2,-0.25); scene.add(post);
+    const g=new THREE.Group(); g.position.set(x,PIVOT_Y,0); scene.add(g);
+    const rodGeo=new THREE.CylinderGeometry(0.02,0.02,1,16); rodGeo.translate(0,-0.5,0);
+    const rod=new THREE.Mesh(rodGeo,steel); g.add(rod);
+    const color=i?0xe879f9:0xf5b642;
+    const bob=new THREE.Mesh(new THREE.SphereGeometry(0.19,32,24),
+      new THREE.MeshStandardMaterial({color,metalness:0.75,roughness:0.2,emissive:color,emissiveIntensity:0.12}));
+    g.add(bob);
+    rigs.push({x,group:g,rod,bob,blob:null});
+  });
+}
+
+/* --- Cambio de tema: los transportadores se redibujan con tinta clara u oscura --- */
+function theme3D(light){
+  R3.light=light;
+  R3.dials.forEach(redraw);
+  if(R3.ground) R3.ground.material.opacity=light?0.55:0.9;
+  R3.needs=true;
+}
+
+/* --- Calidad adaptativa: si el equipo no alcanza ~40 fps, baja la resolución del lienzo --- */
+function adaptQuality(now){
+  const dtms=R3.lastT?now-R3.lastT:16.7; R3.lastT=now;
+  if(dtms>250) return;                       // pestaña en segundo plano: no cuenta
+  R3.ema=R3.ema*0.92+dtms*0.08;
+  R3.slow=R3.ema>25?R3.slow+dtms:Math.max(0,R3.slow-dtms*0.5);
+  if(R3.slow>1500 && R3.pr>0.75){
+    R3.pr=Math.max(0.75,R3.pr*0.8);
+    renderer.setPixelRatio(R3.pr);
+    R3.slow=0; R3.ema=16.7; R3.needs=true;
+  }
+}
+
+function updateThree(){
+  if(!renderer||!R3.visible) return;
+  const host=$('threeHost');
+  if(host.clientWidth<10 || host.clientHeight<10) return; // el stage está oculto durante la ecuación
+  const w=host.clientWidth,h=host.clientHeight;
+  if(renderer.domElement.width!==Math.floor(w*renderer.getPixelRatio()) ||
+     renderer.domElement.height!==Math.floor(h*renderer.getPixelRatio())){
+    renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); R3.needs=true;
+  }
+  // Solo se dibuja si algo cambió (péndulos, cámara, tamaño o tema)
+  const keyNow=S.thR.toFixed(5)+'|'+S.thL.toFixed(5)+'|'+S.L+'|'+cam.az.toFixed(4)+'|'+cam.el.toFixed(4)+'|'+
+    cam.r.toFixed(3)+'|'+cam.tx.toFixed(3)+'|'+cam.ty.toFixed(3)+'|'+w+'x'+h;
+  if(!R3.needs && keyNow===R3.lastKey) return;
+  R3.lastKey=keyNow; R3.needs=false;
+  if(S.running) adaptQuality(performance.now());
+
+  rigs[0].group.rotation.z=S.thR;
+  rigs[1].group.rotation.z=S.thL;
+  rigs.forEach((r,i)=>{
+    r.rod.scale.y=S.L; r.bob.position.y=-S.L;
+    if(r.blob){
+      const th=i?S.thL:S.thR, bx=r.x+S.L*Math.sin(th), by=PIVOT_Y-S.L*Math.cos(th);
+      const alto=Math.max(0,by-0.19-R3.baseTop);
+      r.blob.position.x=bx;
+      r.blob.scale.setScalar(0.42+alto*0.32);
+      r.blob.material.opacity=clamp(0.62*(1-alto/2.6),0,0.62)*(R3.light?0.7:1);
+    }
+  });
+  // Con cam.r = 6.6 el aparato completo entra en cualquier pantalla; el zoom parte de ahí
+  const r=camR();
+  // Si sobra alto, el aparato baja: arriba quedan libres el HUD y la pesa en ángulos grandes
+  let ty=cam.ty;
+  if(cam.tx===CAM0.tx && cam.ty===CAM0.ty) ty=Math.max(cam.ty,-0.34+r*Math.tan(rad(21))*0.9);
+  const tx=cam.tx, tz=0;
+  camera.position.set(tx+r*Math.sin(cam.az)*Math.cos(cam.el),
+                      ty+r*Math.sin(cam.el),
+                      tz+r*Math.cos(cam.az)*Math.cos(cam.el));
+  camera.lookAt(tx,ty,tz);
+  trails.forEach((tr,i)=>{
+    const th=i?S.thL:S.thR;
+    const x=rigs[i].x+S.L*Math.sin(th), y=PIVOT_Y-S.L*Math.cos(th);
+    if(S.t===0){ for(let k=0;k<tr.N;k++){ tr.arr[k*3]=x; tr.arr[k*3+1]=y; tr.arr[k*3+2]=0; } } // reinicio: la estela nace en la pesa
+    for(let k=tr.N-1;k>0;k--){ tr.arr[k*3]=tr.arr[(k-1)*3]; tr.arr[k*3+1]=tr.arr[(k-1)*3+1]; tr.arr[k*3+2]=tr.arr[(k-1)*3+2]; }
+    tr.arr[0]=x; tr.arr[1]=y; tr.arr[2]=0;
+    tr.line.geometry.attributes.position.needsUpdate=true;
+  });
+  renderer.render(scene,camera);
+}
+
+/* ---------- 3. Gráficas 2D (se dibujan en el scroll) ---------- */
+const cv=$('chart'), cx=cv.getContext('2d');
+const PAD={l:46,r:12,t:20,b:30};
+
+function sizeCanvas(){
+  const dpr=Math.min(window.devicePixelRatio||1,2), r=cv.getBoundingClientRect();
+  cv.width=Math.max(10,Math.floor(r.width*dpr)); cv.height=Math.max(10,Math.floor(r.height*dpr));
+  cx.setTransform(dpr,0,0,dpr,0,0);
+  return {w:r.width,h:r.height};
+}
+function makeCache(){
+  const th0=rad(S.theta0), T0=linearPeriod(S.L,S.g), w=Math.sqrt(S.g/S.L);
+  const c={};
+
+  // verificación
+  {
+    const pts=[], N=380, tmax=8, dt=tmax/N;
+    let thRN=th0,omRN=0,thRL=th0,omRL=0;
+    for(let i=0;i<=N;i++){
+      const t=i*dt;
+      pts.push({t, rkReal:deg(thRN), exReal:deg(exactRealTheta(t,th0,S.L,S.g)),
+                  rkLin:deg(thRL), anLin:deg(linearSolution(t,th0,S.L,S.g))});
+      [thRN,omRN]=rk4Step(thRN,omRN,dt,accelReal,S.L,S.g);
+      [thRL,omRL]=rk4Step(thRL,omRL,dt,accelLin,S.L,S.g);
+    }
+    c.verify={pts,xmax:tmax,ymax:Math.max(10,Math.abs(S.theta0)*1.15)};
+  }
+  // cuatro casos
+  {
+    const out=[];
+    [10,45,90,150].forEach(d=>{
+      let th=rad(d),om=0; const pts=[],N=300,tmax=6.2,dt=tmax/N;
+      for(let i=0;i<=N;i++){
+        pts.push({t:i*dt,real:deg(th),lin:d*Math.cos(w*(i*dt))});
+        [th,om]=rk4Step(th,om,dt,accelReal,S.L,S.g);
+      }
+      out.push({d,pts});
+    });
+    c.cases={out,xmax:6.2,ymax:160};
+  }
+  // curva de error
+  {
+    const pts=[];
+    for(let d=1;d<=170;d++){
+      const T=exactPeriod(rad(d),S.L,S.g);
+      pts.push({d,err:(T-T0)/T*100});
+    }
+    let thr=22.9;
+    for(let i=1;i<pts.length;i++) if(pts[i].err>=1){ thr=pts[i-1].d+(1-pts[i-1].err)*(pts[i].d-pts[i-1].d)/(pts[i].err-pts[i-1].err); break; }
+    c.error={pts,thr};
+    $('thrText').textContent=thr.toFixed(1)+'°';
+  }
+  // Taylor
+  {
+    const pts=[];
+    for(let i=0;i<=160;i++){
+      const a=(Math.PI/2)*i/160;
+      pts.push({a,sin:Math.sin(a),lin:a,cubic:a-a*a*a/6});
+    }
+    c.taylor={pts};
+  }
+  c.table=[10,45,90,150].map(d=>{
+    const T=exactPeriod(rad(d),S.L,S.g);
+    return {d,T0,T,evT:(T-T0)/T*100,ev0:(T-T0)/T0*100};
+  });
+  return c;
+}
+let CACHE=makeCache();
+
+function xy(x,y,xmin,xmax,ymin,ymax,dim){
+  return [PAD.l+(x-xmin)/(xmax-xmin)*(dim.w-PAD.l-PAD.r),
+          dim.h-PAD.b-(y-ymin)/(ymax-ymin)*(dim.h-PAD.t-PAD.b)];
+}
+function chartPalette(){
+  return document.body.classList.contains('light')
+    ? {real:'#b45309',lin:'#a21caf',blue:'#0369a1',ok:'#047857',warn:'#be123c',white:'#334155',
+       grid:'rgba(15,23,42,.16)',tick:'#64748b',legend:'#1e293b'}
+    : {real:'#f5b642',lin:'#e879f9',blue:'#38bdf8',ok:'#34d399',warn:'#fb7185',white:'#ffffff',
+       grid:'rgba(148,163,184,.22)',tick:'#94a3b8',legend:'#cbd5e1'};
+}
+function axes(dim,xmin,xmax,ymin,ymax,xlabel,ylabel){
+  const K=chartPalette();
+  cx.strokeStyle=K.grid;cx.lineWidth=1;
+  cx.beginPath();
+  cx.moveTo(PAD.l,PAD.t);cx.lineTo(PAD.l,dim.h-PAD.b);cx.lineTo(dim.w-PAD.r,dim.h-PAD.b);cx.stroke();
+  cx.fillStyle=K.tick;cx.font='10px "IBM Plex Mono",monospace';
+  cx.fillText(ylabel,PAD.l-2,PAD.t-6);
+  cx.textAlign='right';cx.fillText(xlabel,dim.w-PAD.r,dim.h-8);cx.textAlign='left';
+  for(let i=0;i<=4;i++){
+    const y=ymin+(ymax-ymin)*i/4, p=xy(xmin,y,xmin,xmax,ymin,ymax,dim);
+    cx.fillText(Math.round(y*10)/10,4,p[1]+3);
+  }
+}
+function curve(pts,key,xkey,xmin,xmax,ymin,ymax,dim,color,dash,prog){
+  const n=Math.max(2,Math.floor(pts.length*prog));
+  cx.save();cx.beginPath();cx.setLineDash(dash||[]);cx.strokeStyle=color;cx.lineWidth=1.8;
+  for(let i=0;i<n;i++){
+    const p=xy(pts[i][xkey],pts[i][key],xmin,xmax,ymin,ymax,dim);
+    i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]);
+  }
+  cx.stroke();cx.restore();
+}
+function legend(items,dim){
+  const K=chartPalette();
+  let x=PAD.l+4,y=PAD.t+2;
+  cx.font='9px "IBM Plex Mono",monospace';
+  items.forEach(it=>{
+    cx.strokeStyle=it.c;cx.lineWidth=2;cx.setLineDash(it.d||[]);
+    cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+12,y);cx.stroke();cx.setLineDash([]);
+    cx.fillStyle=K.legend;cx.fillText(it.t,x+16,y+3);
+    x+=cx.measureText(it.t).width+30;
+    if(x>dim.w-90){x=PAD.l+4;y+=12;}
+  });
+}
+
+/* Punto del θ₀ elegido con el deslizador: línea guía vertical, punto y etiqueta */
+function marcaTheta0(dim,px,pts,texto){
+  const K=chartPalette(), light=document.body.classList.contains('light');
+  cx.save();
+  cx.strokeStyle=K.white;cx.globalAlpha=.35;cx.setLineDash([2,3]);cx.lineWidth=1;
+  cx.beginPath();cx.moveTo(px,PAD.t);cx.lineTo(px,dim.h-PAD.b);cx.stroke();
+  cx.setLineDash([]);cx.globalAlpha=1;
+  pts.forEach(([py,col])=>{
+    cx.fillStyle=col;cx.beginPath();cx.arc(px,py,4.5,0,7);cx.fill();
+    cx.strokeStyle=light?'#fff':'#0b1220';cx.lineWidth=1.5;cx.stroke();
+  });
+  cx.font='600 10px "IBM Plex Mono",monospace';
+  const w=cx.measureText(texto).width+12, h=16;
+  let bx=px+8, by=Math.max(PAD.t+16,Math.min(pts[0][0]-h-6,dim.h-PAD.b-h-2));
+  if(bx+w>dim.w-PAD.r) bx=px-8-w;
+  cx.fillStyle=light?'rgba(255,255,255,.9)':'rgba(6,11,20,.88)';
+  cx.fillRect(bx,by,w,h);
+  cx.strokeStyle=K.grid;cx.lineWidth=1;cx.strokeRect(bx+.5,by+.5,w-1,h-1);
+  cx.fillStyle=K.legend;cx.fillText(texto,bx+6,by+11.5);
+  cx.restore();
+}
+
+function renderChart(prog){
+  const dim=sizeCanvas(), mode=S.modeChart, K=chartPalette();
+  cx.clearRect(0,0,dim.w,dim.h);
+  if(mode==='verify'){
+    const c=CACHE.verify, ymax=c.ymax, ymin=-ymax;
+    axes(dim,0,c.xmax,ymin,ymax,'t [s]','θ [°]');
+    curve(c.pts,'rkReal','t',0,c.xmax,ymin,ymax,dim,K.real,[],prog);
+    curve(c.pts,'exReal','t',0,c.xmax,ymin,ymax,dim,K.white,[4,3],prog);
+    curve(c.pts,'rkLin','t',0,c.xmax,ymin,ymax,dim,K.lin,[],prog);
+    curve(c.pts,'anLin','t',0,c.xmax,ymin,ymax,dim,K.blue,[4,3],prog);
+    legend([{t:'RK4 real',c:K.real},{t:'exacta',c:K.white,d:[4,3]},{t:'RK4 lineal',c:K.lin},{t:'θ₀cosωt',c:K.blue,d:[4,3]}],dim);
+  }else if(mode==='cases'){
+    const c=CACHE.cases;
+    axes(dim,0,c.xmax,-160,160,'t [s]','θ [°]');
+    const cols=[K.blue,K.ok,K.real,K.warn];
+    c.out.forEach((o,i)=>{ curve(o.pts,'real','t',0,c.xmax,-160,160,dim,cols[i],[],prog);
+                           curve(o.pts,'lin','t',0,c.xmax,-160,160,dim,cols[i],[3,4],prog); });
+    // Colores = amplitud; línea continua = péndulo real; punteada = modelo lineal
+    legend(c.out.map((o,i)=>({t:o.d+'°',c:cols[i]}))
+      .concat([{t:'real',c:K.white},{t:'lineal',c:K.white,d:[3,4]}]),dim);
+  }else if(mode==='error'){
+    const c=CACHE.error;
+    axes(dim,1,170,0,50,'θ₀ [°]','error [%]');
+    cx.strokeStyle=K.warn;cx.globalAlpha=.8;cx.setLineDash([5,4]);cx.beginPath();
+    const a=xy(1,1,1,170,0,50,dim),b=xy(170,1,1,170,0,50,dim);
+    cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;
+    curve(c.pts,'err','d',1,170,0,50,dim,K.blue,[],prog);
+    const q=xy(c.thr,1,1,170,0,50,dim);
+    cx.fillStyle=K.ok;cx.beginPath();cx.arc(q[0],q[1],4,0,7);cx.fill();
+    cx.font='10px "IBM Plex Mono",monospace';
+    cx.fillText('1% → '+c.thr.toFixed(1)+'°',q[0]+7,q[1]-6);
+    legend([{t:'error del período',c:K.blue},{t:'tolerancia 1 %',c:K.warn,d:[5,4]}],dim);
+    // θ₀ del deslizador sobre la curva (el error depende solo de θ₀, no de L ni de g)
+    if(prog>=1){
+      const T0=linearPeriod(S.L,S.g), T=exactPeriod(rad(S.theta0),S.L,S.g), e=(T-T0)/T*100;
+      const m=xy(S.theta0,Math.min(e,50),1,170,0,50,dim);
+      marcaTheta0(dim,m[0],[[m[1],K.real]],'θ₀ = '+S.theta0.toFixed(1)+'° → '+e.toFixed(2)+' %');
+    }
+  }else{ // taylor
+    const c=CACHE.taylor;
+    axes(dim,0,1.6,0,1.7,'θ [rad]','valor');
+    curve(c.pts,'lin','a',0,1.6,0,1.7,dim,K.lin,[4,3],prog);
+    curve(c.pts,'cubic','a',0,1.6,0,1.7,dim,K.ok,[2,3],prog);
+    curve(c.pts,'sin','a',0,1.6,0,1.7,dim,K.real,[],prog);
+    [[10,K.blue],[90,K.warn]].forEach(([d,col])=>{
+      const p=xy(rad(d),0,0,1.6,0,1.7,dim);
+      cx.strokeStyle=col;cx.globalAlpha=.5;cx.beginPath();cx.moveTo(p[0],PAD.t);cx.lineTo(p[0],dim.h-PAD.b);cx.stroke();cx.globalAlpha=1;
+      cx.fillStyle=col;cx.fillText(d+'°',p[0]+3,dim.h-PAD.b-6);
+    });
+    legend([{t:'sen θ',c:K.real},{t:'θ',c:K.lin,d:[4,3]},{t:'θ−θ³/6',c:K.ok,d:[2,3]}],dim);
+    // θ₀ del deslizador: la distancia entre los dos puntos es el error de sen θ ≈ θ
+    if(prog>=1){
+      const a=rad(S.theta0), etiqueta='θ₀ = '+S.theta0.toFixed(1)+'° · error '+taylorError(S.theta0).toFixed(2)+' %';
+      if(a<=1.6){
+        const ps=xy(a,Math.sin(a),0,1.6,0,1.7,dim), pl=xy(a,a,0,1.6,0,1.7,dim);
+        marcaTheta0(dim,ps[0],[[pl[1],K.lin],[ps[1],K.real]],etiqueta);
+      }else{
+        cx.save();cx.font='600 10px "IBM Plex Mono",monospace';cx.fillStyle=K.tick;cx.textAlign='right';
+        cx.fillText(etiqueta+' (fuera del eje)',dim.w-PAD.r,PAD.t+28);cx.restore();
+      }
+    }
+  }
+}
+
+/* ---------- 4. Interacción y bucle ---------- */
+function setMode(mode){
+  S.mode=mode;
+  const map={manual:{label:'MODO 1 · DEDUCCIÓN A MANO',chart:'taylor'},
+             verify:{label:'MODO 2 · RK4 Y VERIFICACIÓN',chart:'verify'},
+             error:{label:'MODO 3 · PERÍODO Y UMBRAL',chart:'error'},
+             anim:{label:'MODO 4 · ANIMACIÓN 3D',chart:'cases'},
+             cierre:{label:'CIERRE · PREGUNTAS',chart:'cases'}}[mode];
+  $('modeLabel').textContent=map.label;
+  S.modeChart=map.chart;
+  $('chartTitle').textContent = S.view==='code'
+    ? 'Cuaderno · '+NOTEBOOKS[S.modeChart].file
+    : NOTEBOOKS[S.modeChart].title;
+  if(S.view==='code') renderNotebook();
+  S.chartAnim={t0:performance.now(),dur:750};
+  const idx=mode==='cierre'?3:({manual:0,verify:1,error:2,anim:3}[mode]);
+  [...$('dots').children].forEach((d,i)=>d.classList.toggle('on',i===idx));
+  if(mode==='manual'){ S.running=false; }
+  else{
+    S.running=true;
+    if(mode==='anim'&&S.firstAnim){ S.firstAnim=false; S.theta0=90; $('sTheta').value=90; resetSim(); }
+  }
+  $('btnPlay').textContent=S.running?'❚❚ Pausar':'▶ Reproducir';
+}
+function resetSim(){
+  S.t=0; S.thR=rad(S.theta0); S.omR=0; S.thL=rad(S.theta0); S.omL=0; S.hist=[];
+  CACHE=makeCache(); S.chartDirty=true; updateUI(); paintTable();
+}
+function stepPhysics(dt){
+  if(!S.running) return;
+  const e=Math.min(dt,0.04)*S.speed, sub=10, h=e/sub;
+  for(let i=0;i<sub;i++){
+    [S.thR,S.omR]=rk4Step(S.thR,S.omR,h,accelReal,S.L,S.g);
+    S.t+=h;
+    S.thL=linearSolution(S.t,rad(S.theta0),S.L,S.g);
+    S.omL=-rad(S.theta0)*Math.sqrt(S.g/S.L)*Math.sin(Math.sqrt(S.g/S.L)*S.t);
+  }
+  S.hist.push(S.t);
+  if(S.hist.length>900) S.hist.shift();
+}
+function updateUI(){
+  $('vTheta').textContent=S.theta0.toFixed(1)+'°';
+  $('vL').textContent=S.L.toFixed(2)+' m';
+  $('vG').textContent=S.g.toFixed(2)+' m/s²';
+  $('hudReal').textContent='θ = '+deg(S.thR).toFixed(1)+'°';
+  $('hudLin').textContent='θ = '+deg(S.thL).toFixed(1)+'°';
+  $('hudTime').textContent='t = '+S.t.toFixed(2)+' s · Δθ = '+deg(S.thL-S.thR).toFixed(1)+'°';
+  $('tayAng').textContent=S.theta0.toFixed(1)+'°';
+  $('tayErr').innerHTML=taylorError(S.theta0).toFixed(2)+'<small> %</small>';
+}
+function paintTable(){
+  const T0=linearPeriod(S.L,S.g);
+  $('periodTable').innerHTML=CACHE.table.map(r=>
+    '<tr><td'+(r.d===90?' class="hi"':'')+'>'+r.d+'°</td><td>'+T0.toFixed(4)+' s</td><td>'+r.T.toFixed(4)+' s</td>'+
+    '<td class="hi">'+r.evT.toFixed(2)+' %</td><td>'+r.ev0.toFixed(2)+' %</td></tr>').join('');
+}
+function frame(now){
+  const dt=lastFrame?(now-lastFrame)/1000:0.016; lastFrame=now;
+  stepPhysics(dt); updateThree(); updateUI();
+  let prog=1;
+  if(S.view!=='code'){
+    if(S.chartAnim){
+      const p=(now-S.chartAnim.t0)/S.chartAnim.dur;
+      prog=p>=1?1:1-Math.pow(1-p,3);
+      if(p>=1) S.chartAnim=null;
+      renderChart(prog);
+    }else if(S.chartDirty){ renderChart(1); S.chartDirty=false; }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- 5. Scroll: revelado, progreso y cambio de modo ---------- */
+function initScroll(){
+  // Aparece cuando su borde entra al 88 % de la pantalla (no por porcentaje del bloque:
+  // la sección del ejercicio a mano es tan alta que en celular nunca llegaría al 12 %)
+  const rev=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');rev.unobserve(e.target);}}),{threshold:0,rootMargin:'0px 0px -12% 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>rev.observe(el));
+
+  const steps=[...document.querySelectorAll('.step')];
+  const so=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){
+      setMode(e.target.dataset.mode);
+      document.querySelectorAll('.navchips a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));
+    }
+  }),{rootMargin:'-25% 0px -55% 0px',threshold:0});
+  steps.forEach(s=>so.observe(s));
+
+  window.addEventListener('scroll',()=>{
+    const h=document.documentElement.scrollHeight-innerHeight;
+    $('progress').style.width=(h>0?scrollY/h*100:0)+'%';
+  },{passive:true});
+  window.addEventListener('resize',()=>{S.chartDirty=true;});
+}
+
+/* ---------- Foco de la ecuación: oculta el 3D y lo devuelve en el paso 2 ---------- */
+function initEquationFocus(){
+  const card=$('p1Latex');
+  if(!card) return;
+  let focused=false;
+  const setFocus=on=>{
+    if(on===focused) return;
+    focused=on;
+    document.body.classList.toggle('eq-focus',on);
+    S.chartDirty=true;
+    if(!on){
+      // Al llegar al paso 2 reaparece el stage y la animación arranca de cero
+      resetSim();
+      updateThree();
+    }
+  };
+  // El 3D se oculta cuando la tarjeta ya subió al 70 % de la pantalla y vuelve cuando la tarjeta
+  // sale por arriba. Antes de desplegarse, la tarjeta está recortada a la columna de texto
+  // (clip-path), así que nunca tapa al 3D. No cambia de tamaño: no hace falta histéresis.
+  const io=new IntersectionObserver(es=>{
+    setFocus(es[es.length-1].isIntersecting);
+  },{threshold:[0],rootMargin:'0px 0px -30% 0px'});
+  io.observe(card);
+}
+
+/* ---------- La tarjeta del ejercicio a mano usa todo el ancho de la página ----------
+   En escritorio la página tiene dos columnas (3D | texto). Esta tarjeta se extiende sobre
+   las dos para quedar centrada y con espacio para LaTeX y Python lado a lado. */
+function layoutTexCard(){
+  const card=$('p1Latex'), lay=document.querySelector('.layout');
+  if(!card||!lay) return;
+  card.style.marginLeft=''; card.style.width=''; card.style.setProperty('--texL','0px');
+  if(window.innerWidth<=980) return;               // una sola columna: ya ocupa todo el ancho
+  // Más ancha que el contenido de la página: hasta 1480 px, centrada en la ventana
+  const vw=document.documentElement.clientWidth;      // sin la barra de desplazamiento
+  const W=Math.min(vw-48,1480), left=(vw-W)/2;
+  const cl=card.getBoundingClientRect().left, off=Math.round(cl-left);
+  card.style.marginLeft=(-off)+'px';
+  card.style.width=Math.round(W)+'px';
+  // Fuera del modo lectura solo se ve la parte de la columna de texto; al entrar, el
+  // clip-path se abre hacia la izquierda mientras el 3D se desvanece (ver .texcard en el CSS)
+  card.style.setProperty('--texL',off+'px');
+}
+/* "Ver cód": por defecto la sección 1 muestra solo la hoja con el LaTeX. El botón saca el
+   editor con el Python desde detrás de la hoja hacia la derecha (la animación está en el
+   CSS, clase .show-code) y otro toque lo vuelve a esconder. Hay dos botones (arriba de la
+   tarjeta y en el encabezado fijo de la hoja) y los dos se mantienen iguales. */
+window.toggleCode = function(btn){
+  const card=btn.closest('.texcard');
+  if(!card) return;
+  const on=card.classList.toggle('show-code');
+  card.querySelectorAll('.codebtn').forEach(b=>{
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? '‹/› Ocultar cód' : '‹/› Ver cód';
+  });
+};
+
+/* "Ver pasos": muestra u oculta las notas a lápiz de cada paso (qué hace, dicho simple). */
+window.toggleNotes = function(btn){
+  const card=btn.closest('.texcard');
+  if(!card) return;
+  const on=card.classList.toggle('show-notes');
+  card.querySelectorAll('.notesbtn').forEach(b=>{
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? '✎ Ocultar pasos' : '✎ Ver pasos';
+  });
+};
+
+function initTexCardLayout(){
+  layoutTexCard();
+  window.addEventListener('resize',layoutTexCard);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutTexCard);
+}
+
+/* ---------- Velocidad de reproducción ----------
+   La barra va de 0 a 100 y el centro (50) es la velocidad normal, 1×.
+   Mitad izquierda: 0.1× → 1× en escala logarítmica (fino en cámara lenta).
+   Mitad derecha: 1× → 2×. Cerca del centro (±4) la barra se pega a 1× con un pequeño
+   tirón (y una vibración corta en celulares que la permiten) para sentir que es la mitad. */
+function bindSpeed(){
+  const sp=$('sSpeed'), vS=$('vSpeed'), tr=sp&&sp.parentElement, slow=$('btnSlow');
+  if(!sp) return;
+  const aVel=s=> s<50 ? 0.1*Math.pow(10,s/50) : Math.pow(2,(s-50)/50);
+  const aBarra=v=> v<1 ? 50*Math.log10(v/0.1) : 50+50*Math.log2(v);
+  const LENTO=0.25;
+  let enIman=true;
+  const aplicar=(s,arrastrando)=>{
+    const iman=Math.abs(s-50)<=4;
+    if(iman){
+      s=50; sp.value=50;
+      if(arrastrando && !enIman){                    // recién llega al centro: tirón
+        tr.classList.remove('snap'); void tr.offsetWidth; tr.classList.add('snap');
+        // vibración corta solo si el usuario ya tocó la página (si no, el navegador la bloquea)
+        const activo=!navigator.userActivation || navigator.userActivation.hasBeenActive;
+        try{ if(navigator.vibrate && activo) navigator.vibrate(12); }catch(e){}
+      }
+    }
+    enIman=iman;
+    S.speed=aVel(s);
+    vS.textContent = s===50 ? '1× normal' : S.speed.toFixed(2)+'×';
+    slow.setAttribute('aria-pressed', Math.abs(S.speed-LENTO)<0.005 ? 'true' : 'false');
+  };
+  sp.addEventListener('input',()=>aplicar(+sp.value,true));
+  sp.addEventListener('dblclick',()=>{ sp.value=50; aplicar(50,false); });
+  slow.addEventListener('click',()=>{
+    const s = Math.abs(S.speed-LENTO)<0.005 ? 50 : aBarra(LENTO);
+    sp.value=s; aplicar(+sp.value,false);
+  });
+  aplicar(+sp.value,false);
+}
+
+/* ---------- 6. Controles ---------- */
+function bindControls(){
+  $('sTheta').addEventListener('input',e=>{S.theta0=+e.target.value; document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',+b.dataset.case===Math.round(S.theta0))); resetSim();});
+  $('sL').addEventListener('input',e=>{S.L=+e.target.value;resetSim();});
+  $('sG').addEventListener('input',e=>{S.g=+e.target.value;resetSim();});
+  $('btnPlay').addEventListener('click',()=>{S.running=!S.running;$('btnPlay').textContent=S.running?'❚❚ Pausar':'▶ Reproducir';});
+  $('btnReset').addEventListener('click',resetSim);
+  bindSpeed();
+  document.querySelectorAll('.case').forEach(b=>b.addEventListener('click',()=>{
+    S.theta0=+b.dataset.case;$('sTheta').value=S.theta0;
+    document.querySelectorAll('.case').forEach(x=>x.classList.toggle('on',x===b));
+    resetSim();S.running=true;$('btnPlay').textContent='❚❚ Pausar';
+  }));
+  $('tabRender').addEventListener('click',()=>setView('render'));
+  $('tabCode').addEventListener('click',()=>setView('code'));
+  $('btnTheme').addEventListener('click',()=>{
+    const light=!document.body.classList.contains('light');
+    applyTheme(light);
+    try{ localStorage.setItem('p5-theme',light?'light':'dark'); }catch(e){}
+  });
+}
+
+/* ---------- Fórmulas LaTeX con KaTeX (secciones 1 y 2) ---------- */
+let taxRendered = false;
+function renderTaxLatex(){
+  // Python de cada renglón: resaltado tipo editor y números de línea seguidos en todo el
+  // archivo, como si fuera un solo punto_a_mano.py abierto en el editor
+  // (cada tarjeta es un archivo distinto: la numeración vuelve a empezar en 1)
+  document.querySelectorAll('.texrows').forEach(hoja=>{
+    let ln=0;
+    hoja.querySelectorAll('pre.pycode[data-py]').forEach(pre=>{
+      if(pre.dataset.hl) return;
+      pre.innerHTML=pre.textContent.split('\n')
+        .map(l=>'<span class="ln">'+(++ln)+'</span>'+hlLine(l)).join('\n');
+      pre.dataset.hl='1';
+    });
+  });
+  if(taxRendered || typeof katex === 'undefined') return;
+  document.querySelectorAll('.texmath[data-tex]').forEach(el=>{
+    katex.render(el.dataset.tex, el, {displayMode:true, throwOnError:false, strict:false,
+      macros:{'\\sen':'\\operatorname{sen}'}});
+  });
+  taxRendered = true;
+}
+window.toggleTaxSource = function(btn){
+  const grid = btn.closest('.card').querySelector('.texgrid');
+  if(!grid) return;
+  const showing = grid.classList.toggle('show-src');
+  btn.textContent = showing ? 'Ver fórmulas' : 'Ver código LaTeX';
+  btn.setAttribute('aria-pressed', showing ? 'true' : 'false');
+};
+
+/* ---------- Tema claro / oscuro ---------- */
+function applyTheme(light){
+  document.body.classList.toggle('light',light);
+  theme3D(light);
+  const b=$('btnTheme');
+  if(b){
+    b.textContent = light ? '☾ Modo oscuro' : '☀ Modo claro';
+    b.setAttribute('aria-pressed', light ? 'true' : 'false');
+  }
+  S.chartDirty=true;
+}
+function initTheme(){
+  let saved=null;
+  try{ saved=localStorage.getItem('p5-theme'); }catch(e){}
+  const light = saved==='light' || (!saved && typeof matchMedia==='function' && matchMedia('(prefers-color-scheme: light)').matches);
+  applyTheme(light);
+}
+
+/* ---------- 7. Arranque ---------- */
+initThree();
+bindControls();
+initTheme();
+initScroll();
+initEquationFocus();
+renderTaxLatex();
+initTexCardLayout();
+paintTable();
+updateUI();
+setMode('manual');
+requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
